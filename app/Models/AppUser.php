@@ -6,6 +6,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -39,5 +40,10 @@ class AppUser extends Authenticatable implements HasName, FilamentUser
     {
         // Define your logic here. For now, we'll allow all found users.
         return true;
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class, 'user_dep_id');
     }
 }

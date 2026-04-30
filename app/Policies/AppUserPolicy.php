@@ -11,62 +11,62 @@ class AppUserPolicy
     
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ViewAny:AppUser');
+        return $authUser->can('ViewAny:AppUserResource');
     }
 
     public function view(AuthUser $authUser): bool
     {
-        return $authUser->can('View:AppUser');
+        return $authUser->can('View:AppUserResource');
     }
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->can('Create:AppUser');
+        return $authUser->can('Create:AppUserResource');
     }
 
     public function update(AuthUser $authUser): bool
     {
-        return $authUser->can('Update:AppUser');
+        return $authUser->can('Update:AppUserResource');
     }
 
     public function delete(AuthUser $authUser): bool
     {
-        return $authUser->can('Delete:AppUser');
+        return $authUser->can('Delete:AppUserResource');
     }
 
     public function deleteAny(AuthUser $authUser): bool
     {
-        return $authUser->can('DeleteAny:AppUser');
+        return $authUser->can('DeleteAny:AppUserResource');
     }
 
     public function restore(AuthUser $authUser): bool
     {
-        return $authUser->can('Restore:AppUser');
+        return $authUser->can('Restore:AppUserResource');
     }
 
     public function forceDelete(AuthUser $authUser): bool
     {
-        return $authUser->can('ForceDelete:AppUser');
+        return $authUser->can('ForceDelete:AppUserResource');
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ForceDeleteAny:AppUser');
+        return $authUser->can('ForceDeleteAny:AppUserResource');
     }
 
     public function restoreAny(AuthUser $authUser): bool
     {
-        return $authUser->can('RestoreAny:AppUser');
+        return $authUser->can('RestoreAny:AppUserResource');
     }
 
     public function replicate(AuthUser $authUser): bool
     {
-        return $authUser->can('Replicate:AppUser');
+        return $authUser->can('Replicate:AppUserResource');
     }
 
     public function reorder(AuthUser $authUser): bool
     {
-        return $authUser->can('Reorder:AppUser');
+        return $authUser->can('Reorder:AppUserResource');
     }
 
 }

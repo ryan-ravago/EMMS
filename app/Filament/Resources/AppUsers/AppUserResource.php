@@ -22,7 +22,24 @@ class AppUserResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    protected static ?string $navigationLabel = "Users";
+    protected static ?string $modelLabel = 'User'; // Singular
+
+    protected static ?string $pluralModelLabel = 'Users'; // Plural
+
     protected static ?string $recordTitleAttribute = 'user_fname';
+
+    protected static ?int $navigationSort = 1;
+
+    public static function getNavigationGroup(): ?string
+    {
+        // $user = auth()->user();
+
+        // return ($user && $user->roles()->count() > 1)
+        //     ? 'Super Admin'
+        //     : null;
+        return 'Super Admin';
+    }
 
     public static function form(Schema $schema): Schema
     {

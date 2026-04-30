@@ -6,6 +6,7 @@ use App\Filament\Resources\Departments\Pages\CreateDepartment;
 use App\Filament\Resources\Departments\Pages\EditDepartment;
 use App\Filament\Resources\Departments\Pages\ListDepartments;
 use App\Filament\Resources\Departments\Pages\ViewDepartment;
+use App\Filament\Resources\Departments\RelationManagers\UsersRelationManager;
 use App\Filament\Resources\Departments\Schemas\DepartmentForm;
 use App\Filament\Resources\Departments\Schemas\DepartmentInfolist;
 use App\Filament\Resources\Departments\Tables\DepartmentsTable;
@@ -15,6 +16,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class DepartmentResource extends Resource
 {
@@ -23,6 +25,18 @@ class DepartmentResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'dep_name';
+
+    protected static ?int $navigationSort = 2;
+
+    public static function getNavigationGroup(): ?string
+    {
+        // $user = auth()->user();
+
+        // return ($user && $user->roles()->count() > 1)
+        //     ? 'Super Admin'
+        //     : null;
+        return 'Super Admin';
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -42,7 +56,7 @@ class DepartmentResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            UsersRelationManager::class
         ];
     }
 

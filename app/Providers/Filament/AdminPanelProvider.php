@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use Andreia\FilamentUiSwitcher\FilamentUiSwitcherPlugin;
 use App\Filament\Helper\CustomLogin;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\Authenticate;
@@ -12,6 +13,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -29,10 +31,19 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('')
+            ->spa()
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn() => new \Illuminate\Support\HtmlString(
+                    app(\Illuminate\Foundation\Vite::class)(['resources/css/app.css', 'resources/js/app.js'])
+                )
+            )
+            ->sidebarCollapsibleOnDesktop()
             ->login(CustomLogin::class)
             ->colors([
                 'primary' => Color::Amber,
             ])
+            ->brandName('EMMS')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
@@ -60,8 +71,39 @@ class AdminPanelProvider extends PanelProvider
             )
             ->plugins([
                 FilamentShieldPlugin::make()
+                    ->navigationGroup(function () {
+                        // Check if user is logged in to avoid errors on the login page
+                        // $user = auth()->user();
+
+                        // if (!$user) {
+                        //     return 'Super Admin'; // Default fallback
+                        // }
+
+                        // // Count the roles assigned to the current user
+                        // $rolesCount = $user->roles()->count();
+
+                        // return $rolesCount === 1
+                        //     ? 'Roles and Permissions'
+                        //     : 'Super Admin';
+                        return 'Super Admin';
+                    })
+                    ->navigationSort(3)
+                    ->gridColumns([
+                        'default' => 1,
+                        'sm' => 2,
+                        'lg' => 3
+                    ])
+                    ->sectionColumnSpan(1)
+                    ->checkboxListColumns([
+                        'default' => 1,
+                        'sm' => 2,
+                        'lg' => 4,
+                    ])
+                    ->resourceCheckboxListColumns([
+                        'default' => 1,
+                        'sm' => 2,
+                    ]),
             ])
-            ->spa()
             ->authMiddleware([
                 Authenticate::class,
             ]);

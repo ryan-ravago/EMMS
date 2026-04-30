@@ -12,9 +12,13 @@ class DepartmentForm
         return $schema
             ->components([
                 TextInput::make('dep_code')
-                    ->required(),
+                    ->label('Code')
+                    ->required()
+                    ->unique(),
                 TextInput::make('dep_name')
-                    ->required(),
+                    ->label('Name')
+                    ->required()
+                    ->unique(),
             ]);
     }
 }

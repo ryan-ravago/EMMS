@@ -108,7 +108,9 @@ class SocialiteController extends Controller
                 ->success()
                 ->send();
 
-            return redirect(Filament::getPanel('admin')->getUrl());
+            // return redirect(Filament::getPanel('admin')->getUrl());
+            return redirect()->intended(Filament::getPanel('admin')->getUrl());
+            // return redirect('/login');
         } catch (\Exception $e) {
             Log::error('Google login failed: ' . $e->getMessage());
             RateLimiter::hit($key, 60);
