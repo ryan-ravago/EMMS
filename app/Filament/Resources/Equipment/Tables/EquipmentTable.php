@@ -27,7 +27,7 @@ class EquipmentTable
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('eqm_vin')
-                    ->label('Vehicle Identification Number')
+                    ->label('VIN')
                     ->searchable(),
                 TextColumn::make('eqm_plate_num')
                     ->label('Plate #')
@@ -40,7 +40,7 @@ class EquipmentTable
                 //
             ])
             ->recordActions([
-                ViewAction::make(),
+                // ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

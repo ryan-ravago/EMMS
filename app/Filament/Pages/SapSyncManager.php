@@ -1,25 +1,70 @@
 <?php
 
-namespace App\Filament\Resources\Equipment\Pages;
+namespace App\Filament\Pages;
 
-use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Jobs\SyncEquipmentFromSap;
 use App\Models\AppSetting;
 use App\Models\Equipment;
 use App\Models\OPRC;
+use BackedEnum;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Action;
-use Filament\Actions\CreateAction;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Pages\Page;
+use UnitEnum;
+use Filament\Forms\Components\TimePicker;
+use Filament\Schemas\Schema;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
-class ListEquipment extends ListRecords
+class SapSyncManager extends Page
 {
-    protected static string $resource = EquipmentResource::class;
+    use HasPageShield, InteractsWithForms;
+
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-path';
+    protected static ?string $navigationLabel = 'SAP Sync Manager';
+    protected static string | UnitEnum | null $navigationGroup = 'Super Admin';
+    protected static ?int $navigationSort = 99;
+    protected string $view = 'filament.pages.sap-sync-manager';
+
+    public ?array $data = [];
+
+    public function mount(): void
+    {
+        $this->form->fill([
+            'value' => AppSetting::where('key', 'sap_sync_time')->value('value'),
+        ]);
+    }
+
+    public function form(Schema $schema): Schema
+    {
+        return $schema
+            ->schema([
+                TimePicker::make('value')
+                    ->label('Daily Sync Time')
+                    ->seconds(false)        // HH:MM only
+                    ->required(),
+            ])
+            ->statePath('data');
+    }
+
+    public function saveSchedule(): void
+    {
+        $data = $this->form->getState();
+
+        AppSetting::set('sap_sync_time', $data['value']);
+
+        Notification::make()
+            ->title('Schedule Updated')
+            ->body('SAP sync will now run daily at ' . Carbon::parse($data['value'])->format('g:ia'))
+            ->success()
+            ->send();
+    }
 
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
             Action::make('sync')
                 ->label('Sync from SAP')
                 ->icon('heroicon-o-arrow-path')
@@ -111,20 +156,5 @@ class ListEquipment extends ListRecords
                 })
             // ->successNotificationTitle('Sync completed successfully'),
         ];
-    }
-
-
-    public function getSubheading(): ?string
-    {
-        $setting = \App\Models\AppSetting::first();
-
-        if (! $setting?->last_equipment_sync) {
-            return "No sync data found";
-        }
-
-        // Converts the timestamp into something like "6:05 AM"
-        $timeOnly = \Carbon\Carbon::parse($setting->last_equipment_sync)->format('g:i A');
-
-        return "Last equipment sync: " . $timeOnly;
     }
 }
