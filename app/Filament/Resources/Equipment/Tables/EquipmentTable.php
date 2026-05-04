@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Equipment\Tables;
 
+use App\Filament\Resources\Equipment\EquipmentResource;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -9,6 +10,7 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class EquipmentTable
 {
@@ -39,6 +41,9 @@ class EquipmentTable
             ->filters([
                 //
             ])
+            ->recordUrl(
+                fn(Model $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
+            )
             ->recordActions([
                 // ViewAction::make(),
                 EditAction::make(),

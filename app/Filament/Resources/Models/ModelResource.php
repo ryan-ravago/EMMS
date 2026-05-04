@@ -20,7 +20,7 @@ class ModelResource extends Resource
 {
     protected static ?string $model = EquipmentModel::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCube;
 
     protected static ?string $recordTitleAttribute = 'eqmm_name';
     protected static ?string $navigationLabel = 'Models';

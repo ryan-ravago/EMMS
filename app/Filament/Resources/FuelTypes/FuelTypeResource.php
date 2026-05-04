@@ -21,7 +21,7 @@ class FuelTypeResource extends Resource
 {
     protected static ?string $model = FuelType::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBeaker;
 
     protected static ?string $recordTitleAttribute = 'fuel_name';
     protected static ?string $navigationLabel = 'Fuel Types';

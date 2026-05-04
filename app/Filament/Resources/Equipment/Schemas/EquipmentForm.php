@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Equipment\Schemas;
 
+use CodeWithDennis\FilamentSelectTree\SelectTree;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -46,6 +48,28 @@ class EquipmentForm
                             ->native(false)
                             ->searchable()
                             ->preload()
+                            ->createOptionForm([
+                                TextInput::make('eqmm_name')
+                                    ->label('Name')
+                                    ->required()
+                                    ->unique(),
+                                SelectTree::make('eqmm_eqmc_id')
+                                    ->label('Category')
+                                    ->relationship('category', 'eqmc_name', 'eqmc_parent_id'),
+                                Select::make('eqmm_brand_id')
+                                    ->label('Brand')
+                                    ->relationship('brand', 'eqmb_name')
+                                    ->native(false),
+                                Select::make('eqmm_fuel_type')
+                                    ->label('Fuel Type')
+                                    ->relationship('fuel_type', 'fuel_name')
+                                    ->native(false),
+                            ])
+                            ->createOptionAction(function (Action $action) {
+                                return $action
+                                    ->modalHeading('Add New Model')
+                                    ->modalWidth('md'); // xs, sm, md, lg, xl, 2xl
+                            })
                             ->columnSpanFull(),
                         TextInput::make('eqm_vin')
                             ->label('Vehicle Identification Number')
@@ -54,6 +78,15 @@ class EquipmentForm
                         TextInput::make('eqm_plate_num')
                             ->label('Plate Number')
                             ->placeholder('e.g. ABC 1234'),
+                        TextInput::make('eqm_serial_num')
+                            ->label('Serial #')
+                            ->placeholder('e.g. SN-000123')
+                            ->unique()
+                            ->maxLength(255),
+                        TextInput::make('eqm_engine')
+                            ->label('Engine')
+                            ->placeholder('e.g. 4JJ1')
+                            ->maxLength(255),
                     ]),
             ]);
     }

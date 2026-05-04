@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Equipment\Schemas;
 
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class EquipmentInfolist
@@ -12,20 +13,43 @@ class EquipmentInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('eqm_eqmm_id')
-                    ->numeric(),
-                TextEntry::make('eqm_name'),
-                TextEntry::make('eqm_vin')
-                    ->placeholder('-'),
-                TextEntry::make('eqm_plate_num')
-                    ->placeholder('-'),
-                TextEntry::make('eqm_prc_code')
-                    ->placeholder('-'),
-                IconEntry::make('eqm_is_active')
-                    ->boolean(),
-                TextEntry::make('eqm_updated_at')
-                    ->dateTime()
-                    ->placeholder('-'),
+                Section::make('SAP Information')
+                    ->description('Data synced from SAP. These fields are read-only.')
+                    ->icon('heroicon-o-server')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('eqm_prc_code')
+                            ->label('PRC Code'),
+                        TextEntry::make('eqm_name')
+                            ->label('Equipment Name')
+                            ->columnSpanFull(),
+                        IconEntry::make('eqm_is_active')
+                            ->label('Active')
+                            ->boolean(),
+                    ]),
+
+                Section::make('Equipment Details')
+                    ->description('Additional information you can fill in manually.')
+                    ->icon('heroicon-o-wrench-screwdriver')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('model.eqmm_name')
+                            ->label('Model')
+                            ->columnSpanFull()
+                            ->placeholder('—'),
+                        TextEntry::make('eqm_vin')
+                            ->label('Vehicle Identification Number')
+                            ->placeholder('—'),
+                        TextEntry::make('eqm_plate_num')
+                            ->label('Plate Number')
+                            ->placeholder('—'),
+                        TextEntry::make('eqm_serial_num')
+                            ->label('Serial #')
+                            ->placeholder('—'),
+                        TextEntry::make('eqm_engine')
+                            ->label('Engine')
+                            ->placeholder('—'),
+                    ]),
             ]);
     }
 }

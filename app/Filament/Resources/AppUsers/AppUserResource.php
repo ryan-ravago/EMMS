@@ -20,7 +20,7 @@ class AppUserResource extends Resource
 {
     protected static ?string $model = AppUser::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
     protected static ?string $navigationLabel = "Users";
     protected static ?string $modelLabel = 'User'; // Singular

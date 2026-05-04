@@ -21,7 +21,7 @@ class BrandResource extends Resource
 {
     protected static ?string $model = EquipmentBrand::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
     protected static ?string $recordTitleAttribute = 'eqmb_name';
     protected static ?string $navigationLabel = 'Brands';

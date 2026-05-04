@@ -16,6 +16,8 @@ class Equipment extends Model
         'eqm_vin',
         'eqm_plate_num',
         'eqm_prc_code',
+        'eqm_serial_num',
+        'eqm_engine',
         'eqm_is_active',
         'eqm_updated_at',
     ];

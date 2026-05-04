@@ -17,6 +17,13 @@ class ModelForm
                     ->label('Name')
                     ->required()
                     ->unique(),
+                Select::make('eqmm_eqmt_id')
+                    ->label('Equipment Type')
+                    ->relationship('type', 'eqmt_name')
+                    ->native(false)
+                    ->searchable()
+                    ->preload()
+                    ->exists('equipment_types', 'eqmt_id'),
                 SelectTree::make('eqmm_eqmc_id')
                     ->label('Category')
                     ->relationship('category', 'eqmc_name', 'eqmc_parent_id'),
@@ -28,6 +35,16 @@ class ModelForm
                     ->label('Fuel Type')
                     ->relationship('fuel_type', 'fuel_name')
                     ->native(false),
+                TextInput::make('eqmm_max_capacity_tons')
+                    ->label('Max Capacity (tons)')
+                    ->numeric()
+                    ->minValue(0)
+                    ->step(0.01),
+                TextInput::make('eqmm_max_reach_meters')
+                    ->label('Max Reach (meters)')
+                    ->numeric()
+                    ->minValue(0)
+                    ->step(0.01),
             ]);
     }
 }
