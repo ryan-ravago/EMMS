@@ -6,6 +6,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class BrandsTable
@@ -14,7 +15,10 @@ class BrandsTable
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('eqmb_name')
+                    ->label('Name')
+                    ->searchable()
+                    ->sortable()
             ])
             ->filters([
                 //

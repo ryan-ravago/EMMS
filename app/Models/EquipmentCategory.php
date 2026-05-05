@@ -42,4 +42,17 @@ class EquipmentCategory extends Model
 
         return implode(' > ', array_reverse($names));
     }
+
+    public function getFullPathAttribute(): string
+    {
+        $names = [];
+        $category = $this;
+
+        while ($category) {
+            $names[] = $category->eqmc_name;
+            $category = $category->parent;
+        }
+
+        return implode(' > ', array_reverse($names));
+    }
 }

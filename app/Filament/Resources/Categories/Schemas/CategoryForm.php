@@ -14,7 +14,7 @@ class CategoryForm
         return $schema
             ->components([
                 TextInput::make('eqmc_name')
-                    ->label('Namdde')
+                    ->label('Name')
                     ->required(),
                 // ->unique(table: 'equipment_categories', column: 'eqmc_name', ignoreRecord: true),
                 SelectTree::make('eqmc_parent_id')
