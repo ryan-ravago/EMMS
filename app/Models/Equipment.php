@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Equipment extends Model
 {
@@ -27,5 +28,13 @@ class Equipment extends Model
     public function model()
     {
         return $this->belongsTo(EquipmentModel::class, 'eqm_eqmm_id', 'eqmm_id');
+    }
+
+    // Equipment.php
+    public function checklistTemplates(): BelongsToMany
+    {
+        return $this->belongsToMany(ChecklistTemplate::class, 'equipment_checklist_assignments', 'eca_eqm_id', 'eca_clt_id')
+            ->using(EquipmentChecklistAssignment::class)
+            ->withPivot('eca_assigned_by', 'eca_assigned_at');
     }
 }

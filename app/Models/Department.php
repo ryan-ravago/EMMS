@@ -18,4 +18,9 @@ class Department extends Model
     {
         return $this->hasMany(AppUser::class, 'user_dep_id', 'dep_id');
     }
+
+    public function departments(): HasMany
+    {
+        return $this->hasMany(ChecklistTemplate::class, 'cli_clt_id', 'clt_id');
+    }
 }

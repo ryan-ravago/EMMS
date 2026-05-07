@@ -36,7 +36,14 @@ class ModelForm
                         return $action
                             ->modalHeading('Add New Equipment Type')
                             ->modalWidth('md'); // xs, sm, md, lg, xl, 2xl
-                    }),
+                    })
+                    ->editOptionForm([
+                        TextInput::make('eqmt_name')
+                            ->label('Name')
+                            ->required()
+                            ->unique()
+                            ->maxLength(255)
+                    ]),
                 SelectTree::make('eqmm_eqmc_id')
                     ->label('Category')
                     ->relationship('category', 'eqmc_name', 'eqmc_parent_id'),
