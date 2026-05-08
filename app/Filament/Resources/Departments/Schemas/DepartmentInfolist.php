@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Departments\Schemas;
 
+use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Filament\Schemas\Components\Grid;
@@ -30,6 +31,10 @@ class DepartmentInfolist
                                     ->label('Department Name')
                                     // ->size(TextEntrySize::Large) // Makes the name bigger
                                     ->weight(FontWeight::Bold),
+
+                                IconEntry::make('is_maintenance')
+                                    ->label('Maintenance Department')
+                                    ->boolean(),
                             ]),
                     ]),
             ]);

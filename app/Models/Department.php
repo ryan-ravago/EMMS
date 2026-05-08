@@ -10,7 +10,7 @@ class Department extends Model
     protected $table = 'departments';
     protected $primaryKey = 'dep_id';
 
-    protected $fillable = ['dep_code', 'dep_name'];
+    protected $fillable = ['dep_code', 'dep_name', 'is_maintenance'];
 
     public $timestamps = false;
 

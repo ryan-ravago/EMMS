@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Departments\Schemas;
 
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 
 class DepartmentForm
@@ -19,6 +20,9 @@ class DepartmentForm
                     ->label('Name')
                     ->required()
                     ->unique(),
+                Toggle::make('is_maintenance')
+                    ->label('Maintenance Department')
+                    ->default(false),
             ]);
     }
 }
