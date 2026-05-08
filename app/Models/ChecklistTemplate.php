@@ -48,7 +48,7 @@ class ChecklistTemplate extends Model
     {
         return $this->belongsToMany(Equipment::class, 'equipment_checklist_assignments', 'eca_clt_id', 'eca_eqm_id')
             ->using(EquipmentChecklistAssignment::class)
-            ->withPivot('eca_assigned_by', 'eca_assigned_at');
+            ->withPivot('eca_due_effectivity_dt', 'eca_due_dt', 'eca_assigned_by', 'eca_assigned_at');
     }
 
     public function equipment(): BelongsToMany

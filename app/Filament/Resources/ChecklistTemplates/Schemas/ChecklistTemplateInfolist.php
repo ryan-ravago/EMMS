@@ -6,6 +6,7 @@ use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class ChecklistTemplateInfolist
@@ -15,6 +16,7 @@ class ChecklistTemplateInfolist
         return $schema
             ->components([
                 Section::make('General Information')
+                    ->description('Basic details of the checklist template.')
                     ->columns(2)
                     ->schema([
                         TextEntry::make('clt_name')
@@ -30,6 +32,7 @@ class ChecklistTemplateInfolist
                     ]),
 
                 Section::make('Schedule & Interval')
+                    ->description('Recurrence interval and scheduled run time.')
                     ->columns(4)
                     ->hidden(fn($record) => $record->clt_cut_id == 1)
                     ->schema([
@@ -53,6 +56,9 @@ class ChecklistTemplateInfolist
                     ]),
 
                 Section::make('Checklist Items')
+                    ->description(fn(Get $get) => $get('clt_cut_id') == 2
+                        ? 'Items included in this scheduled checklist.'
+                        : 'Items included in this pre-operational checklist.')
                     ->columnSpanFull()
                     ->schema([
                         RepeatableEntry::make('checklistItems')
@@ -68,6 +74,7 @@ class ChecklistTemplateInfolist
                     ]),
 
                 Section::make('Audit')
+                    ->description('Record creation and last modification timestamps.')
                     ->columns(2)
                     // ->collapsed()
                     ->schema([

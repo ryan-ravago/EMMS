@@ -18,8 +18,7 @@ class AppUserInfolist
             ->columns(2)
             ->components([
                 Section::make('Personal Information')
-                    ->columns(3)
-                    ->columnSpan(1)
+                    ->columns(2)
                     ->schema([
                         TextEntry::make('user_fname')
                             ->label('First Name'),
@@ -27,7 +26,8 @@ class AppUserInfolist
                             ->label('Middle Name')
                             ->placeholder('-'),
                         TextEntry::make('user_lname')
-                            ->label('Last Name'),
+                            ->label('Last Name')
+                            ->columnSpanFull(),
                     ]),
 
                 Section::make('Contact Information')
@@ -44,6 +44,7 @@ class AppUserInfolist
                             ->url(fn($record) => $record->user_fb_profile_link)
                             ->openUrlInNewTab()
                             ->color('info')
+                            ->columnSpanFull()
                     ]),
 
                 Section::make('Application Access')

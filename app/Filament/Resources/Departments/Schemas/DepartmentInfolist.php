@@ -32,9 +32,6 @@ class DepartmentInfolist
                                     ->weight(FontWeight::Bold),
                             ]),
                     ]),
-            ])
-            ->extraAttributes([
-                'style' => 'margin-bottom: 30px;'
             ]);
     }
 }

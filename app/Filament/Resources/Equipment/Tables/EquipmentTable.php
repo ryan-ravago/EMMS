@@ -9,6 +9,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,9 +21,11 @@ class EquipmentTable
             ->columns([
                 TextColumn::make('eqm_prc_code')
                     ->label('PRC Code')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('eqm_name')
                     ->label('Name')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('model.eqmm_name')
                     ->label('Model')
@@ -30,16 +33,30 @@ class EquipmentTable
                     ->sortable(),
                 TextColumn::make('eqm_vin')
                     ->label('VIN')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('eqm_plate_num')
                     ->label('Plate #')
+                    ->sortable()
                     ->searchable(),
                 IconColumn::make('eqm_is_active')
                     ->label('Active')
+                    ->sortable()
                     ->boolean()
             ])
             ->filters([
-                //
+                SelectFilter::make('eqm_is_active')
+                    ->label('Status')
+                    ->options([
+                        1 => 'Active',
+                        0 => 'Inactive',
+                    ]),
+                SelectFilter::make('eqm_eqmm_id')
+                    ->label('Model')
+                    ->relationship('model', 'eqmm_name')
+                    ->searchable()
+                    ->preload()
+                    ->multiple(),
             ])
             ->recordUrl(
                 fn(Model $record): string => EquipmentResource::getUrl('view', ['record' => $record]),

@@ -20,6 +20,7 @@ class ChecklistTemplateForm
         return $schema
             ->components([
                 Section::make('General Information')
+                    ->description('Basic details of the checklist template.')
                     ->columns(2)
                     ->schema([
                         TextInput::make('clt_name')
@@ -39,6 +40,7 @@ class ChecklistTemplateForm
                     ]),
 
                 Section::make('Schedule & Interval')
+                    ->description('Recurrence interval and scheduled run time.')
                     ->columns(4)
                     ->hidden(fn(Get $get) => $get('clt_cut_id') != 2)
                     ->schema([
@@ -70,6 +72,9 @@ class ChecklistTemplateForm
                     ]),
 
                 Section::make('Checklist Items')
+                    ->description(fn(Get $get) => $get('clt_cut_id') == 2
+                        ? 'Items included in this scheduled checklist.'
+                        : 'Items included in this pre-operational checklist.')
                     ->schema([
                         Repeater::make('checklistItems')
                             ->relationship('checklistItems')

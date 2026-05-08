@@ -4,11 +4,15 @@ namespace App\Filament\Resources\Equipment\RelationManagers;
 
 use App\Filament\Resources\ChecklistTemplates\ChecklistTemplateResource;
 use App\Models\ChecklistTemplate;
+use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Actions\AttachAction;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DetachAction;
 use Filament\Actions\DetachBulkAction;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Tables\Columns\TextColumn;
@@ -53,29 +57,89 @@ class ChecklistTemplatesRelationManager extends RelationManager
             ])
             ->headerActions([
                 CreateAction::make(),
-                AttachAction::make()
-                    ->recordSelectSearchColumns(['clt_name'])
-                    ->recordTitleAttribute('clt_name')
-                    ->preloadRecordSelect()
-                    ->schema(fn(AttachAction $action) => [
-                        $action->getRecordSelect()
-                            ->live(),
+                Action::make('attachChecklistTemplateUnderEquipmentUnits')
+                    ->label('Attach')
+                    ->modalWidth('lg')
+                    ->closeModalByClickingAway(false)
+                    ->modalCloseButton(false)
+                    ->schema([
+                        Select::make('recordId')
+                            ->label('Checklist Template')
+                            ->options(function () {
+                                $attached = $this->getOwnerRecord()->checklistTemplates()->pluck('clt_id')->toArray();
+
+                                return ChecklistTemplate::with('checklistUsageType')
+                                    ->whereNotIn('clt_id', $attached)
+                                    ->orderBy('clt_name')
+                                    ->get()
+                                    ->mapWithKeys(fn($template) => [
+                                        $template->clt_id => "{$template->clt_name} — {$template->checklistUsageType?->cut_name}"
+                                    ]);
+                            })
+                            ->searchable()
+                            ->live()
+                            ->required(),
                         DateTimePicker::make('eca_due_effectivity_dt')
-                            ->label('Effectivity Date')
+                            ->label('Effectivity Date & Time')
                             ->seconds(false)
-                            ->required()
+                            ->displayFormat('M j, Y h:i A')
                             ->hidden(function (Get $get) {
-                                $templateId = $get('recordId');
-                                $template = ChecklistTemplate::find($templateId);
+                                $template = ChecklistTemplate::find($get('recordId'));
                                 return !$template || $template->clt_cut_id != 2;
-                            }),
-                    ]),
+                            })
+                    ])
+                    ->action(function (array $data): void {
+                        try {
+                            $template = ChecklistTemplate::find($data['recordId']);
+                            $owner = $this->getOwnerRecord();
+
+                            $dueEffectivityDt = null;
+                            $dueDt = null;
+
+                            if ($template && $template->clt_cut_id == 2 && !empty($data['eca_due_effectivity_dt'])) {
+                                $dueEffectivityDt = $data['eca_due_effectivity_dt'];
+
+                                $dueDt = Carbon::parse($dueEffectivityDt)
+                                    ->addYears($template->clt_interval_years ?? 0)
+                                    ->addMonths($template->clt_interval_months ?? 0)
+                                    ->addWeeks($template->clt_interval_weeks ?? 0)
+                                    ->addDays($template->clt_interval_days ?? 0);
+
+                                if (!empty($template->clt_schedule_time)) {
+                                    $scheduleTime = Carbon::parse($template->clt_schedule_time);
+                                    $dueDt->setTime($scheduleTime->hour, $scheduleTime->minute);
+                                }
+                            }
+
+                            $owner->checklistTemplates()->attach($data['recordId'], [
+                                'eca_due_effectivity_dt' => $dueEffectivityDt,
+                                'eca_due_dt' => $dueDt,
+                                'eca_assigned_by' => auth()->id(),
+                                'eca_assigned_at' => now(),
+                            ]);
+
+                            Notification::make()
+                                ->success()
+                                ->title('Template Attached')
+                                ->body("{$template->clt_name} has been successfully attached.")
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Attachment Failed')
+                                ->body($e->getMessage())
+                                ->send();
+                        }
+                    }),
             ])
             ->recordActions([
                 DetachAction::make(),
             ])
             ->toolbarActions([
                 DetachBulkAction::make(),
+            ])
+            ->extraAttributes([
+                'style' => 'margin-top: 30px;'
             ]);
     }
 }

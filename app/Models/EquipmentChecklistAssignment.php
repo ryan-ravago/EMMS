@@ -16,6 +16,8 @@ class EquipmentChecklistAssignment extends Pivot
     protected $fillable = [
         'eca_clt_id',
         'eca_eqm_id',
+        'eca_due_effectivity_dt',
+        'eca_due_dt',
         'eca_assigned_by',
         'eca_assigned_at',
     ];
