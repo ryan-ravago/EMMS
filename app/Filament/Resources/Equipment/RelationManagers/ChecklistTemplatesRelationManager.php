@@ -36,7 +36,8 @@ class ChecklistTemplatesRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('department.dep_name')
                     ->label('Department')
-                    ->sortable(),
+                    ->sortable()
+                    ->visible(fn() => auth()->user()->hasRole('super_admin')),
                 TextColumn::make('clt_interval_years')
                     ->label('Interval')
                     ->formatStateUsing(function ($record) {
@@ -49,11 +50,15 @@ class ChecklistTemplatesRelationManager extends RelationManager
 
                         $interval = $parts ? implode(' ', $parts) : '—';
                         $time = $record->clt_schedule_time
-                            ? \Carbon\Carbon::parse($record->clt_schedule_time)->format('h:i A')
+                            ? Carbon::parse($record->clt_schedule_time)->format('h:i A')
                             : null;
 
                         return $time ? "{$interval} @ {$time}" : $interval;
-                    })
+                    }),
+                TextColumn::make('eca_due_dt')
+                    ->label('Due Date')
+                    ->searchable()
+                    ->formatStateUsing(fn($state) => $state ? Carbon::parse($state)->format('M j, Y h:i A') : '-')
             ])
             ->headerActions([
                 CreateAction::make(),

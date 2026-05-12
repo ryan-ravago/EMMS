@@ -48,12 +48,16 @@ class EquipmentUnitsRelationManager extends RelationManager
                     ->label('Model')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('eqm_vin')
-                    ->label('VIN')
-                    ->searchable(),
+                // TextColumn::make('eqm_vin')
+                //     ->label('VIN')
+                //     ->searchable(),
                 TextColumn::make('eqm_plate_num')
                     ->label('Plate #')
+                    ->searchable(),
+                TextColumn::make('eca_due_dt')
+                    ->label('Due Date')
                     ->searchable()
+                    ->formatStateUsing(fn($state) => $state ? Carbon::parse($state)->format('M j, Y h:i A') : '-')
             ])
             ->headerActions([
                 // CreateAction::make(),
@@ -120,8 +124,7 @@ class EquipmentUnitsRelationManager extends RelationManager
                             ->label('Effectivity Date & Time')
                             ->seconds(false)
                             ->displayFormat('M j, Y h:i A')
-                            ->visible(fn() => $this->getOwnerRecord()->clt_cut_id === 2)
-                            ->native(false),
+                            ->visible(fn() => $this->getOwnerRecord()->clt_cut_id === 2),
                     ])
                     ->action(function (array $data): void {
                         try {

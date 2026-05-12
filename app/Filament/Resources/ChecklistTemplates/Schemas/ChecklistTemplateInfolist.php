@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ChecklistTemplates\Schemas;
 
+use Carbon\Carbon;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -25,10 +26,8 @@ class ChecklistTemplateInfolist
                         TextEntry::make('checklistUsageType.cut_name')
                             ->label('Usage Type'),
                         TextEntry::make('department.dep_name')
-                            ->label('Department'),
-                        IconEntry::make('clt_is_active')
-                            ->label('Active')
-                            ->boolean(),
+                            ->label('Department')
+                            ->visible(fn() => auth()->user()?->hasRole('super_admin'))
                     ]),
 
                 Section::make('Schedule & Interval')
@@ -50,8 +49,8 @@ class ChecklistTemplateInfolist
                             ->placeholder('-'),
                         TextEntry::make('clt_schedule_time')
                             ->label('Schedule Time')
-                            ->time()
                             ->placeholder('-')
+                            ->formatStateUsing(fn($state) => $state ? Carbon::createFromFormat('H:i:s', $state)->format('h:i A') : '-')
                             ->columnSpanFull(),
                     ]),
 
@@ -61,15 +60,11 @@ class ChecklistTemplateInfolist
                         : 'Items included in this pre-operational checklist.')
                     ->columnSpanFull()
                     ->schema([
-                        RepeatableEntry::make('checklistItems')
-                            ->schema([
-                                TextEntry::make('cli_name')
-                                    ->label('Item Name'),
-                                TextEntry::make('cli_sort_order')
-                                    ->label('Order'),
-                            ])
-                            ->columns(2)
-                            ->grid(3)
+                        TextEntry::make('checklistItems')
+                            ->label('')
+                            ->state(fn($record) => $record->checklistItems->pluck('cli_name')->toArray())
+                            ->listWithLineBreaks()
+                            ->bulleted()
                             ->columnSpanFull(),
                     ]),
 

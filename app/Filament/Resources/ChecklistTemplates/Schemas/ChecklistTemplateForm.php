@@ -83,11 +83,11 @@ class ChecklistTemplateForm
                                     ->label('Item Name')
                                     ->required()
                                     ->columnSpan(3),
-                                TextInput::make('cli_sort_order')
-                                    ->label('Sort Order')
-                                    ->numeric()
-                                    ->default(0)
-                                    ->columnSpan(1),
+                                // TextInput::make('cli_sort_order')
+                                //     ->label('Sort Order')
+                                //     ->numeric()
+                                //     ->default(0)
+                                //     ->columnSpan(1),
                             ])
                             ->mutateRelationshipDataBeforeCreateUsing(function (array $data): array {
                                 $data['cli_created_by']      = auth()->id();
