@@ -30,6 +30,11 @@ class AppUser extends Authenticatable implements HasName, FilamentUser
     public $timestamps = false;
 
     // This method tells Filament what to display in the user menu
+    public function getFullNameAttribute(): string
+    {
+        return trim("{$this->user_fname} {$this->user_lname}");
+    }
+
     public function getFilamentName(): string
     {
         return "{$this->user_fname} {$this->user_lname}";

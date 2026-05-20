@@ -30,11 +30,36 @@ class Equipment extends Model
         return $this->belongsTo(EquipmentModel::class, 'eqm_eqmm_id', 'eqmm_id');
     }
 
-    // Equipment.php
-    public function checklistTemplates(): BelongsToMany
+    public function tasks(): BelongsToMany
     {
-        return $this->belongsToMany(ChecklistTemplate::class, 'equipment_checklist_assignments', 'eca_eqm_id', 'eca_clt_id')
-            ->using(EquipmentChecklistAssignment::class)
-            ->withPivot('eca_assigned_by', 'eca_assigned_at');
+        return $this->belongsToMany(Task::class, 'equipment_task_checklist_template', 'etct_eqm_id', 'etct_task_id');
     }
+
+    public function scheduledTasks(): BelongsToMany
+    {
+        return $this->belongsToMany(Task::class, 'equipment_tasks_schedules', 'ets_eqm_id', 'ets_task_id')
+            ->withPivot([
+                'ets_id',
+                'ets_dep_id',
+                'ets_sort_order',
+                'ets_itrv_years',
+                'ets_itrv_months',
+                'ets_itrv_weeks',
+                'ets_itrv_days',
+                'ets_sched_time',
+                'ets_due_effectivity_dt',
+                'ets_due_dt',
+                'ets_assigned_by',
+                'ets_assigned_at'
+            ]);
+    }
+
+    // protected static function booted(): void
+    // {
+    //     $bust = fn() => cache()->forget('equipment_count');
+
+    //     static::created($bust);
+    //     static::updated($bust);
+    //     static::deleted($bust);
+    // }
 }

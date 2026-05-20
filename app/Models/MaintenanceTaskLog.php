@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MaintenanceTaskLog extends Model
 {
@@ -19,4 +20,24 @@ class MaintenanceTaskLog extends Model
     ];
 
     public $timestamps = false;
+
+    public function maintenanceTask(): BelongsTo
+    {
+        return $this->belongsTo(MaintenanceTask::class, 'mtl_mt_id');
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class, 'mtl_status_id');
+    }
+
+    public function action(): BelongsTo
+    {
+        return $this->belongsTo(Action::class, 'mtl_last_act_made');
+    }
+
+    public function logBy(): BelongsTo
+    {
+        return $this->belongsTo(AppUser::class, 'mtl_by');
+    }
 }

@@ -9,6 +9,8 @@ class Action extends Model
 {
     protected $table = 'actions';
     protected $primaryKey = 'a_id';
+    protected $keyType = 'string';
+    public $incrementing = false;
 
     protected $fillable = [
         'a_present_tense',
@@ -17,8 +19,8 @@ class Action extends Model
 
     public $timestamps = false;
 
-    // public function maintenanceTaskLogs(): HasMany
-    // {
-    //     return $this->hasMany(MaintenanceTaskLog::class, 'mtl_last_act_made');
-    // }
+    public function maintenanceTaskLogs(): HasMany
+    {
+        return $this->hasMany(MaintenanceTaskLog::class, 'mtl_last_act_made');
+    }
 }

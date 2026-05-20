@@ -15,14 +15,16 @@ class MaintenanceTask extends Model
         'mt_eqm_id',
         'mt_eqm_log',
         'mt_dep_id',
-        'mt_clt_id',
-        'mt_clt_log',
-        'mt_cli_id',
-        'mt_cli_log',
+        'mt_ets_id',
+        'mt_task_id',
+        'mt_task_log',
         'mt_status_id',
+        'mt_due_dt',
         'mt_remarks',
         'mt_scheduled_dt',
-        'mt_closed_dt'
+        'mt_closed_dt',
+        'mt_by',
+        'mt_dt',
     ];
 
     public $timestamps = false;
@@ -37,18 +39,28 @@ class MaintenanceTask extends Model
         return $this->belongsTo(Equipment::class, 'mt_eqm_id');
     }
 
-    public function checklistTemplate(): BelongsTo
+    public function task(): BelongsTo
     {
-        return $this->belongsTo(ChecklistTemplate::class, 'mt_clt_id');
+        return $this->belongsTo(Task::class, 'mt_task_id');
     }
 
-    public function checklistItem(): BelongsTo
+    public function schedule(): BelongsTo
     {
-        return $this->belongsTo(ChecklistItem::class, 'mt_cli_id');
+        return $this->belongsTo(EquipmentTasksSchedule::class, 'mt_ets_id');
+    }
+
+    public function maintenanceTaskLogs(): HasMany
+    {
+        return $this->hasMany(MaintenanceTaskLog::class, 'mtl_mt_id');
     }
 
     public function status(): BelongsTo
     {
         return $this->belongsTo(Status::class, 'mt_status_id');
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(AppUser::class, 'mt_by', 'user_id');
     }
 }

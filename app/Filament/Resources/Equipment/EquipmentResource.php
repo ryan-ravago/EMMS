@@ -6,7 +6,6 @@ use App\Filament\Resources\Equipment\Pages\CreateEquipment;
 use App\Filament\Resources\Equipment\Pages\EditEquipment;
 use App\Filament\Resources\Equipment\Pages\ListEquipment;
 use App\Filament\Resources\Equipment\Pages\ViewEquipment;
-use App\Filament\Resources\Equipment\RelationManagers\ChecklistTemplatesRelationManager;
 use App\Filament\Resources\Equipment\Schemas\EquipmentForm;
 use App\Filament\Resources\Equipment\Schemas\EquipmentInfolist;
 use App\Filament\Resources\Equipment\Tables\EquipmentTable;
@@ -29,6 +28,16 @@ class EquipmentResource extends Resource
     protected static ?string $pluralModelLabel = 'Equipments';
     protected static ?string $slug = 'equipments';
 
+    // public static function getNavigationBadge(): ?string
+    // {
+    //     return cache()->remember('equipment_count', 60, fn() => static::getModel()::count());
+    // }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+
     public static function form(Schema $schema): Schema
     {
         return EquipmentForm::configure($schema);
@@ -47,7 +56,7 @@ class EquipmentResource extends Resource
     public static function getRelations(): array
     {
         return [
-            ChecklistTemplatesRelationManager::class
+            //
         ];
     }
 

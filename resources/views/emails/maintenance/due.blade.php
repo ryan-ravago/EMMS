@@ -24,10 +24,7 @@
                     Department</th>
                 <th
                     style="text-align:left; padding: 10px 12px; border-bottom: 2px solid #e1e1e1; background: #f7f7f7; font-weight: 600;">
-                    Checklist</th>
-                <th
-                    style="text-align:left; padding: 10px 12px; border-bottom: 2px solid #e1e1e1; background: #f7f7f7; font-weight: 600;">
-                    Item</th>
+                    Task</th>
                 <th
                     style="text-align:left; padding: 10px 12px; border-bottom: 2px solid #e1e1e1; background: #f7f7f7; font-weight: 600;">
                     Due Date</th>
@@ -41,8 +38,7 @@
                 <tr>
                     <td style="padding: 12px; border-bottom: 1px solid #ebebeb;">{{ $task->eqm_name }}</td>
                     <td style="padding: 12px; border-bottom: 1px solid #ebebeb;">{{ $task->dep_name }}</td>
-                    <td style="padding: 12px; border-bottom: 1px solid #ebebeb;">{{ $task->clt_name }}</td>
-                    <td style="padding: 12px; border-bottom: 1px solid #ebebeb;">{{ $task->mt_cli_log }}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #ebebeb;">{{ $task->mt_task_log }}</td>
                     <td style="padding: 12px; border-bottom: 1px solid #ebebeb;">
                         {{ \Carbon\Carbon::parse($task->mt_due_dt)->format('M d, Y | h:i A') }}</td>
                     <td style="padding: 12px; border-bottom: 1px solid #ebebeb;">{{ $task->status_title }}</td>

@@ -9,6 +9,8 @@ class Status extends Model
 {
     protected $table = 'statuses';
     protected $primaryKey = 'status_id';
+    protected $keyType = 'string';
+    public $incrementing = false;
 
     protected $fillable = ['status_title'];
 
