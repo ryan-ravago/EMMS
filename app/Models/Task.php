@@ -34,6 +34,9 @@ class Task extends Model
             if (!$task->task_created_at) {
                 $task->task_created_at = $now;
             }
+            if (!$task->task_dep_id) {
+                $task->task_dep_id = auth()->user()?->user_dep_id; // ← current user's dept
+            }
             if (!$task->task_last_updated_by) {
                 $task->task_last_updated_by = auth()->id();
             }
@@ -43,8 +46,10 @@ class Task extends Model
         });
 
         static::updating(function (Task $task) {
+            $now = now();
+
             $task->task_last_updated_by = auth()->id();
-            $task->task_last_updated_at = now();
+            $task->task_last_updated_at = $now;
         });
     }
 
@@ -58,14 +63,19 @@ class Task extends Model
         return $this->belongsTo(TaskUsageType::class, 'task_tut_id', 'tut_id');
     }
 
-    public function creator(): BelongsTo
+    public function taskUsageType(): BelongsTo
+    {
+        return $this->belongsTo(TaskUsageType::class, 'task_tut_id', 'tut_id');
+    }
+
+    public function createdBy(): BelongsTo
     {
         return $this->belongsTo(AppUser::class, 'task_created_by', 'user_id');
     }
 
-    public function lastUpdatedByDepartment(): BelongsTo
+    public function lastUpdatedBy(): BelongsTo
     {
-        return $this->belongsTo(Department::class, 'task_last_updated_by', 'dep_id');
+        return $this->belongsTo(AppUser::class, 'task_last_updated_by', 'user_id');
     }
 
     public function equipmentUnitsForTemplate(): BelongsToMany

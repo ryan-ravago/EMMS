@@ -49,9 +49,9 @@ class MaintenanceTaskResource extends Resource
     {
         return [
             'index' => ListMaintenanceTasks::route('/'),
-            'create' => CreateMaintenanceTask::route('/create'),
+            // 'create' => CreateMaintenanceTask::route('/create'),
             'view' => ViewMaintenanceTask::route('/{record}'),
-            'edit' => EditMaintenanceTask::route('/{record}/edit'),
+            // 'edit' => EditMaintenanceTask::route('/{record}/edit'),
         ];
     }
 }

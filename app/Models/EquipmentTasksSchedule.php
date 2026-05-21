@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 class EquipmentTasksSchedule extends Model
 {
@@ -25,22 +26,48 @@ class EquipmentTasksSchedule extends Model
         'ets_due_dt',
         'ets_assigned_by',
         'ets_assigned_at',
+        'ets_last_assigned_by',
+        'ets__last_assigned_at'
     ];
 
     protected static function booted(): void
     {
         static::creating(function (EquipmentTasksSchedule $schedule) {
+            $now = now();
+
+            // Auto-fill department from logged-in user
+            if (!$schedule->ets_dep_id) {
+                $schedule->ets_dep_id = auth()->user()->user_dep_id;
+            }
+
             if (!$schedule->ets_assigned_by) {
                 $schedule->ets_assigned_by = auth()->id();
             }
             if (!$schedule->ets_assigned_at) {
-                $schedule->ets_assigned_at = now();
+                $schedule->ets_assigned_at = $now;
             }
+
+            // Auto-calculate due date from interval
+            $schedule->ets_due_dt = Carbon::parse($schedule->ets_due_effectivity_dt)
+                ->addYears($schedule->ets_itrv_years ?? 0)
+                ->addMonths($schedule->ets_itrv_months ?? 0)
+                ->addWeeks($schedule->ets_itrv_weeks ?? 0)
+                ->addDays($schedule->ets_itrv_days ?? 0)
+                ->setTimeFromTimeString($schedule->ets_sched_time ?? '00:00:00');
         });
 
         static::updating(function (EquipmentTasksSchedule $schedule) {
-            $schedule->ets_assigned_by = auth()->id();
-            $schedule->ets_assigned_at = now();
+            $now = now();
+
+            $schedule->ets_last_assigned_by = auth()->id();
+            $schedule->ets_last_assigned_at = $now;
+
+            $schedule->ets_due_dt = Carbon::parse($schedule->ets_due_effectivity_dt)
+                ->addYears($schedule->ets_itrv_years ?? 0)
+                ->addMonths($schedule->ets_itrv_months ?? 0)
+                ->addWeeks($schedule->ets_itrv_weeks ?? 0)
+                ->addDays($schedule->ets_itrv_days ?? 0)
+                ->setTimeFromTimeString($schedule->ets_sched_time ?? '00:00:00');
         });
     }
 
@@ -62,5 +89,10 @@ class EquipmentTasksSchedule extends Model
     public function assignedBy(): BelongsTo
     {
         return $this->belongsTo(AppUser::class, 'ets_assigned_by', 'user_id');
+    }
+
+    public function lastAssignedBy(): BelongsTo
+    {
+        return $this->belongsTo(AppUser::class, 'ets_last_assigned_by', 'user_id');
     }
 }

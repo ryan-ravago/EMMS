@@ -7,6 +7,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class TasksTable
@@ -16,28 +17,20 @@ class TasksTable
         return $table
             ->columns([
                 TextColumn::make('task_name')
-                    ->searchable(),
-                TextColumn::make('task_dep_id')
-                    ->numeric()
+                    ->label('Task Name')
+                    ->searchable()
                     ->sortable(),
-                TextColumn::make('task_tut_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('task_created_by')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('task_created_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('task_last_updated_by')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('task_last_updated_at')
-                    ->dateTime()
+                TextColumn::make('taskUsageType.tut_name')
+                    ->label('Usage Type')
+                    ->searchable()
                     ->sortable(),
             ])
             ->filters([
-                //
+                SelectFilter::make('task_tut_id')
+                    ->label('Usage Type')
+                    ->relationship('taskUsageType', 'tut_name')
+                    ->searchable()
+                    ->preload(),
             ])
             ->recordActions([
                 ViewAction::make(),

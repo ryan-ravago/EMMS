@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Equipment extends Model
 {
@@ -52,6 +53,11 @@ class Equipment extends Model
                 'ets_assigned_by',
                 'ets_assigned_at'
             ]);
+    }
+
+    public function equipmentTasksSchedules(): HasMany
+    {
+        return $this->hasMany(EquipmentTasksSchedule::class, 'ets_eqm_id', 'eqm_id');
     }
 
     // protected static function booted(): void

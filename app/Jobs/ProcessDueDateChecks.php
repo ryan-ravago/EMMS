@@ -13,6 +13,7 @@ use App\Models\AppUser;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class ProcessDueDateChecks implements ShouldQueue
 {
@@ -39,7 +40,7 @@ class ProcessDueDateChecks implements ShouldQueue
 
         DB::transaction(function () use ($now, &$etsIds) {
             $etsIds = $this->processEquipmentTasksSchedules($now);
-            $this->processMaintenanceTasks($now);
+            // $this->processMaintenanceTasks($now);
         });
 
         // send notifications AFTER transaction commits
@@ -58,12 +59,8 @@ class ProcessDueDateChecks implements ShouldQueue
         DB::table('equipment_tasks_schedules as ets')
             ->join('tasks as t', 't.task_id', '=', 'ets.ets_task_id')
             ->join('equipment_units as equ', 'equ.eqm_id', '=', 'ets.ets_eqm_id')
-            ->where('ets.ets_due_dt', '<=', $now)
             ->whereNotNull('ets.ets_due_dt')
-            ->where(function ($query) use ($now) {
-                $query->whereNull('ets.ets_sched_time')
-                      ->orWhereRaw('TIME(?) >= ets.ets_sched_time', [$now]);
-            })
+            ->where('ets.ets_due_dt', '<=', $now)
             ->select([
                 'equ.eqm_name',
                 'ets.ets_id',
@@ -81,9 +78,12 @@ class ProcessDueDateChecks implements ShouldQueue
             ->orderBy('ets.ets_due_dt')
             ->chunk(200, function ($schedules) use ($now, &$allEtsIds) {
                 $insert = [];
+                $batchId = Str::uuid();
+                $scheduleIds = $schedules->pluck('ets_id')->toArray();
 
                 foreach ($schedules as $row) {
                     $insert[] = [
+                        'mt_batch_id'     => $batchId,
                         'mt_eqm_id'       => $row->ets_eqm_id,
                         'mt_eqm_log'      => $row->eqm_name,
                         'mt_dep_id'       => $row->ets_dep_id,
@@ -93,7 +93,7 @@ class ProcessDueDateChecks implements ShouldQueue
                         'mt_status_id'    => 'pnd',
                         'mt_scheduled_dt' => $row->ets_due_dt,
                         'mt_due_dt'       => $row->ets_due_dt,
-                        'mt_remarks'      => 'The task is system-generated',
+                        'mt_remarks'      => 'System-generated',
                         'mt_by'           => null,
                         'mt_dt'           => $now
                     ];
@@ -103,18 +103,21 @@ class ProcessDueDateChecks implements ShouldQueue
                     return;
                 }
 
-                $insertedIds = [];
-                foreach ($insert as $record) {
-                    $insertedIds[] = DB::table('maintenance_tasks')->insertGetId($record);
-                }
+                DB::table('maintenance_tasks')->insert($insert);
+
+                $insertedIds = DB::table('maintenance_tasks')
+                    ->where('mt_batch_id', $batchId)
+                    ->select(['mt_id', 'mt_due_dt'])
+                    ->get();
 
                 $logs = [];
                 foreach ($insertedIds as $mtId) {
                     $logs[] = [
-                        'mtl_mt_id' => $mtId,
+                        'mtl_mt_id' => $mtId->mt_id,
                         'mtl_status_id' => 'pnd',
+                        'mtl_due_dt' => $mtId->mt_due_dt,
                         'mtl_last_act_made' => 'create',
-                        'mtl_remarks' => 'The task is system-generated',
+                        'mtl_remarks' => 'System-generated',
                         'mtl_by' => null,
                         'mtl_dt' => $now,
                     ];
@@ -124,41 +127,14 @@ class ProcessDueDateChecks implements ShouldQueue
                     DB::table('maintenance_task_logs')->insert($logs);
                 }
 
-                foreach ($schedules as $row) {
-                    $nextDue = null;
-                    if ($row->ets_itrv_years || $row->ets_itrv_months || $row->ets_itrv_weeks || $row->ets_itrv_days) {
-                        $dt = Carbon::parse($row->ets_due_dt);
-                        if ($row->ets_itrv_years) {
-                            $dt->addYears($row->ets_itrv_years);
-                        }
-                        if ($row->ets_itrv_months) {
-                            $dt->addMonths($row->ets_itrv_months);
-                        }
-                        if ($row->ets_itrv_weeks) {
-                            $dt->addWeeks($row->ets_itrv_weeks);
-                        }
-                        if ($row->ets_itrv_days) {
-                            $dt->addDays($row->ets_itrv_days);
-                        }
-                        if ($row->ets_sched_time) {
-                            $timeParts = explode(':', $row->ets_sched_time);
-                            if (count($timeParts) >= 2) {
-                                $dt->setTime((int)$timeParts[0], (int)$timeParts[1], (int)($timeParts[2] ?? 0));
-                            }
-                        }
-                        $nextDue = $dt;
-                    }
+                DB::table('equipment_tasks_schedules')
+                    ->whereIn('ets_id', $scheduleIds)
+                    ->update(['ets_due_dt' => null]);
 
-                    DB::table('equipment_tasks_schedules')
-                        ->where('ets_id', $row->ets_id)
-                        ->update(['ets_due_dt' => $nextDue]);
-                }
-
-                $etsIds = $schedules->pluck('ets_id')->toArray();
-                $allEtsIds = array_merge($allEtsIds, $etsIds);
+                $allEtsIds = array_merge($allEtsIds, $scheduleIds);
 
                 Log::info('[DueDateChecks] Created maintenance tasks & advanced ets_due_dt', [
-                    'ets_ids' => $etsIds,
+                    'ets_ids' => $allEtsIds,
                     'tasks_count' => count($insert),
                 ]);
             });

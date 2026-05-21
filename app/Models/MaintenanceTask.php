@@ -12,6 +12,7 @@ class MaintenanceTask extends Model
     protected $primaryKey = 'mt_id';
 
     protected $fillable = [
+        'mt_batch_id',
         'mt_eqm_id',
         'mt_eqm_log',
         'mt_dep_id',
