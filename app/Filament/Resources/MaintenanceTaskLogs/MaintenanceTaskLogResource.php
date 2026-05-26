@@ -54,7 +54,7 @@ class MaintenanceTaskLogResource extends Resource
         return [
             'index' => ListMaintenanceTaskLogs::route('/'),
             'create' => CreateMaintenanceTaskLog::route('/create'),
-            'view' => ViewMaintenanceTaskLog::route('/{record}'),
+            // 'view' => ViewMaintenanceTaskLog::route('/{record}'),
             'edit' => EditMaintenanceTaskLog::route('/{record}/edit'),
         ];
     }

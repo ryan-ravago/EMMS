@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -50,5 +51,10 @@ class AppUser extends Authenticatable implements HasName, FilamentUser
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class, 'user_dep_id');
+    }
+
+    public function workOrders(): BelongsToMany
+    {
+        return $this->belongsToMany(WorkOrder::class, 'work_order_assignments', 'woa_worker_id', 'woa_wo_id', 'user_id', 'wo_id');
     }
 }

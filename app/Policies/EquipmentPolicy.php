@@ -72,4 +72,9 @@ class EquipmentPolicy
         return $authUser->can('Reorder:EquipmentResource');
     }
 
+    public function sync(AuthUser $authUser, Equipment $equipment): bool
+    {
+        return $authUser->can('Sync:EquipmentResource');
+    }
+
 }

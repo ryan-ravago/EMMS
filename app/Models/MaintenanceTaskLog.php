@@ -13,6 +13,7 @@ class MaintenanceTaskLog extends Model
     protected $fillable = [
         'mtl_mt_id',
         'mtl_status_id',
+        'mtl_due_dt',
         'mtl_last_act_made',
         'mtl_remarks',
         'mtl_by',

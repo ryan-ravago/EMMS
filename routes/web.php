@@ -14,3 +14,9 @@ use App\Http\Controllers\SocialiteController;
 //     ->name('socialite.callback');
 Route::get('/auth/google', [SocialiteController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [SocialiteController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+
+Route::get('/wo-preview-confirmation', function () {
+    $workOrder = \App\Models\WorkOrder::with(['priority', 'createdBy'])->first();
+
+    return new \App\Mail\WorkOrderConfirmationMail($workOrder);
+});

@@ -57,7 +57,12 @@ class Equipment extends Model
 
     public function equipmentTasksSchedules(): HasMany
     {
-        return $this->hasMany(EquipmentTasksSchedule::class, 'ets_eqm_id', 'eqm_id');
+        // return $this->hasMany(EquipmentTasksSchedule::class, 'ets_eqm_id', 'eqm_id');
+        return $this->hasMany(EquipmentTasksSchedule::class, 'ets_eqm_id', 'eqm_id')
+            ->when(
+                auth()->check() && !auth()->user()->hasRole('super_admin'),
+                fn($query) => $query->where('ets_dep_id', auth()->user()->user_dep_id)
+            );
     }
 
     // protected static function booted(): void

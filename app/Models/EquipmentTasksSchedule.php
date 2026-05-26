@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class EquipmentTasksSchedule extends Model
 {
@@ -47,13 +48,22 @@ class EquipmentTasksSchedule extends Model
                 $schedule->ets_assigned_at = $now;
             }
 
-            // Auto-calculate due date from interval
-            $schedule->ets_due_dt = Carbon::parse($schedule->ets_due_effectivity_dt)
-                ->addYears($schedule->ets_itrv_years ?? 0)
-                ->addMonths($schedule->ets_itrv_months ?? 0)
-                ->addWeeks($schedule->ets_itrv_weeks ?? 0)
-                ->addDays($schedule->ets_itrv_days ?? 0)
-                ->setTimeFromTimeString($schedule->ets_sched_time ?? '00:00:00');
+            // Only calculate due date if no open maintenance task exists for same equipment + task
+            $hasOpenTask = DB::table('maintenance_tasks')
+                ->where('mt_eqm_id', $schedule->ets_eqm_id)
+                ->where('mt_task_id', $schedule->ets_task_id)
+                ->whereIn('mt_status_id', ['pnd', 'snz', 'inprog'])
+                ->exists();
+
+            if (!$hasOpenTask) {
+                // Auto-calculate due date from interval
+                $schedule->ets_due_dt = Carbon::parse($schedule->ets_due_effectivity_dt)
+                    ->addYears($schedule->ets_itrv_years ?? 0)
+                    ->addMonths($schedule->ets_itrv_months ?? 0)
+                    ->addWeeks($schedule->ets_itrv_weeks ?? 0)
+                    ->addDays($schedule->ets_itrv_days ?? 0)
+                    ->setTimeFromTimeString($schedule->ets_sched_time ?? '00:00:00');
+            }
         });
 
         static::updating(function (EquipmentTasksSchedule $schedule) {
@@ -62,12 +72,20 @@ class EquipmentTasksSchedule extends Model
             $schedule->ets_last_assigned_by = auth()->id();
             $schedule->ets_last_assigned_at = $now;
 
-            $schedule->ets_due_dt = Carbon::parse($schedule->ets_due_effectivity_dt)
-                ->addYears($schedule->ets_itrv_years ?? 0)
-                ->addMonths($schedule->ets_itrv_months ?? 0)
-                ->addWeeks($schedule->ets_itrv_weeks ?? 0)
-                ->addDays($schedule->ets_itrv_days ?? 0)
-                ->setTimeFromTimeString($schedule->ets_sched_time ?? '00:00:00');
+            // Only recalculate due date if no open maintenance task exists
+            $hasOpenTask = DB::table('maintenance_tasks')
+                ->where('mt_ets_id', $schedule->ets_id)
+                ->whereIn('mt_status_id', ['pnd', 'snz', 'inprog']) // add any other "open" statuses
+                ->exists();
+
+            if (!$hasOpenTask) {
+                $schedule->ets_due_dt = Carbon::parse($schedule->ets_due_effectivity_dt)
+                    ->addYears($schedule->ets_itrv_years ?? 0)
+                    ->addMonths($schedule->ets_itrv_months ?? 0)
+                    ->addWeeks($schedule->ets_itrv_weeks ?? 0)
+                    ->addDays($schedule->ets_itrv_days ?? 0)
+                    ->setTimeFromTimeString($schedule->ets_sched_time ?? '00:00:00');
+            }
         });
     }
 

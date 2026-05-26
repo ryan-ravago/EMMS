@@ -62,10 +62,10 @@ class ViewMaintenanceTask extends ViewRecord
                     ->icon(fn() => DB::table('actions')->where('a_id', 'snz')->value('a_icon'))
                     ->visible(fn(MaintenanceTask $record): bool => in_array($record->mt_status_id, ['pnd']))
                     ->schema([
-                        DatePicker::make('mtl_due_dt')
+                        DateTimePicker::make('mtl_due_dt')
                             ->label('Extend Due Date')
-                            ->displayFormat('M d, Y')
-                            ->native(false)
+                            ->displayFormat('M d, Y | h:i A')
+                            ->seconds(false)
                             ->required()
                             // ->minDate(fn(MaintenanceTask $record) => Carbon::parse($record->mt_due_dt)->addDay())
                             ->rules([
@@ -104,7 +104,7 @@ class ViewMaintenanceTask extends ViewRecord
                                     'mtl_mt_id' => $record->mt_id,
                                     'mtl_status_id' => 'snz',
                                     'mtl_due_dt' => $data['mtl_due_dt'],
-                                    'mtl_last_act_made' => 'snooze',
+                                    'mtl_last_act_made' => 'snz',
                                     'mtl_remarks' => $data['mtl_remarks'],
                                     'mtl_by' => auth()->id(),
                                     'mtl_dt' => $now,
@@ -162,7 +162,7 @@ class ViewMaintenanceTask extends ViewRecord
                                 MaintenanceTaskLog::create([
                                     'mtl_mt_id' => $record->mt_id,
                                     'mtl_status_id' => 'cmp',
-                                    'mtl_last_act_made' => 'create',
+                                    'mtl_last_act_made' => 'mac',
                                     'mtl_remarks' => $data['mtl_remarks'],
                                     'mtl_by' => auth()->id(),
                                     'mtl_dt' => $now,

@@ -4,8 +4,93 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1a54a758af3e93463cf5bc977a52c33e",
+    "content-hash": "780ccfb477aea35d9e7620b973a7556c",
     "packages": [
+        {
+            "name": "al-saloul/filament-image-gallery",
+            "version": "v3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/al-saloul/filament-image-gallery.git",
+                "reference": "68ed452b1a6fa1a943ba61292164441d09c62b3a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/al-saloul/filament-image-gallery/zipball/68ed452b1a6fa1a943ba61292164441d09c62b3a",
+                "reference": "68ed452b1a6fa1a943ba61292164441d09c62b3a",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^3.0 || ^4.0 || ^5.0",
+                "filament/forms": "^3.0 || ^4.0 || ^5.0",
+                "filament/infolists": "^3.0 || ^4.0 || ^5.0",
+                "filament/tables": "^3.0 || ^4.0 || ^5.0",
+                "php": "^8.2",
+                "spatie/laravel-package-tools": "^1.15.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "nunomaduro/collision": "^7.9 || ^8.0",
+                "orchestra/testbench": "^8.0 || ^9.0 || ^10.0",
+                "pestphp/pest": "^2.1 || ^3.0",
+                "pestphp/pest-plugin-arch": "^2.0 || ^3.0",
+                "pestphp/pest-plugin-laravel": "^2.0 || ^3.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Alsaloul\\ImageGallery\\ImageGalleryServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Alsaloul\\ImageGallery\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mohammed Alsaloul",
+                    "email": "eng.alsaloul.mohammed@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A Filament plugin for displaying image galleries with zoom, rotate, and flip capabilities",
+            "homepage": "https://github.com/al-saloul/filament-image-gallery",
+            "keywords": [
+                "Viewer",
+                "al-saloul",
+                "filament",
+                "flip",
+                "flip-image",
+                "fullscreen-view",
+                "gallery-controls",
+                "image-gallery",
+                "image-navigation",
+                "image-preview",
+                "image-rotate",
+                "image-slider",
+                "image-viewer",
+                "laravel",
+                "lightbox",
+                "mirror-image",
+                "next-prev",
+                "photo-gallery",
+                "rotate",
+                "slideshow",
+                "zoom"
+            ],
+            "support": {
+                "issues": "https://github.com/al-saloul/filament-image-gallery/issues",
+                "source": "https://github.com/al-saloul/filament-image-gallery"
+            },
+            "time": "2026-01-20T21:36:59+00:00"
+        },
         {
             "name": "bezhansalleh/filament-plugin-essentials",
             "version": "1.2.1",
@@ -5705,6 +5790,88 @@
                 }
             ],
             "time": "2022-12-17T21:53:22+00:00"
+        },
+        {
+            "name": "solution-forest/filament-simplelightbox",
+            "version": "1.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/solutionforest/Filament-SimpleLightBox.git",
+                "reference": "643062c2cedd77ad967d023092442893d2ee751b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/solutionforest/Filament-SimpleLightBox/zipball/643062c2cedd77ad967d023092442893d2ee751b",
+                "reference": "643062c2cedd77ad967d023092442893d2ee751b",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^4.0|^5.0",
+                "filament/infolists": "^4.0|^5.0",
+                "filament/tables": "^4.0|^5.0",
+                "illuminate/contracts": "^11.28|^12.0|^13.0",
+                "php": "^8.2",
+                "spatie/laravel-package-tools": "^1.15.0"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.0",
+                "laravel/pint": "^1.0",
+                "nunomaduro/collision": "^8.0",
+                "orchestra/testbench": "^9.0|^10.0|^11.0",
+                "pestphp/pest": "^3.0|^4.0",
+                "pestphp/pest-plugin-arch": "^3.0|^4.0",
+                "pestphp/pest-plugin-laravel": "^3.0|^4.0",
+                "phpstan/extension-installer": "^1.1",
+                "phpstan/phpstan-deprecation-rules": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "spatie/laravel-ray": "^1.26"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "FilamentSimpleLightBox": "SolutionForest\\FilamentSimpleLightBox\\Facades\\FilamentSimpleLightBox"
+                    },
+                    "providers": [
+                        "SolutionForest\\FilamentSimpleLightBox\\FilamentSimpleLightBoxServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SolutionForest\\FilamentSimpleLightBox\\": "src/",
+                    "SolutionForest\\FilamentSimpleLightBox\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "alan",
+                    "email": "info@solutionforest.net",
+                    "role": "Developer"
+                }
+            ],
+            "description": "This is my package filament-simplelightbox",
+            "homepage": "https://github.com/solutionforest/filament-simplelightbox",
+            "keywords": [
+                "filament-simplelightbox",
+                "laravel",
+                "solutionforest"
+            ],
+            "support": {
+                "issues": "https://github.com/solutionforest/filament-simplelightbox/issues",
+                "source": "https://github.com/solutionforest/filament-simplelightbox"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/SolutionForest",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-04-29T07:46:58+00:00"
         },
         {
             "name": "spatie/invade",

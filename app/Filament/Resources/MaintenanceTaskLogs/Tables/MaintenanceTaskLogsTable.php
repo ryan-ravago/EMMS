@@ -8,6 +8,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
@@ -51,10 +52,12 @@ class MaintenanceTaskLogsTable
             ->filters([
                 //
             ])
-            ->recordUrl(fn(Model $record): string => MaintenanceTaskLogResource::getUrl('view', ['record' => $record]))
+            // ->recordUrl(fn(Model $record): string => MaintenanceTaskLogResource::getUrl('view', ['record' => $record]))
             ->defaultSort('mtl_dt', 'desc')
             ->recordActions([
-                // ViewAction::make(),
+                ViewAction::make()
+                    ->modalWidth(Width::SevenExtraLarge)
+                    ->extraAttributes(['style' => 'display:none']), // hides the button but keeps it functional,
                 EditAction::make(),
             ])
             ->toolbarActions([

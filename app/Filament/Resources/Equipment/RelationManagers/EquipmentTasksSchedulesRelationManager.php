@@ -226,7 +226,8 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('department.dep_name')
                     ->label('Department')
-                    ->sortable(),
+                    ->sortable()
+                    ->visible(fn() => auth()->user()->hasRole('super_admin')),
                 TextColumn::make('ets_due_effectivity_dt')
                     ->label('Effectivity Date')
                     ->dateTime('M d, Y')
@@ -252,14 +253,17 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                 CreateAction::make()
                     ->modalHeading('Create Task Schedule')
                     ->modalWidth(Width::SevenExtraLarge)
+                    ->authorize(true)
                     ->closeModalByClickingAway(false)
                     ->closeModalByEscaping(false)
             ])
+            ->recordAction('view')
             ->recordActions([
                 ViewAction::make()
                     ->modalHeading('View Task Schedule')
                     ->modalWidth(Width::SevenExtraLarge),
                 EditAction::make()
+                    ->authorize(true)
                     ->modalHeading('Edit Task Schedule')
                     ->modalWidth(Width::SevenExtraLarge)
                     ->closeModalByClickingAway(false)

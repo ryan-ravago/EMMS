@@ -7,6 +7,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 
 class DepartmentsTable
@@ -21,6 +22,8 @@ class DepartmentsTable
                 TextColumn::make('dep_name')
                     ->label('Department')
                     ->searchable(),
+                ToggleColumn::make('is_maintenance')
+                    ->label('Maintenance Dept')
             ])
             ->filters([
                 //

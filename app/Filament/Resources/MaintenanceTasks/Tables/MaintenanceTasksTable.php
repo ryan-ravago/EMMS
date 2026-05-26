@@ -18,6 +18,13 @@ class MaintenanceTasksTable
     {
         return $table
             ->columns([
+                TextColumn::make('status.status_title')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn(MaintenanceTask $record): string => $record->status->status_color)
+                    ->icon(fn(MaintenanceTask $record): string => $record->status->status_icon)
+                    ->sortable(),
+
                 TextColumn::make('equipmentUnit.eqm_name')
                     ->label('Equipment')
                     ->searchable()
@@ -32,13 +39,6 @@ class MaintenanceTasksTable
                 TextColumn::make('mt_task_log')
                     ->label('Task')
                     ->searchable(),
-
-                TextColumn::make('status.status_title')
-                    // ->label('Status')
-                    // ->badge()
-                    // ->color(fn(MaintenanceTask $record): string => $record->status->status_color)
-                    // ->icon(fn(MaintenanceTask $record): string => $record->status->status_icon)
-                    ->sortable(),
 
                 TextColumn::make('mt_due_dt')
                     ->label('Due Date')
@@ -68,7 +68,7 @@ class MaintenanceTasksTable
             ])
             ->recordUrl(fn(Model $record): string => MaintenanceTaskResource::getUrl('view', ['record' => $record]))
             ->recordActions([
-                // EditAction::make(),
+                EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

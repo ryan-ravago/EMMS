@@ -5,6 +5,7 @@ namespace App\Filament\Resources\MaintenanceTasks\RelationManagers;
 use App\Filament\Resources\MaintenanceTaskLogs\MaintenanceTaskLogResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class MaintenanceTaskLogsRelationManager extends RelationManager
@@ -20,6 +21,7 @@ class MaintenanceTaskLogsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->defaultSort('mtl_dt', 'desc')
             ->headerActions([
                 CreateAction::make(),
             ])

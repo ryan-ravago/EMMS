@@ -40,12 +40,12 @@ class ProcessDueDateChecks implements ShouldQueue
 
         DB::transaction(function () use ($now, &$etsIds) {
             $etsIds = $this->processEquipmentTasksSchedules($now);
-            // $this->processMaintenanceTasks($now);
+            $this->processOverDueMaintenanceTasks($now);
         });
 
         // send notifications AFTER transaction commits
         if (!empty($etsIds)) {
-            $this->sendDueNotifications($etsIds, $now);
+            // $this->sendDueNotifications($etsIds, $now);
         }
     }
 
@@ -221,10 +221,11 @@ class ProcessDueDateChecks implements ShouldQueue
     /**
      * Check mt_due_dt, mark overdue, log it.
      */
-    private function processMaintenanceTasks($now): void
+    private function processOverDueMaintenanceTasks($now): void
     {
         DB::table('maintenance_tasks')
             ->where('mt_due_dt', '<=', $now)
+            ->whereDate('mt_dt', '!=', $now->toDateString())
             ->whereNotNull('mt_due_dt')
             ->whereNull('mt_closed_dt')
             ->whereIn('mt_status_id', ['snz', 'pnd'])
@@ -243,8 +244,9 @@ class ProcessDueDateChecks implements ShouldQueue
                 $logs = $tasks->map(fn($task) => [
                     'mtl_mt_id'     => $task->mt_id,
                     'mtl_status_id' => 'pnd',
+                    'mtl_due_dt'    => $task->mt_due_dt,
                     'mtl_last_act_made' => 'rtv',
-                    'mtl_remarks'   => 'Automatically marked as overdue by system',
+                    'mtl_remarks'   => 'Overdue - updated by system',
                     'mtl_by'        => null,
                     'mtl_dt'        => $now,
                 ])->toArray();

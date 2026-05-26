@@ -10,6 +10,7 @@ use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ListEquipment extends ListRecords
@@ -21,6 +22,7 @@ class ListEquipment extends ListRecords
         return [
             CreateAction::make(),
             Action::make('sync')
+                ->visible(fn() => Auth::user()->can('Sync:EquipmentResource'))
                 ->label('Sync from SAP')
                 ->icon('heroicon-o-arrow-path')
                 ->color('success')

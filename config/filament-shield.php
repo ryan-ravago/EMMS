@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Filament\Resources\TechnicianWorkOrders\TechnicianWorkOrderResource;
+use App\Filament\Resources\WorkOrders\WorkOrderResource;
+use App\Models\TechnicianWorkOrder;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Pages\Dashboard;
 use Filament\Widgets\AccountWidget;
@@ -187,6 +191,15 @@ return [
                 'update',
                 'delete',
             ],
+            EquipmentResource::class => [
+                'sync'
+            ],
+            WorkOrderResource::class => [
+                'addUpdate'
+            ],
+            TechnicianWorkOrderResource::class => [
+                'addUpdate'
+            ]
         ],
         'exclude' => [
             //
