@@ -33,6 +33,8 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
 {
     protected static string $relationship = 'equipmentTasksSchedules';
 
+    protected static ?string $title = 'Tasks for Preventive';
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['ets_eqm_id'] = $this->getOwnerRecord()->getKey();
@@ -51,7 +53,11 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                     ->schema([
                         Select::make('ets_task_id')
                             ->label('Task')
-                            ->relationship('task', 'task_name')
+                            ->relationship(
+                                name: 'task',
+                                titleAttribute: 'task_name',
+                                modifyQueryUsing: fn($query) => $query->where('task_tut_id', 2)
+                            )
                             ->searchable()
                             ->preload()
                             ->columnSpan(3)
@@ -71,23 +77,27 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                                     )->validationMessages([
                                         'unique' => 'The task name has already been taken.'
                                     ]),
-                                Select::make('task_tut_id')
-                                    ->label('Usage Type')
-                                    ->placeholder('Select a usage type')
-                                    ->relationship('taskUsageType', 'tut_name')
-                                    ->searchable()
-                                    ->preload()
-                                    ->required()
-                                    ->native(false)
-                                    ->exists(
-                                        table: TaskUsageType::class,
-                                        column: 'tut_id',
-                                    ),
+                                // Select::make('task_tut_id')
+                                //     ->label('Usage Type')
+                                //     ->placeholder('Select a usage type')
+                                //     ->relationship('taskUsageType', 'tut_name')
+                                //     ->searchable()
+                                //     ->preload()
+                                //     ->required()
+                                //     ->native(false)
+                                //     ->exists(
+                                //         table: TaskUsageType::class,
+                                //         column: 'tut_id',
+                                //     ),
                             ])
-                            ->createOptionModalHeading('Add New Task')
+                            ->createOptionModalHeading('Add New Preventive Task')
                             ->createOptionAction(
                                 fn(Action $action) => $action
                                     ->modalWidth(Width::Large)
+                                    ->mutateFormDataUsing(function (array $data) {
+                                        $data['task_tut_id'] = 2;
+                                        return $data;
+                                    })
                             ),
                         TextInput::make('ets_sort_order')
                             ->label('Sort Order')
@@ -251,7 +261,8 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
             ])
             ->headerActions([
                 CreateAction::make()
-                    ->modalHeading('Create Task Schedule')
+                    ->label('Create Preventive Task')
+                    ->modalHeading('Create Equipment Task Schedule')
                     ->modalWidth(Width::SevenExtraLarge)
                     ->authorize(true)
                     ->closeModalByClickingAway(false)
@@ -268,15 +279,17 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                     ->modalWidth(Width::SevenExtraLarge)
                     ->closeModalByClickingAway(false)
                     ->closeModalByEscaping(false),
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->authorize(true)
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->authorize(true),
                 ]),
-            ])
-            ->extraAttributes([
-                'style' => 'margin-top: 30px;'
             ]);
+        // ->extraAttributes([
+        //     'style' => 'margin-top: 30px;'
+        // ]);
     }
 }

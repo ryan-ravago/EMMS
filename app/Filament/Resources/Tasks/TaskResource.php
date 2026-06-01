@@ -27,8 +27,15 @@ class TaskResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->where('task_dep_id', auth()->user()->user_dep_id);
+        $query = parent::getEloquentQuery();
+
+        // If the authenticated user is a super_admin, skip the department filter
+        if (auth()->user()?->hasRole('super_admin')) {
+            return $query;
+        }
+
+        // Otherwise, scope the query to the user's specific department
+        return $query->where('task_dep_id', auth()->user()->user_dep_id);
     }
 
     public static function form(Schema $schema): Schema

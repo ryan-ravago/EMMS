@@ -112,7 +112,7 @@ class TechnicianWorkOrderInfolist
                             ->icon('heroicon-o-arrow-top-right-on-square')
                             ->iconPosition(IconPosition::After),
                         TextEntry::make('workers')
-                            ->hiddenLabel()
+                            ->Label('Technicians')
                             ->badge()
                             ->icon('heroicon-o-user-circle')
                             ->state(fn($record) => $record->workers->map(fn($w) => "{$w->user_fname} {$w->user_lname}")->toArray()),
@@ -130,7 +130,7 @@ class TechnicianWorkOrderInfolist
                             ->dateTime('M d, Y | h:i A'),
                         TextEntry::make('wo_closed_dt')
                             ->label('Closed At')
-                            ->dateTime()
+                            ->dateTime('M d, Y | h:i A')
                             ->placeholder('-'),
                     ]),
             ])

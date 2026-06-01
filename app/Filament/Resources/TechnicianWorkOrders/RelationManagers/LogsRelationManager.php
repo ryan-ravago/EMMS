@@ -23,6 +23,13 @@ class LogsRelationManager extends RelationManager
 
     protected static ?string $title = 'History Logs';
 
+    protected function getListeners(): array
+    {
+        return [
+            'refreshLogsRelationManager' => '$refresh',
+        ];
+    }
+
     public function isReadOnly(): bool
     {
         return true;

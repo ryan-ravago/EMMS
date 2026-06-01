@@ -6,7 +6,9 @@ use App\Filament\Resources\TechnicianWorkOrders\Pages\CreateTechnicianWorkOrder;
 use App\Filament\Resources\TechnicianWorkOrders\Pages\EditTechnicianWorkOrder;
 use App\Filament\Resources\TechnicianWorkOrders\Pages\ListTechnicianWorkOrders;
 use App\Filament\Resources\TechnicianWorkOrders\Pages\ViewTechnicianWorkOrder;
+use App\Filament\Resources\TechnicianWorkOrders\RelationManagers\LogsRelationManager;
 use App\Filament\Resources\TechnicianWorkOrders\RelationManagers\LogUpdatesRelationManager;
+use App\Filament\Resources\TechnicianWorkOrders\RelationManagers\ReportSubmissionsRelationManager;
 use App\Filament\Resources\TechnicianWorkOrders\Schemas\TechnicianWorkOrderForm;
 use App\Filament\Resources\TechnicianWorkOrders\Schemas\TechnicianWorkOrderInfolist;
 use App\Filament\Resources\TechnicianWorkOrders\Tables\TechnicianWorkOrdersTable;
@@ -53,7 +55,9 @@ class TechnicianWorkOrderResource extends Resource
     public static function getRelations(): array
     {
         return [
-            LogUpdatesRelationManager::class
+            LogsRelationManager::class,
+            LogUpdatesRelationManager::class,
+            ReportSubmissionsRelationManager::class
         ];
     }
 

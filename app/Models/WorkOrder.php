@@ -34,8 +34,6 @@ class WorkOrder extends Model
         'wo_attachments' => 'array',
     ];
 
-    public static $bootedNow;
-
     public function equipment(): BelongsTo
     {
         return $this->belongsTo(Equipment::class, 'wo_eqm_id', 'eqm_id');
@@ -79,5 +77,10 @@ class WorkOrder extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(WorkOrderLog::class, 'wol_wo_id', 'wo_id');
+    }
+
+    public function reportSubmissions(): HasMany
+    {
+        return $this->hasMany(ReportSubmission::class, 'rs_wo_id', 'wo_id',);
     }
 }

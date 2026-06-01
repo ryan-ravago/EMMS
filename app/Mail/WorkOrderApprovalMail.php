@@ -2,36 +2,42 @@
 
 namespace App\Mail;
 
+use App\Models\AppUser;
+use App\Models\WorkOrder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Support\Collection;
+use Illuminate\Queue\SerializesModels;
 
-class MaintenanceTaskDueMail extends Mailable
+class WorkOrderApprovalMail extends Mailable
 {
-    use Queueable;
+    use Queueable, SerializesModels;
 
     /**
      * Create a new message instance.
      */
     public function __construct(
-        public readonly Collection $tasks,
-        public readonly string $type = 'due'
-    ) {}
+        public WorkOrder $workOrder,
+        public AppUser $approver,
+        public ?string $note,
+        public string $recipientType, // 'manager' | 'technician'
+    ) {
+        //
+    }
 
     /**
      * Get the message envelope.
      */
     public function envelope(): Envelope
     {
-        $count = $this->tasks->count();
-
-        $subject = $this->type === 'overdue'
-            ? "[Overdue Reminder]: {$count} maintenance task(s) overdue"
-            : "[Due Notice]: {$count} maintenance task(s) due today";
+        $subject = match ($this->recipientType) {
+            'manager'    => "Completion Approved – {$this->workOrder->wo_no}",
+            'technician' => "Work Order Completed – {$this->workOrder->wo_no}",
+            default      => "Work Order Update – {$this->workOrder->wo_no}",
+        };
 
         return new Envelope(subject: $subject);
     }
@@ -41,13 +47,7 @@ class MaintenanceTaskDueMail extends Mailable
      */
     public function content(): Content
     {
-        return new Content(
-            view: 'emails.maintenance.due',
-            with: [
-                'tasks' => $this->tasks,
-                'type' => $this->type,
-            ],
-        );
+        return new Content(view: 'emails.work-orders.work-order-approval');
     }
 
     /**

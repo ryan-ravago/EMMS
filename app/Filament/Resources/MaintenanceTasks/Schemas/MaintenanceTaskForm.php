@@ -21,9 +21,6 @@ class MaintenanceTaskForm
                 TextInput::make('mt_dep_id')
                     ->required()
                     ->numeric(),
-                TextInput::make('mt_ets_id')
-                    ->numeric()
-                    ->default(null),
                 TextInput::make('mt_task_id')
                     ->required()
                     ->numeric(),

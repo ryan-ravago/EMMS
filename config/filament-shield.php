@@ -195,10 +195,16 @@ return [
                 'sync'
             ],
             WorkOrderResource::class => [
-                'addUpdate'
+                'addUpdate',
+                'addReport',
+                'rejectCompletion',
+                'approveCompletion',
+                'cancelWorkOrder',
             ],
             TechnicianWorkOrderResource::class => [
-                'addUpdate'
+                'addUpdate',
+                'addReport',
+                'requestCompletion'
             ]
         ],
         'exclude' => [

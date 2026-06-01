@@ -72,10 +72,12 @@ class EquipmentTasksSchedule extends Model
             $schedule->ets_last_assigned_by = auth()->id();
             $schedule->ets_last_assigned_at = $now;
 
-            // Only recalculate due date if no open maintenance task exists
+            // Only recalculate due date if no open maintenance task exists for this specific combination
             $hasOpenTask = DB::table('maintenance_tasks')
-                ->where('mt_ets_id', $schedule->ets_id)
-                ->whereIn('mt_status_id', ['pnd', 'snz', 'inprog']) // add any other "open" statuses
+                ->where('mt_dep_id', $schedule->ets_dep_id)   // Matching Department ID
+                ->where('mt_task_id', $schedule->ets_task_id) // Matching Task ID
+                ->where('mt_eqm_id', $schedule->ets_eqm_id)   // Matching Equipment ID
+                ->whereIn('mt_status_id', ['pnd', 'snz', 'inprog']) // Active "open" states
                 ->exists();
 
             if (!$hasOpenTask) {

@@ -6,7 +6,9 @@ use App\Filament\Resources\WorkOrders\Pages\CreateWorkOrder;
 use App\Filament\Resources\WorkOrders\Pages\EditWorkOrder;
 use App\Filament\Resources\WorkOrders\Pages\ListWorkOrders;
 use App\Filament\Resources\WorkOrders\Pages\ViewWorkOrder;
+use App\Filament\Resources\WorkOrders\RelationManagers\LogsRelationManager;
 use App\Filament\Resources\WorkOrders\RelationManagers\LogUpdatesRelationManager;
+use App\Filament\Resources\WorkOrders\RelationManagers\ReportSubmissionsRelationManager;
 use App\Filament\Resources\WorkOrders\Schemas\WorkOrderForm;
 use App\Filament\Resources\WorkOrders\Schemas\WorkOrderInfolist;
 use App\Filament\Resources\WorkOrders\Tables\WorkOrdersTable;
@@ -16,6 +18,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class WorkOrderResource extends Resource
 {
@@ -24,6 +27,12 @@ class WorkOrderResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'wo_no';
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('wo_dep_id', auth()->user()->user_dep_id);
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -43,7 +52,9 @@ class WorkOrderResource extends Resource
     public static function getRelations(): array
     {
         return [
-            LogUpdatesRelationManager::class
+            LogsRelationManager::class,
+            LogUpdatesRelationManager::class,
+            ReportSubmissionsRelationManager::class
         ];
     }
 

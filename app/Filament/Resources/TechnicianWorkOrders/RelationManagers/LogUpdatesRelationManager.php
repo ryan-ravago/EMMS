@@ -28,10 +28,12 @@ class LogUpdatesRelationManager extends RelationManager
 {
     protected static string $relationship = 'logUpdates';
 
+    protected static ?string $title = 'Updates';
+
     protected function getListeners(): array
     {
         return [
-            'refreshRelationManager' => '$refresh',
+            'refreshLogsRelationManager' => '$refresh',
         ];
     }
 

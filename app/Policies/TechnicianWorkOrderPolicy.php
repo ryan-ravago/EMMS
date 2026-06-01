@@ -11,7 +11,7 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 class TechnicianWorkOrderPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:TechnicianWorkOrderResource');
@@ -74,7 +74,28 @@ class TechnicianWorkOrderPolicy
 
     public function addUpdate(AuthUser $authUser, TechnicianWorkOrder $technicianWorkOrder): bool
     {
-        return $authUser->can('AddUpdate:TechnicianWorkOrderResource');
+        if ($technicianWorkOrder->wo_status_id === 'inprog') {
+            return $authUser->can('AddUpdate:TechnicianWorkOrderResource');
+        }
+
+        return false;
     }
 
+    public function addReport(AuthUser $authUser, TechnicianWorkOrder $technicianWorkOrder): bool
+    {
+        if ($technicianWorkOrder->wo_status_id === 'inprog') {
+            return $authUser->can('AddReport:TechnicianWorkOrderResource');
+        }
+
+        return false;
+    }
+
+    public function requestCompletion(AuthUser $authUser, TechnicianWorkOrder $technicianWorkOrder): bool
+    {
+        if ($technicianWorkOrder->wo_status_id === 'inprog') {
+            return $authUser->can('RequestCompletion:TechnicianWorkOrderResource');
+        }
+
+        return false;
+    }
 }

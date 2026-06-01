@@ -57,4 +57,16 @@ class AppUser extends Authenticatable implements HasName, FilamentUser
     {
         return $this->belongsToMany(WorkOrder::class, 'work_order_assignments', 'woa_worker_id', 'woa_wo_id', 'user_id', 'wo_id');
     }
+
+    public function reportSubmissions(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ReportSubmission::class,
+            'worker_reports',
+            'wr_worker_id',
+            'wr_rs_id',
+            'user_id',
+            'rs_id'
+        );
+    }
 }

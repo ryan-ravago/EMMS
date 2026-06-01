@@ -16,7 +16,6 @@ class MaintenanceTask extends Model
         'mt_eqm_id',
         'mt_eqm_log',
         'mt_dep_id',
-        'mt_ets_id',
         'mt_task_id',
         'mt_task_log',
         'mt_status_id',
@@ -43,11 +42,6 @@ class MaintenanceTask extends Model
     public function task(): BelongsTo
     {
         return $this->belongsTo(Task::class, 'mt_task_id');
-    }
-
-    public function schedule(): BelongsTo
-    {
-        return $this->belongsTo(EquipmentTasksSchedule::class, 'mt_ets_id');
     }
 
     public function maintenanceTaskLogs(): HasMany

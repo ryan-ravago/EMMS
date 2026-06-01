@@ -2,10 +2,13 @@
 
 namespace App\Filament\Resources\MaintenanceTasks\Schemas;
 
+use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Filament\Resources\Tasks\TaskResource;
 use App\Models\MaintenanceTask;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\IconPosition;
 
 class MaintenanceTaskInfolist
 {
@@ -16,8 +19,12 @@ class MaintenanceTaskInfolist
                 Section::make('Task Details')
                     ->columns(2)
                     ->schema([
-                        TextEntry::make('equipmentUnit.eqm_name')
-                            ->label('Equipment'),
+                        TextEntry::make('mt_eqm_log')
+                            ->label('Equipment')
+                            ->url(fn($record) => EquipmentResource::getUrl('view', ['record' => $record->mt_eqm_id]))
+                            ->openUrlInNewTab()
+                            ->icon('heroicon-o-arrow-top-right-on-square')
+                            ->iconPosition(IconPosition::After),
 
                         TextEntry::make('department.dep_name')
                             ->label('Department')
@@ -25,7 +32,11 @@ class MaintenanceTaskInfolist
 
                         TextEntry::make('mt_task_log')
                             ->label('Task')
-                            ->placeholder('-'),
+                            ->placeholder('-')
+                            ->url(fn($record) => TaskResource::getUrl('view', ['record' => $record->mt_task_id]))
+                            ->openUrlInNewTab()
+                            ->icon('heroicon-o-arrow-top-right-on-square')
+                            ->iconPosition(IconPosition::After),
 
                         TextEntry::make('status.status_title')
                             ->label('Status')

@@ -44,9 +44,7 @@ class ProcessDueDateChecks implements ShouldQueue
         });
 
         // send notifications AFTER transaction commits
-        if (!empty($etsIds)) {
-            // $this->sendDueNotifications($etsIds, $now);
-        }
+        $this->sendDueNotifications($etsIds, $now);
     }
 
     /**
@@ -87,7 +85,6 @@ class ProcessDueDateChecks implements ShouldQueue
                         'mt_eqm_id'       => $row->ets_eqm_id,
                         'mt_eqm_log'      => $row->eqm_name,
                         'mt_dep_id'       => $row->ets_dep_id,
-                        'mt_ets_id'       => $row->ets_id,
                         'mt_task_id'      => $row->ets_task_id,
                         'mt_task_log'     => $row->task_name,
                         'mt_status_id'    => 'pnd',
@@ -143,82 +140,6 @@ class ProcessDueDateChecks implements ShouldQueue
     }
 
     /**
-     * Send email notifications.
-     */
-    private function sendDueNotifications(array $etsIds, $now): void
-    {
-        $schedules = DB::table('equipment_tasks_schedules')
-            ->whereIn('ets_id', $etsIds)
-            ->select('ets_eqm_id', 'ets_task_id')
-            ->get();
-
-        $eqmIds = $schedules->pluck('ets_eqm_id')->unique()->toArray();
-        $taskIds = $schedules->pluck('ets_task_id')->unique()->toArray();
-
-        $tasks = DB::table('maintenance_tasks as mt')
-            ->join('equipment_units as eqm', 'eqm.eqm_id', '=', 'mt.mt_eqm_id')
-            ->join('departments as dep', 'dep.dep_id', '=', 'mt.mt_dep_id')
-            ->join('tasks as t', 't.task_id', '=', 'mt.mt_task_id')
-            ->join('statuses as s', 's.status_id', '=', 'mt.mt_status_id')
-            ->whereIn('mt.mt_eqm_id', $eqmIds)
-            ->whereIn('mt.mt_task_id', $taskIds)
-            ->whereRaw('DATE(mt.mt_due_dt) = ?', [$now->toDateString()])
-            ->select([
-                'mt.mt_id',
-                'mt.mt_task_log',
-                'mt.mt_due_dt',
-                'mt.mt_dep_id',
-                'eqm.eqm_name',
-                'dep.dep_name',
-                't.task_name',
-                's.status_title',
-            ])
-            ->get();
-
-        Log::info('[DueDateChecks] Tasks for notification', ['count' => $tasks->count()]);
-
-        if ($tasks->isEmpty()) {
-            Log::warning('[DueDateChecks] No tasks found for notification', ['ets_ids' => $etsIds]);
-            return;
-        }
-
-        $depIds = $tasks->pluck('mt_dep_id')->unique()->toArray();
-
-        $recipients = DB::table('app_users as u')
-            ->join('model_has_roles as mhr', 'mhr.model_id', '=', 'u.user_id')
-            ->join('roles as r', 'r.id', '=', 'mhr.role_id')
-            ->where('mhr.model_type', AppUser::class)
-            ->whereIn('u.user_dep_id', $depIds)
-            ->whereNotNull('u.user_email')
-            ->whereIn('r.name', ['manager', 'user'])
-            ->select('u.user_email', 'u.user_dep_id')
-            ->distinct()
-            ->get()
-            ->groupBy('user_email');
-
-        $emailsQueued = 0;
-
-        foreach ($recipients as $email => $group) {
-            $recipientDepIds = $group->pluck('user_dep_id')->unique()->toArray();
-            $recipientTasks = $tasks->filter(fn($task) => in_array($task->mt_dep_id, $recipientDepIds));
-
-            if ($recipientTasks->isEmpty()) {
-                continue;
-            }
-
-            Mail::to($email)
-                ->queue(new MaintenanceTaskDueMail($recipientTasks));
-
-            $emailsQueued++;
-        }
-
-        Log::info('[DueDateChecks] Queued notification emails', [
-            'emails_queued' => $emailsQueued,
-            'task_count' => $tasks->count(),
-        ]);
-    }
-
-    /**
      * Check mt_due_dt, mark overdue, log it.
      */
     private function processOverDueMaintenanceTasks($now): void
@@ -228,7 +149,7 @@ class ProcessDueDateChecks implements ShouldQueue
             ->whereDate('mt_dt', '!=', $now->toDateString())
             ->whereNotNull('mt_due_dt')
             ->whereNull('mt_closed_dt')
-            ->whereIn('mt_status_id', ['snz', 'pnd'])
+            ->whereIn('mt_status_id', ['snz'])
             ->select('mt_id', 'mt_status_id', 'mt_due_dt')
             ->orderBy('mt_due_dt')
             ->chunk(200, function ($tasks) use ($now) {
@@ -258,5 +179,126 @@ class ProcessDueDateChecks implements ShouldQueue
                     'ids'   => $ids,
                 ]);
             });
+    }
+
+    /**
+     * Send email notifications.
+     */
+    private function sendDueNotifications(array $etsIds, $now): void
+    {
+        // Fetches the inserted task schedules to maintenance tasks selecting columns: ets_eqm_id & ets_task_id
+        // Their due dates are nulled
+        $schedules = DB::table('equipment_tasks_schedules')
+            ->whereIn('ets_id', $etsIds)
+            ->select('ets_eqm_id', 'ets_task_id')
+            ->get();
+
+        $eqmIds = $schedules->pluck('ets_eqm_id')->unique()->toArray();
+        $taskIds = $schedules->pluck('ets_task_id')->unique()->toArray();
+
+        // Fetch the maintenance tasks based on nulled task schedules
+        // Newly due tasks (created today from task schedules)
+        $newTasks = DB::table('maintenance_tasks as mt')
+            ->join('equipment_units as eqm', 'eqm.eqm_id', '=', 'mt.mt_eqm_id')
+            ->join('departments as dep', 'dep.dep_id', '=', 'mt.mt_dep_id')
+            ->join('tasks as t', 't.task_id', '=', 'mt.mt_task_id')
+            ->join('statuses as s', 's.status_id', '=', 'mt.mt_status_id')
+            ->whereIn('mt.mt_eqm_id', $eqmIds)
+            ->whereIn('mt.mt_task_id', $taskIds)
+            ->whereRaw('DATE(mt.mt_due_dt) = ?', [$now->toDateString()])
+            ->select([
+                'mt.mt_id',
+                'mt.mt_task_log',
+                'mt.mt_due_dt',
+                'mt.mt_dep_id',
+                'eqm.eqm_name',
+                'dep.dep_name',
+                't.task_name',
+                's.status_title',
+            ])
+            ->get();
+
+        // Overdue tasks
+        $overdueTasks = DB::table('maintenance_tasks as mt')
+            ->join('equipment_units as eqm', 'eqm.eqm_id', '=', 'mt.mt_eqm_id')
+            ->join('departments as dep', 'dep.dep_id', '=', 'mt.mt_dep_id')
+            ->join('tasks as t', 't.task_id', '=', 'mt.mt_task_id')
+            ->join('statuses as s', 's.status_id', '=', 'mt.mt_status_id')
+            ->whereNull('mt.mt_closed_dt')
+            ->where('mt.mt_status_id', 'pnd')
+            ->whereRaw('DATE(mt.mt_due_dt) < ?', [$now->toDateString()]) // exclude today's new ones
+            ->select(['mt.mt_id', 'mt.mt_task_log', 'mt.mt_due_dt', 'mt.mt_dep_id', 'eqm.eqm_name', 'dep.dep_name', 't.task_name', 's.status_title'])
+            ->get();
+
+        $this->dispatchEmails($newTasks, 'due');
+        $this->dispatchEmails($overdueTasks, 'overdue');
+    }
+
+    private function dispatchEmails($tasks, string $type): void
+    {
+        if ($tasks->isEmpty()) {
+            Log::info("[DueDateChecks] No {$type} tasks to notify.");
+            return;
+        }
+
+        $depIds = $tasks->pluck('mt_dep_id')->unique()->toArray();
+
+        // $recipients = DB::table('app_users as u')
+        //     ->join('model_has_roles as mhr', 'mhr.model_id', '=', 'u.user_id')
+        //     ->join('roles as r', 'r.id', '=', 'mhr.role_id')
+        //     ->where('mhr.model_type', AppUser::class)
+        //     ->whereIn('u.user_dep_id', $depIds)
+        //     ->whereNotNull('u.user_email')
+        //     ->where('r.name', 'manager')
+        //     ->select('u.user_email', 'u.user_dep_id')
+        //     ->distinct()
+        //     ->get()
+        //     ->groupBy('user_email');
+
+        $recipients = AppUser::role('manager')
+            ->whereIn('user_dep_id', $depIds)
+            ->whereNotNull('user_email')
+            ->select('user_email', 'user_dep_id')
+            ->get()
+            ->groupBy('user_email');
+
+        if ($recipients->isEmpty()) {
+            Log::warning("[DueDateChecks] No managers found for {$type} notification", [
+                'dep_ids' => $depIds,
+            ]);
+            return;
+        }
+
+        $emailsQueued = 0;
+
+        foreach ($recipients as $email => $group) {
+            $managerDepId = $group->first()->user_dep_id;
+            $recipientTasks = $tasks->filter(fn($task) => $task->mt_dep_id == $managerDepId);
+            Log::info($recipientTasks);
+
+            if ($recipientTasks->isEmpty()) {
+                Log::warning("[DueDateChecks] No {$type} tasks matched for manager", [
+                    'email' => $email,
+                    'dep_ids' => $managerDepId,
+                ]);
+                continue;
+            }
+
+            try {
+                Mail::to($email)->queue(new MaintenanceTaskDueMail($recipientTasks->values(), $type));
+                $emailsQueued++;
+            } catch (\Exception $e) {
+                Log::error("[DueDateChecks] Failed to queue {$type} email", [
+                    'email' => $email,
+                    'error' => $e->getMessage(),
+                    'task_ids' => $recipientTasks->pluck('mt_id')->toArray(),
+                ]);
+            }
+        }
+
+        Log::info("[DueDateChecks] Queued {$type} notification emails", [
+            'emails_queued' => $emailsQueued,
+            'task_count' => $tasks->count(),
+        ]);
     }
 }

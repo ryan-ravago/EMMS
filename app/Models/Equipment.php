@@ -65,6 +65,10 @@ class Equipment extends Model
             );
     }
 
+    public function equipmentTaskChecklistTemplates(): HasMany
+    {
+        return $this->hasMany(EquipmentTaskChecklistTemplate::class, 'etct_eqm_id', 'eqm_id');
+    }
     // protected static function booted(): void
     // {
     //     $bust = fn() => cache()->forget('equipment_count');

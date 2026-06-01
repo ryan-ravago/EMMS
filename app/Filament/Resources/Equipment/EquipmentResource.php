@@ -6,6 +6,7 @@ use App\Filament\Resources\Equipment\Pages\CreateEquipment;
 use App\Filament\Resources\Equipment\Pages\EditEquipment;
 use App\Filament\Resources\Equipment\Pages\ListEquipment;
 use App\Filament\Resources\Equipment\Pages\ViewEquipment;
+use App\Filament\Resources\Equipment\RelationManagers\EquipmentTaskChecklistTemplatesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\EquipmentTasksSchedulesRelationManager;
 use App\Filament\Resources\Equipment\Schemas\EquipmentForm;
 use App\Filament\Resources\Equipment\Schemas\EquipmentInfolist;
@@ -57,7 +58,8 @@ class EquipmentResource extends Resource
     public static function getRelations(): array
     {
         return [
-            EquipmentTasksSchedulesRelationManager::class
+            EquipmentTasksSchedulesRelationManager::class,
+            EquipmentTaskChecklistTemplatesRelationManager::class
         ];
     }
 

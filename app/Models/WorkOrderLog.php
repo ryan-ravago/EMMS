@@ -17,6 +17,7 @@ class WorkOrderLog extends Model
         'wol_status_id',
         'wol_a_log',
         'wol_status_log',
+        'wol_note',
         'wol_by',
         'wol_dt',
     ];

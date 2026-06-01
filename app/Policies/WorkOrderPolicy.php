@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use App\Models\AppUser;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\WorkOrder;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -11,7 +12,7 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 class WorkOrderPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:WorkOrderResource');
@@ -19,7 +20,13 @@ class WorkOrderPolicy
 
     public function view(AuthUser $authUser, WorkOrder $workOrder): bool
     {
-        return $authUser->can('View:WorkOrderResource');
+        if (
+            $authUser->user_dep_id === $workOrder->wo_dep_id
+        ) {
+            return $authUser->can('View:WorkOrderResource');
+        }
+
+        return false;
     }
 
     public function create(AuthUser $authUser): bool
@@ -74,7 +81,65 @@ class WorkOrderPolicy
 
     public function addUpdate(AuthUser $authUser, WorkOrder $workOrder): bool
     {
-        return $authUser->can('AddUpdate:WorkOrderResource');
+        if (
+            $workOrder->wo_status_id === 'inprog' &&
+            // $authUser->hasRole('manager') &&
+            $authUser->user_dep_id === $workOrder->wo_dep_id
+        ) {
+            return $authUser->can('AddUpdate:WorkOrderResource');
+        }
+
+        return false;
     }
 
+    public function addReport(AuthUser $authUser, WorkOrder $workOrder): bool
+    {
+        if (
+            $workOrder->wo_status_id === 'inprog' &&
+            // $authUser->hasRole('manager') &&
+            $authUser->user_dep_id === $workOrder->wo_dep_id
+        ) {
+            return $authUser->can('AddReport:WorkOrderResource');
+        }
+
+        return false;
+    }
+
+    public function approveCompletion(AuthUser $authUser, WorkOrder $workOrder): bool
+    {
+        if (
+            $workOrder->wo_status_id === 'pca' &&
+            // $authUser->hasRole('manager') &&
+            $authUser->user_dep_id === $workOrder->wo_dep_id
+        ) {
+            return $authUser->can('ApproveCompletion:WorkOrderResource');
+        }
+
+        return false;
+    }
+
+    public function rejectCompletion(AuthUser $authUser, WorkOrder $workOrder): bool
+    {
+        if (
+            $workOrder->wo_status_id === 'pca' &&
+            // $authUser->hasRole('manager') &&
+            $authUser->user_dep_id === $workOrder->wo_dep_id
+        ) {
+            return $authUser->can('RejectCompletion:WorkOrderResource');
+        }
+
+        return false;
+    }
+
+    public function cancelWorkOrder(AuthUser $authUser, WorkOrder $workOrder): bool
+    {
+        if (
+            in_array($workOrder->wo_status_id, ['inprog', 'pca']) &&
+            $authUser->user_dep_id === $workOrder->wo_dep_id
+        ) {
+            return $authUser->can('CancelWorkOrder:WorkOrderResource');
+        }
+
+        return false;
+    }
 }

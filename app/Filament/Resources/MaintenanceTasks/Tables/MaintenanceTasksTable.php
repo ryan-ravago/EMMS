@@ -25,7 +25,7 @@ class MaintenanceTasksTable
                     ->icon(fn(MaintenanceTask $record): string => $record->status->status_icon)
                     ->sortable(),
 
-                TextColumn::make('equipmentUnit.eqm_name')
+                TextColumn::make('mt_eqm_log')
                     ->label('Equipment')
                     ->searchable()
                     ->sortable(),
