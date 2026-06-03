@@ -69,6 +69,11 @@ class Equipment extends Model
     {
         return $this->hasMany(EquipmentTaskChecklistTemplate::class, 'etct_eqm_id', 'eqm_id');
     }
+
+    public function inspections(): HasMany
+    {
+        return $this->hasMany(Inspection::class, 'ins_eqm_id', 'eqm_id');
+    }
     // protected static function booted(): void
     // {
     //     $bust = fn() => cache()->forget('equipment_count');

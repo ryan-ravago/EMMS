@@ -27,6 +27,7 @@ use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rules\Unique;
 
 class EquipmentTasksSchedulesRelationManager extends RelationManager
@@ -43,6 +44,11 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
         return $data;
     }
 
+    public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
+    {
+        return auth()->user()->department?->dep_code === 'PREV';
+    }
+
     public function form(Schema $schema): Schema
     {
         return $schema
@@ -56,7 +62,9 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                             ->relationship(
                                 name: 'task',
                                 titleAttribute: 'task_name',
-                                modifyQueryUsing: fn($query) => $query->where('task_tut_id', 2)
+                                modifyQueryUsing: fn($query) => $query
+                                    ->where('task_tut_id', 2)
+                                    ->where('task_dep_id', auth()->user()->user_dep_id)
                             )
                             ->searchable()
                             ->preload()

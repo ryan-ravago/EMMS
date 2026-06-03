@@ -8,6 +8,7 @@ use App\Filament\Resources\Equipment\Pages\ListEquipment;
 use App\Filament\Resources\Equipment\Pages\ViewEquipment;
 use App\Filament\Resources\Equipment\RelationManagers\EquipmentTaskChecklistTemplatesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\EquipmentTasksSchedulesRelationManager;
+use App\Filament\Resources\Equipment\RelationManagers\InspectionsRelationManager;
 use App\Filament\Resources\Equipment\Schemas\EquipmentForm;
 use App\Filament\Resources\Equipment\Schemas\EquipmentInfolist;
 use App\Filament\Resources\Equipment\Tables\EquipmentTable;
@@ -59,7 +60,8 @@ class EquipmentResource extends Resource
     {
         return [
             EquipmentTasksSchedulesRelationManager::class,
-            EquipmentTaskChecklistTemplatesRelationManager::class
+            EquipmentTaskChecklistTemplatesRelationManager::class,
+            InspectionsRelationManager::class
         ];
     }
 

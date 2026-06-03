@@ -13,6 +13,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\DissociateAction;
 use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -20,6 +21,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Unique;
 
 class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
@@ -31,8 +33,8 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['etct_eqm_id'] = $this->getOwnerRecord()->getKey();
-        $data['etct_dep_id'] = auth()->user()->user_dep_id;
-        $data['etct_created_by'] = auth()->id();
+        $data['etct_dep_id'] = Auth::user()->user_dep_id;
+        $data['etct_created_by'] = Auth::id();
         $data['etct_created_at'] = now();
 
         return $data;
@@ -42,7 +44,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                Select::make('ets_task_id')
+                Select::make('etct_task_id')
                     ->label('Task')
                     ->relationship(
                         name: 'task',
@@ -63,7 +65,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                             ->unique(
                                 table: Task::class,
                                 column: 'task_name',
-                                modifyRuleUsing: fn(Unique $rule) => $rule->where('task_dep_id', auth()->user()->user_dep_id),
+                                modifyRuleUsing: fn(Unique $rule) => $rule->where('task_dep_id', Auth::user()->user_dep_id),
                                 ignoreRecord: true,
                             )->validationMessages([
                                 'unique' => 'The task name has already been taken.'
@@ -87,6 +89,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                             ->modalWidth(Width::Large)
                             ->mutateFormDataUsing(function (array $data) {
                                 $data['task_tut_id'] = 1;
+
                                 return $data;
                             })
                     ),
@@ -102,11 +105,11 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                     ->label('Task')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('createdBy.user_fname')
+                TextColumn::make('creator.user_fname')
                     ->label('Added By')
                     ->formatStateUsing(
-                        fn($record) => $record->createdBy
-                            ? "{$record->createdBy->user_fname} {$record->createdBy->user_lname}"
+                        fn($record) => $record->creator
+                            ? "{$record->creator->user_fname} {$record->creator->user_lname}"
                             : '—'
                     ),
                 TextColumn::make('etct_created_at')
@@ -128,9 +131,11 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                 AssociateAction::make(),
             ])
             ->recordActions([
+                ViewAction::make(),
                 EditAction::make(),
                 DissociateAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->authorize(true),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

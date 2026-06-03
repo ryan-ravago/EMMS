@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 
 class EquipmentTaskChecklistTemplate extends Model
 {
@@ -22,9 +23,14 @@ class EquipmentTaskChecklistTemplate extends Model
     protected static function booted(): void
     {
         static::creating(function (EquipmentTaskChecklistTemplate $template) {
-            if (!$template->etct_created_by) {
-                $template->etct_created_by = auth()->id();
+            if (!$template->etct_dep_id && Auth::check()) {
+                $template->etct_dep_id = Auth::user()->user_dep_id;
             }
+
+            if (!$template->etct_created_by && Auth::check()) {
+                $template->etct_created_by = Auth::id();
+            }
+
             if (!$template->etct_created_at) {
                 $template->etct_created_at = now();
             }
