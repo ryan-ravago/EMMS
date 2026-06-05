@@ -3,6 +3,9 @@
 namespace App\Filament\Resources\Inspections\Pages;
 
 use App\Filament\Resources\Inspections\InspectionResource;
+use App\Models\Action;
+use App\Models\InspectionItemLog;
+use App\Models\Status;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +14,14 @@ use Illuminate\Support\Facades\Log;
 
 class CreateInspection extends CreateRecord
 {
+
+    protected ?\Illuminate\Support\Carbon $now = null;
+
+    protected function now(): \Illuminate\Support\Carbon
+    {
+        return $this->now ??= now();
+    }
+
     protected static string $resource = InspectionResource::class;
 
     protected function mutateFormDataBeforeCreate(array $data): array
@@ -20,7 +31,7 @@ class CreateInspection extends CreateRecord
         }
 
         $data['ins_submitted_by'] = auth()->id();
-        $data['ins_submitted_dt'] = now();
+        $data['ins_submitted_dt'] = $this->now();
 
         return $data;
     }
@@ -44,14 +55,33 @@ class CreateInspection extends CreateRecord
             try {
                 $inspection = static::getModel()::create($data);
 
-                $inspection->inspectionItems()->createMany(
+                $action = Action::find('create');
+                $statusPnd = Status::find('pnd');
+                $statusCmp = Status::find('cmp');
+
+                $createdItems = $inspection->inspectionItems()->createMany(
                     collect($items)->map(fn($item) => [
                         'insi_task_id'             => $item['insi_task_id'],
+                        'insi_status_id'           => in_array($item['insi_result'], ['P', 'N']) ? 'cmp' : 'pnd',
                         'insi_cli_name_for_record' => $item['insi_cli_name_for_record'],
                         'insi_result'              => $item['insi_result'],
                         'insi_remarks'             => $item['insi_remarks'] ?? null,
+                        'insi_closed_dt'           => in_array($item['insi_result'], ['P', 'N']) ? $this->now() : null,
                     ])->toArray()
                 );
+
+                $logs = $createdItems->map(fn($item) => [
+                    'inil_insi_id'     => $item->insi_id,
+                    'inil_a_id'        => $action->a_id,
+                    'inil_status_id'   => $item->insi_status_id === 'cmp' ? $statusCmp->status_id : $statusPnd->status_id,
+                    'inil_action_made' => $action->a_past_tense,
+                    'inil_status_log'  => $item->insi_status_id === 'cmp' ? $statusCmp->status_title : $statusPnd->status_title,
+                    'inil_remarks'     => null,
+                    'inil_by'          => auth()->id(),
+                    'inil_dt'          => $this->now(),
+                ])->toArray();
+
+                InspectionItemLog::insert($logs);
 
                 return $inspection;
             } catch (\Exception $e) {

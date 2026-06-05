@@ -21,6 +21,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Unique;
 
@@ -29,6 +30,12 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
     protected static string $relationship = 'equipmentTaskChecklistTemplates';
 
     protected static ?string $title = 'Tasks for Inspection';
+
+    // EquipmentTaskChecklistTemplatesRelationManager
+    public static function getBadge(Model $ownerRecord, string $pageClass): ?string
+    {
+        return (string) $ownerRecord->equipmentTaskChecklistTemplates()->count();
+    }
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {

@@ -54,9 +54,15 @@ class WorkOrdersTable
                     ->listWithLineBreaks()
                     ->icon('heroicon-o-user-circle')
                     ->state(fn($record) => $record->workers->map(fn($w) => "{$w->user_fname} {$w->user_lname}")->toArray()),
+                TextColumn::make('wo_closed_dt')
+                    ->label('Closed At')
+                    ->dateTime('M d, Y h:i A')
+                    ->color('gray')
+                    ->placeholder('-')
+                    ->sortable(),
                 TextColumn::make('wo_created_dt')
                     ->label('Created At')
-                    ->dateTime('M d, Y | h:i A')
+                    ->dateTime('M d, Y h:i A')
                     ->sortable(),
             ])
             ->filters([

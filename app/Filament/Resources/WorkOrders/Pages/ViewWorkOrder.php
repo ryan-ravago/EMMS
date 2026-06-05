@@ -13,6 +13,8 @@ use App\Mail\WorkOrderCompletionRequestedMail;
 use App\Mail\WorkOrderRejectionMail;
 use App\Models\Action as ModelsAction;
 use App\Models\Status;
+use App\Models\InspectionItem;
+use App\Models\InspectionItemLog;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderLog;
 use App\Models\WorkOrderLogUpdate;
@@ -292,6 +294,7 @@ class ViewWorkOrder extends ViewRecord
                     ->action(function (array $data, WorkOrder $record) {
                         try {
                             DB::transaction(function () use ($data, $record) {
+                                $now = now();
                                 $workOrder = WorkOrder::where('wo_id', $record->wo_id)
                                     ->lockForUpdate()
                                     ->first();
@@ -311,12 +314,40 @@ class ViewWorkOrder extends ViewRecord
                                     'wol_status_log' => $status->status_title,
                                     'wol_note'       => $data['wol_note'],
                                     'wol_by'         => auth()->id(),
-                                    'wol_dt'         => now(),
+                                    'wol_dt'         => $now,
                                 ]);
+
+                                if ($workOrder->wo_insi_id) {
+                                    $inspectionItem = InspectionItem::where('insi_id', $workOrder->wo_insi_id)
+                                        ->lockForUpdate()
+                                        ->first();
+
+                                    if ($inspectionItem) {
+                                        $inspectionItem->update([
+                                            'insi_status_id' => 'pnd',
+                                            'insi_closed_dt' => $now,
+                                        ]);
+
+                                        $inspectionAction = ModelsAction::find('upt');
+                                        $pendingStatus = Status::find('pnd');
+
+                                        InspectionItemLog::create([
+                                            'inil_insi_id'     => $inspectionItem->insi_id,
+                                            'inil_a_id'        => $inspectionAction->a_id,
+                                            'inil_status_id'   => $pendingStatus->status_id,
+                                            'inil_action_made' => $inspectionAction->a_past_tense,
+                                            'inil_status_log'  => $pendingStatus->status_title,
+                                            'inil_remarks'     => 'Cancelled the linked work order and reverted this inspection finding to pending.',
+                                            'inil_wo_id'       => $workOrder->wo_id,
+                                            'inil_by'          => auth()->id(),
+                                            'inil_dt'          => $now,
+                                        ]);
+                                    }
+                                }
 
                                 $workOrder->update([
                                     'wo_status_id' => $status->status_id,
-                                    'wo_closed_dt' => now(),
+                                    'wo_closed_dt' => $now,
                                 ]);
                             });
 

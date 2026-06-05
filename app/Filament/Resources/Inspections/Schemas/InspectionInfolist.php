@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Inspections\Schemas;
 
+use App\Models\InspectionItem;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -45,16 +46,18 @@ class InspectionInfolist
                             ->placeholder('—'),
                     ]),
 
-                Section::make('Inspection Items')
+                Section::make('Inspection Tasks')
                     ->icon('heroicon-o-list-bullet')
+                    ->columnSpanFull()
                     ->schema([
                         RepeatableEntry::make('inspectionItems')
-                            ->label('')
+                            ->hiddenLabel()
                             ->columns(2)
+                            ->grid(3)
                             ->schema([
                                 TextEntry::make('insi_cli_name_for_record')
                                     ->label('Task')
-                                    ->columnSpan(1),
+                                    ->columnSpan(2),
 
                                 TextEntry::make('insi_result')
                                     ->label('Result')
@@ -73,10 +76,26 @@ class InspectionInfolist
                                     })
                                     ->columnSpan(1),
 
+                                TextEntry::make('status.status_title')
+                                    ->label('Status')
+                                    ->badge()
+                                    ->columnSpan(1)
+                                    ->color(fn(InspectionItem $record) => $record->status->status_color)
+                                    ->icon(fn(InspectionItem $record) => $record->status->status_icon),
+
                                 TextEntry::make('insi_remarks')
                                     ->label('Remarks')
                                     ->placeholder('—')
                                     ->columnSpan(2),
+
+                                TextEntry::make('view_link')
+                                    ->hiddenLabel()
+                                    ->default('View details →')
+                                    ->url(fn($record) => url("/inspection-items/{$record->insi_id}"))
+                                    ->columnSpan(2)
+                                    ->extraAttributes([
+                                        'class' => 'text-right fi-link text-primary-600 hover:text-primary-500 hover:underline font-medium cursor-pointer',
+                                    ]),
                             ]),
                     ]),
             ]);

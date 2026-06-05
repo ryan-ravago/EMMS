@@ -115,16 +115,18 @@ class InspectionForm
                             ->maxDate(now()),
                     ]),
 
-                Section::make('Inspection Items')
+                Section::make('Inspection Tasks')
                     ->icon('heroicon-o-list-bullet')
                     ->visible(fn(Get $get) => filled($get('ins_eqm_id')))
+                    ->columnSpanfull()
                     ->schema([
                         Repeater::make('inspection_items')
-                            ->label('')
+                            ->hiddenLabel()
                             ->addable(false)
                             ->deletable(false)
                             ->reorderable(false)
                             ->columns(2)
+                            ->grid(3)
                             ->default(function (Get $get) {
                                 $eqmId = $get('ins_eqm_id');
                                 $depId = auth()->user()->hasRole('super_admin')

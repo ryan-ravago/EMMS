@@ -4,7 +4,9 @@ namespace App\Filament\Resources\WorkOrders\Schemas;
 
 use App\Filament\Resources\Departments\DepartmentResource;
 use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Filament\Resources\InspectionItems\InspectionItemResource;
 use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
+use App\Models\InspectionItem;
 use App\Models\MaintenanceTask;
 use App\Models\WorkOrder;
 use Filament\Infolists\Components\ImageEntry;
@@ -113,7 +115,7 @@ class WorkOrderInfolist
                             ->iconPosition(IconPosition::After),
                         TextEntry::make('wo_insi_id')
                             ->label('Inspection')
-                            // ->url(fn($record) => MaintenanceTaskResource::getUrl('view', ['record' => $record->wo_insi_id]))
+                            ->url(fn($record) => InspectionItemResource::getUrl('view', ['record' => $record->wo_insi_id]))
                             ->placeholder('-')
                             ->icon('heroicon-o-arrow-top-right-on-square')
                             ->iconPosition(IconPosition::After),

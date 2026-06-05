@@ -3,8 +3,12 @@
 namespace App\Filament\Resources\Equipment\RelationManagers;
 
 use App\Filament\Resources\Inspections\InspectionResource;
+use App\Models\Action;
 use App\Models\Department;
 use App\Models\EquipmentTaskChecklistTemplate;
+use App\Models\InspectionItem;
+use App\Models\InspectionItemLog;
+use App\Models\Status;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteBulkAction;
@@ -37,6 +41,17 @@ class InspectionsRelationManager extends RelationManager
     protected static string $relationship = 'inspections';
 
     // protected static ?string $relatedResource = InspectionResource::class;
+
+    protected function now(): \Illuminate\Support\Carbon
+    {
+        return $this->now ??= now();
+    }
+
+    // InspectionsRelationManager
+    public static function getBadge(Model $ownerRecord, string $pageClass): ?string
+    {
+        return (string) $ownerRecord->inspections()->count();
+    }
 
     // protected function handleRecordCreation(array $data): Model
     // {
@@ -131,10 +146,12 @@ class InspectionsRelationManager extends RelationManager
 
                 Section::make('Inspection Items')
                     ->icon('heroicon-o-list-bullet')
+                    ->columnSpanFull()
                     ->schema([
                         RepeatableEntry::make('inspectionItems')
                             ->label('')
                             ->columns(2)
+                            ->grid(3)
                             ->schema([
                                 TextEntry::make('insi_cli_name_for_record')
                                     ->label('Task')
@@ -157,10 +174,27 @@ class InspectionsRelationManager extends RelationManager
                                     })
                                     ->columnSpan(1),
 
+                                TextEntry::make('status.status_title')
+                                    ->label('Status')
+                                    ->badge()
+                                    ->columnSpan(1)
+                                    ->color(fn(InspectionItem $record) => $record->status->status_color)
+                                    ->icon(fn(InspectionItem $record) => $record->status->status_icon),
+
                                 TextEntry::make('insi_remarks')
                                     ->label('Remarks')
                                     ->placeholder('—')
                                     ->columnSpan(2),
+
+                                TextEntry::make('view_link')
+                                    ->hiddenLabel()
+                                    ->default('View details →')
+                                    ->url(fn($record) => url("/inspection-items/{$record->insi_id}"))
+                                    ->columnSpan(2)
+                                    // ->openUrlInNewTab()
+                                    ->extraAttributes([
+                                        'class' => 'text-right fi-link text-primary-600 hover:text-primary-500 hover:underline font-medium cursor-pointer',
+                                    ]),
                             ]),
                     ]),
             ]);
@@ -316,17 +350,18 @@ class InspectionsRelationManager extends RelationManager
                                     ->maxDate(now()),
                             ]),
 
-                        Section::make('Inspection Items')
+                        Section::make('Inspection Tasks')
                             ->icon('heroicon-o-list-bullet')
-                            ->columns(2)
                             ->visible(fn(Get $get) => filled($get('ins_eqm_id')))
+                            ->columnSpanFull()
                             ->schema([
                                 Repeater::make('inspection_items')
-                                    ->label('')
+                                    ->hiddenLabel()
                                     ->addable(false)
                                     ->deletable(false)
                                     ->reorderable(false)
                                     ->columns(2)
+                                    ->grid(3)
                                     ->default(function (Get $get) {
                                         $eqmId = $this->getOwnerRecord()->getKey();
                                         $depId = auth()->user()->hasRole('super_admin')
@@ -394,7 +429,7 @@ class InspectionsRelationManager extends RelationManager
 
                     ])
                     ->modalWidth(Width::SevenExtraLarge)
-                    ->slideOver()
+                    // ->slideOver()
                     ->action(function (array $data, CreateAction $action) use ($table) {
                         DB::transaction(function () use ($data, $action, $table) {
                             try {
@@ -421,18 +456,39 @@ class InspectionsRelationManager extends RelationManager
                                         ? $data['ins_dep_id']
                                         : auth()->user()->user_dep_id,
                                     'ins_submitted_by' => auth()->id(),
-                                    'ins_submitted_dt' => now(),
+                                    'ins_submitted_dt' => $this->now(),
                                 ]);
+
+                                $action = Action::find('create');
+                                $statusPnd = Status::find('pnd');
+                                $statusCmp = Status::find('cmp');
 
                                 DB::table('inspection_items')->insert(
                                     collect($items)->map(fn($item) => [
                                         'insi_ins_id'              => $inspection->ins_id,
                                         'insi_task_id'             => $item['insi_task_id'],
+                                        'insi_status_id'           => in_array($item['insi_result'], ['P', 'N']) ? 'cmp' : 'pnd',
                                         'insi_cli_name_for_record' => $item['insi_cli_name_for_record'],
                                         'insi_result'              => $item['insi_result'],
                                         'insi_remarks'             => $item['insi_remarks'] ?? null,
+                                        'insi_closed_dt'           => in_array($item['insi_result'], ['P', 'N']) ? $this->now() : null,
                                     ])->toArray()
                                 );
+
+                                $createdItems = InspectionItem::where('insi_ins_id', $inspection->ins_id)->get();
+
+                                $logs = $createdItems->map(fn($item) => [
+                                    'inil_insi_id'     => $item->insi_id,
+                                    'inil_a_id'        => $action->a_id,
+                                    'inil_status_id'   => $item->insi_status_id === 'cmp' ? $statusCmp->status_id : $statusPnd->status_id,
+                                    'inil_action_made' => $action->a_past_tense,
+                                    'inil_status_log'  => $item->insi_status_id === 'cmp' ? $statusCmp->status_title : $statusPnd->status_title,
+                                    'inil_remarks'     => null,
+                                    'inil_by'          => auth()->id(),
+                                    'inil_dt'          => $this->now(),
+                                ])->toArray();
+
+                                InspectionItemLog::insert($logs);
                             } catch (\Exception $e) {
                                 Log::error('Inspection creation failed', [
                                     'error' => $e->getMessage(),

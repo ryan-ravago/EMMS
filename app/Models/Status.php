@@ -12,12 +12,21 @@ class Status extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
-    protected $fillable = ['status_title'];
+    protected $fillable = [
+        'status_title',
+        'status_color',
+        'status_icon',
+    ];
 
     public $timestamps = false;
 
     public function maintenanceTasks(): HasMany
     {
-        return $this->hasMany(MaintenanceTask::class, 'mt_status_id');
+        return $this->hasMany(MaintenanceTask::class, 'mt_status_id', 'status_id');
+    }
+
+    public function inspectionItems(): HasMany
+    {
+        return $this->hasMany(InspectionItem::class, 'insi_status_id', 'status_id');
     }
 }

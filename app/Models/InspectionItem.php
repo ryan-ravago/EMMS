@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InspectionItem extends Model
 {
@@ -14,9 +15,15 @@ class InspectionItem extends Model
     protected $fillable = [
         'insi_ins_id',
         'insi_task_id',
+        'insi_status_id',
         'insi_result',
         'insi_cli_name_for_record',
         'insi_remarks',
+        'insi_closed_dt',
+    ];
+
+    protected $casts = [
+        'insi_closed_dt' => 'datetime',
     ];
 
     public function inspection(): BelongsTo
@@ -29,8 +36,23 @@ class InspectionItem extends Model
         return $this->belongsTo(Task::class, 'insi_task_id', 'task_id');
     }
 
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class, 'insi_status_id', 'status_id');
+    }
+
     public function result(): BelongsTo
     {
         return $this->belongsTo(InspectionResult::class, 'insi_result', 'insr_code');
+    }
+
+    public function logs(): HasMany
+    {
+        return $this->hasMany(InspectionItemLog::class, 'inil_insi_id', 'insi_id');
+    }
+
+    public function workOrders(): HasMany
+    {
+        return $this->hasMany(WorkOrder::class, 'wo_insi_id', 'insi_id');
     }
 }

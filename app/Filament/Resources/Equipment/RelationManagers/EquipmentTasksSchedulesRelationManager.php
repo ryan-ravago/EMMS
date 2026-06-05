@@ -36,6 +36,12 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
 
     protected static ?string $title = 'Tasks for Preventive';
 
+    // EquipmentTasksSchedulesRelationManager
+    public static function getBadge(Model $ownerRecord, string $pageClass): ?string
+    {
+        return (string) $ownerRecord->equipmentTasksSchedules()->count();
+    }
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['ets_eqm_id'] = $this->getOwnerRecord()->getKey();

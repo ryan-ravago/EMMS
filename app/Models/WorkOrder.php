@@ -49,6 +49,11 @@ class WorkOrder extends Model
         return $this->belongsTo(MaintenanceTask::class, 'wo_mt_id', 'mt_id');
     }
 
+    public function inspectionItem(): BelongsTo
+    {
+        return $this->belongsTo(InspectionItem::class, 'wo_insi_id', 'insi_id');
+    }
+
     public function priority(): BelongsTo
     {
         return $this->belongsTo(Priority::class, 'wo_prio_id', 'prio_id');
