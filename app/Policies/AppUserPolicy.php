@@ -2,13 +2,13 @@
 
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class AppUserPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:AppUserResource');
@@ -68,5 +68,4 @@ class AppUserPolicy
     {
         return $authUser->can('Reorder:AppUserResource');
     }
-
 }

@@ -18,7 +18,7 @@ class EquipmentTaskChecklistTemplateResource extends Resource
 {
     protected static ?string $model = EquipmentTaskChecklistTemplate::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentDuplicate;
 
     public static function shouldRegisterNavigation(): bool
     {

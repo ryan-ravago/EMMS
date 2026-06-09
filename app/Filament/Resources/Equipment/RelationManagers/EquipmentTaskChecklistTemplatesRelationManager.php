@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\Equipment\RelationManagers;
 
-use Filament\Actions\Action;
+use App\Models\EquipmentTaskChecklistTemplate;
 use App\Models\Task;
 use App\Models\TaskUsageType;
+use Filament\Actions\Action;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -16,11 +17,14 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Unique;
@@ -29,12 +33,17 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
 {
     protected static string $relationship = 'equipmentTaskChecklistTemplates';
 
-    protected static ?string $title = 'Tasks for Inspection';
+    protected static ?string $title = 'Inspection Template';
 
     // EquipmentTaskChecklistTemplatesRelationManager
     public static function getBadge(Model $ownerRecord, string $pageClass): ?string
     {
-        return (string) $ownerRecord->equipmentTaskChecklistTemplates()->count();
+        $query = $ownerRecord->equipmentTaskChecklistTemplates();
+        if (! Auth::user()->hasRole('super_admin')) {
+            $query->where('etct_dep_id', Auth::user()->user_dep_id);
+        }
+
+        return (string) $query->count();
     }
 
     protected function mutateFormDataBeforeCreate(array $data): array
@@ -56,7 +65,15 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                     ->relationship(
                         name: 'task',
                         titleAttribute: 'task_name',
-                        modifyQueryUsing: fn($query) => $query->where('task_tut_id', 1)
+                        modifyQueryUsing: fn($query) => $query
+                            ->where('task_tut_id', 1)
+                            ->where('task_dep_id', auth()->user()->user_dep_id)
+                            ->whereNotIn(
+                                'task_id',
+                                EquipmentTaskChecklistTemplate::where('etct_eqm_id', $this->getOwnerRecord()->getKey())
+                                    ->where('etct_dep_id', auth()->user()->user_dep_id)
+                                    ->pluck('etct_task_id')
+                            )
                     )
                     ->searchable()
                     ->preload()
@@ -75,7 +92,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                                 modifyRuleUsing: fn(Unique $rule) => $rule->where('task_dep_id', Auth::user()->user_dep_id),
                                 ignoreRecord: true,
                             )->validationMessages([
-                                'unique' => 'The task name has already been taken.'
+                                'unique' => 'The task name has already been taken.',
                             ]),
                         // Select::make('task_tut_id')
                         //     ->label('Usage Type')
@@ -103,6 +120,39 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
             ]);
     }
 
+    public function infolist(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Section::make('Task Details')
+                    ->icon('heroicon-o-clipboard-document-list')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('task.task_name')
+                            ->label('Task Name')
+                            ->columnSpanFull(),
+                        TextEntry::make('task.department.dep_name')
+                            ->label('Department'),
+                        TextEntry::make('task.taskUsageType.tut_name')
+                            ->label('Usage Type'),
+                    ]),
+
+                Section::make('Audit Info')
+                    ->icon('heroicon-o-clock')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('creator.user_fname')
+                            ->label('Added By')
+                            ->formatStateUsing(fn($record) => $record->creator
+                                ? "{$record->creator->user_fname} {$record->creator->user_lname}"
+                                : '—'),
+                        TextEntry::make('etct_created_at')
+                            ->label('Added At')
+                            ->dateTime('M d, Y | h:i A'),
+                    ]),
+            ]);
+    }
+
     public function table(Table $table): Table
     {
         return $table
@@ -124,6 +174,11 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                     ->dateTime()
                     ->sortable(),
             ])
+            ->modifyQueryUsing(function (Builder $query) {
+                if (! Auth::user()->hasRole('super_admin')) {
+                    $query->where('etct_dep_id', Auth::user()->user_dep_id);
+                }
+            })
             ->filters([
                 //
             ])
@@ -138,7 +193,8 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                 AssociateAction::make(),
             ])
             ->recordActions([
-                ViewAction::make(),
+                ViewAction::make()
+                    ->modalWidth(Width::FiveExtraLarge),
                 EditAction::make(),
                 DissociateAction::make(),
                 DeleteAction::make()

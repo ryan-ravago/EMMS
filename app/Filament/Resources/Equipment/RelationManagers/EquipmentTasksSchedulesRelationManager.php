@@ -2,20 +2,16 @@
 
 namespace App\Filament\Resources\Equipment\RelationManagers;
 
-use Filament\Actions\Action;
 use App\Models\Task;
 use App\Models\TaskUsageType;
-use Filament\Actions\AssociateAction;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
@@ -27,19 +23,26 @@ use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Unique;
 
 class EquipmentTasksSchedulesRelationManager extends RelationManager
 {
     protected static string $relationship = 'equipmentTasksSchedules';
 
-    protected static ?string $title = 'Tasks for Preventive';
+    protected static ?string $title = 'Preventive Template';
 
     // EquipmentTasksSchedulesRelationManager
     public static function getBadge(Model $ownerRecord, string $pageClass): ?string
     {
-        return (string) $ownerRecord->equipmentTasksSchedules()->count();
+        $query = $ownerRecord->equipmentTasksSchedules();
+        if (! Auth::user()->hasRole('super_admin')) {
+            $query->where('ets_dep_id', Auth::user()->user_dep_id);
+        }
+
+        return (string) $query->count();
     }
 
     protected function mutateFormDataBeforeCreate(array $data): array
@@ -52,6 +55,10 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
 
     public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
     {
+        if (auth()->user()->hasRole('super_admin')) {
+            return true;
+        }
+
         return auth()->user()->department?->dep_code === 'PREV';
     }
 
@@ -68,7 +75,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                             ->relationship(
                                 name: 'task',
                                 titleAttribute: 'task_name',
-                                modifyQueryUsing: fn($query) => $query
+                                modifyQueryUsing: fn ($query) => $query
                                     ->where('task_tut_id', 2)
                                     ->where('task_dep_id', auth()->user()->user_dep_id)
                             )
@@ -86,10 +93,10 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                                     ->unique(
                                         table: Task::class,
                                         column: 'task_name',
-                                        modifyRuleUsing: fn(Unique $rule) => $rule->where('task_dep_id', auth()->user()->user_dep_id),
+                                        modifyRuleUsing: fn (Unique $rule) => $rule->where('task_dep_id', auth()->user()->user_dep_id),
                                         ignoreRecord: true,
                                     )->validationMessages([
-                                        'unique' => 'The task name has already been taken.'
+                                        'unique' => 'The task name has already been taken.',
                                     ]),
                                 // Select::make('task_tut_id')
                                 //     ->label('Usage Type')
@@ -106,17 +113,18 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                             ])
                             ->createOptionModalHeading('Add New Preventive Task')
                             ->createOptionAction(
-                                fn(Action $action) => $action
+                                fn (Action $action) => $action
                                     ->modalWidth(Width::Large)
                                     ->mutateFormDataUsing(function (array $data) {
                                         $data['task_tut_id'] = 2;
+
                                         return $data;
                                     })
                             ),
                         TextInput::make('ets_sort_order')
                             ->label('Sort Order')
                             ->numeric()
-                            ->default(0)
+                            ->default(0),
                     ]),
 
                 Section::make('Interval')
@@ -162,7 +170,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                             ->label('Due Effectivity Date')
                             ->columnSpan(1)
                             ->required()
-                            ->native(false)
+                            ->native(false),
                     ]),
             ]);
     }
@@ -181,7 +189,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                             ->label('Sort Order'),
                         TextEntry::make('department.dep_name')
                             ->label('Department')
-                            ->visible(fn() => auth()->user()->hasRole('super_admin')),
+                            ->visible(fn () => auth()->user()->hasRole('super_admin')),
                     ]),
 
                 Section::make('Interval')
@@ -251,7 +259,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                 TextColumn::make('department.dep_name')
                     ->label('Department')
                     ->sortable()
-                    ->visible(fn() => auth()->user()->hasRole('super_admin')),
+                    ->visible(fn () => auth()->user()->hasRole('super_admin')),
                 TextColumn::make('ets_due_effectivity_dt')
                     ->label('Effectivity Date')
                     ->dateTime('M d, Y')
@@ -266,6 +274,11 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                     ->numeric()
                     ->sortable(),
             ])
+            ->modifyQueryUsing(function (Builder $query) {
+                if (! auth()->user()->hasRole('super_admin')) {
+                    $query->where('ets_dep_id', auth()->user()->user_dep_id);
+                }
+            })
             ->filters([
                 SelectFilter::make('ets_dep_id')
                     ->label('Department')
@@ -280,7 +293,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                     ->modalWidth(Width::SevenExtraLarge)
                     ->authorize(true)
                     ->closeModalByClickingAway(false)
-                    ->closeModalByEscaping(false)
+                    ->closeModalByEscaping(false),
             ])
             ->recordAction('view')
             ->recordActions([
@@ -294,7 +307,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                     ->closeModalByClickingAway(false)
                     ->closeModalByEscaping(false),
                 DeleteAction::make()
-                    ->authorize(true)
+                    ->authorize(true),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

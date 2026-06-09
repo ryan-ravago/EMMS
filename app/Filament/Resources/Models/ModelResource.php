@@ -23,7 +23,9 @@ class ModelResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCube;
 
     protected static ?string $recordTitleAttribute = 'eqmm_name';
+
     protected static ?string $navigationLabel = 'Models';
+
     protected static ?string $modelLabel = 'Model';
     // protected static ?string $pluralModelLabel = 'Models';
 
@@ -40,6 +42,11 @@ class ModelResource extends Resource
     public static function table(Table $table): Table
     {
         return ModelsTable::configure($table);
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
     }
 
     public static function getRelations(): array

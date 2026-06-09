@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\MaintenanceTaskLogs\Tables;
 
 use App\Filament\Resources\MaintenanceTaskLogs\MaintenanceTaskLogResource;
+use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use App\Models\MaintenanceTaskLog;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -22,13 +23,13 @@ class MaintenanceTaskLogsTable
                 TextColumn::make('status.status_title') // adjust to your status relationship/field
                     ->label('Status')
                     ->badge()
-                    ->color(fn(MaintenanceTaskLog $record): string => $record->status->status_color)
-                    ->icon(fn(MaintenanceTaskLog $record): string => $record->status->status_icon)
+                    ->color(fn (MaintenanceTaskLog $record): string => $record->status->status_color)
+                    ->icon(fn (MaintenanceTaskLog $record): string => $record->status->status_icon)
                     ->searchable(),
                 TextColumn::make('action.a_past_tense')
                     ->label('Last Action Made')
                     ->searchable()
-                    ->placeholder('-')
+                    ->placeholder('—')
                     ->wrap(),
                 TextColumn::make('mtl_remarks')
                     ->label('Remarks')
@@ -37,11 +38,24 @@ class MaintenanceTaskLogsTable
                 TextColumn::make('mtl_due_dt')
                     ->label('Due Date')
                     ->dateTime('M d, Y | h:iA')
-                    ->placeholder('-')
+                    ->placeholder('—')
                     ->sortable(),
+                TextColumn::make('workOrder.wo_no')
+                    ->label('WO #')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('—')
+                    ->color('info')
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->iconPosition('after')
+                    ->url(
+                        fn ($record) => $record->workOrder
+                            ? WorkOrderResource::getUrl('view', ['record' => $record->workOrder->wo_id])
+                            : null
+                    ),
                 TextColumn::make('logBy.full_name')
                     ->label('Logged By')
-                    ->placeholder('-')
+                    ->placeholder('—')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('mtl_dt')

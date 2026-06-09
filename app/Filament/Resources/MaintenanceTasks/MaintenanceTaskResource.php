@@ -17,24 +17,28 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class MaintenanceTaskResource extends Resource
 {
     protected static ?string $model = MaintenanceTask::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedWrenchScrewdriver;
 
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
 
-        // If the authenticated user is a super_admin, skip the department filter
-        if (auth()->user()?->hasRole('super_admin')) {
+        if (Auth::user()?->hasRole('super_admin')) {
             return $query;
         }
 
-        // Otherwise, scope the query to the user's specific department
-        return $query->where('mt_dep_id', auth()->user()->user_dep_id);
+        return $query->where('mt_dep_id', Auth::user()?->user_dep_id);
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getEloquentQuery()->count();
     }
 
     public static function form(Schema $schema): Schema

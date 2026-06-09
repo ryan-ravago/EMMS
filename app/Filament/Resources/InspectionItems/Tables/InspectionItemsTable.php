@@ -10,6 +10,8 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class InspectionItemsTable
 {
@@ -20,8 +22,8 @@ class InspectionItemsTable
                 TextColumn::make('status.status_title')
                     ->label('Status')
                     ->badge()
-                    ->color(fn(InspectionItem $record) => $record->status->status_color)
-                    ->icon(fn(InspectionItem $record) => $record->status->status_icon)
+                    ->color(fn (InspectionItem $record) => $record->status->status_color)
+                    ->icon(fn (InspectionItem $record) => $record->status->status_icon)
                     ->sortable(),
                 TextColumn::make('inspection.equipment.eqm_name')
                     ->label('Equipment')
@@ -34,13 +36,13 @@ class InspectionItemsTable
                 TextColumn::make('insi_result')
                     ->label('Result')
                     ->badge()
-                    ->color(fn($state) => match ($state) {
+                    ->color(fn ($state) => match ($state) {
                         'P' => 'success',
                         'F' => 'danger',
                         'N' => 'gray',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn($state) => match ($state) {
+                    ->formatStateUsing(fn ($state) => match ($state) {
                         'P' => 'Passed',
                         'F' => 'Failed',
                         'N' => 'N/A',
@@ -50,7 +52,7 @@ class InspectionItemsTable
                     ->label('Remarks')
                     ->placeholder('—')
                     ->limit(50)
-                    ->tooltip(fn($record) => $record->insi_remarks),
+                    ->tooltip(fn ($record) => $record->insi_remarks),
                 TextColumn::make('insi_closed_dt')
                     ->label('Closed at')
                     ->dateTime('M d, Y | h:i A')
@@ -67,6 +69,13 @@ class InspectionItemsTable
                 //     ->color('info'),
             ])
             ->defaultSort('inspection.ins_submitted_dt', 'desc')
+            ->modifyQueryUsing(function (Builder $query) {
+                if (! Auth::user()->hasRole('super_admin')) {
+                    $query->whereHas('inspection', function (Builder $query) {
+                        $query->where('ins_dep_id', Auth::user()->user_dep_id);
+                    });
+                }
+            })
             ->filters([
                 SelectFilter::make('insi_result')
                     ->label('Result')

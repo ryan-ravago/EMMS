@@ -19,19 +19,30 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class WorkOrderResource extends Resource
 {
     protected static ?string $model = WorkOrder::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentCheck;
 
     protected static ?string $recordTitleAttribute = 'wo_no';
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->where('wo_dep_id', auth()->user()->user_dep_id);
+        $query = parent::getEloquentQuery();
+
+        if (Auth::user()?->hasRole('super_admin')) {
+            return $query;
+        }
+
+        return $query->where('wo_dep_id', Auth::user()?->user_dep_id);
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getEloquentQuery()->count();
     }
 
     public static function form(Schema $schema): Schema

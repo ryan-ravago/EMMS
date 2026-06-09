@@ -16,12 +16,14 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class InspectionItemResource extends Resource
 {
     protected static ?string $model = InspectionItem::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentCheck;
 
     protected static ?string $recordTitleAttribute = 'insi_id';
 
@@ -33,6 +35,26 @@ class InspectionItemResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return InspectionItemInfolist::configure($schema);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (Auth::user()?->hasRole('super_admin')) {
+            return $query;
+        }
+
+        return $query->whereHas(
+            'inspection',
+            fn(Builder $query) =>
+            $query->where('ins_dep_id', Auth::user()?->user_dep_id)
+        );
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getEloquentQuery()->count();
     }
 
     public static function table(Table $table): Table

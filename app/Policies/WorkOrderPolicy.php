@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use App\Models\AppUser;
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\WorkOrder;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class WorkOrderPolicy
 {
@@ -20,6 +19,10 @@ class WorkOrderPolicy
 
     public function view(AuthUser $authUser, WorkOrder $workOrder): bool
     {
+        if ($authUser->hasRole('super_admin')) {
+            return $authUser->can('View:WorkOrderResource');
+        }
+
         if (
             $authUser->user_dep_id === $workOrder->wo_dep_id
         ) {

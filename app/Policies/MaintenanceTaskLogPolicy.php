@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\MaintenanceTaskLog;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class MaintenanceTaskLogPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:MaintenanceTaskLogResource');
@@ -19,7 +19,16 @@ class MaintenanceTaskLogPolicy
 
     public function view(AuthUser $authUser, MaintenanceTaskLog $maintenanceTaskLog): bool
     {
-        return $authUser->can('View:MaintenanceTaskLogResource');
+        if ($authUser->hasRole('super_admin')) {
+            return $authUser->can('View:MaintenanceTaskLogResource');
+        }
+
+        $maintenanceTask = $maintenanceTaskLog->maintenanceTask;
+        if ($maintenanceTask && $authUser->user_dep_id === $maintenanceTask->mt_dep_id) {
+            return $authUser->can('View:MaintenanceTaskLogResource');
+        }
+
+        return false;
     }
 
     public function create(AuthUser $authUser): bool
@@ -71,5 +80,4 @@ class MaintenanceTaskLogPolicy
     {
         return $authUser->can('Reorder:MaintenanceTaskLogResource');
     }
-
 }

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Inspection;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class InspectionPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:InspectionResource');
@@ -19,7 +19,15 @@ class InspectionPolicy
 
     public function view(AuthUser $authUser, Inspection $inspection): bool
     {
-        return $authUser->can('View:InspectionResource');
+        if ($authUser->hasRole('super_admin')) {
+            return $authUser->can('View:InspectionResource');
+        }
+
+        if ($authUser->user_dep_id === $inspection->ins_dep_id) {
+            return $authUser->can('View:InspectionResource');
+        }
+
+        return false;
     }
 
     public function create(AuthUser $authUser): bool
@@ -71,5 +79,4 @@ class InspectionPolicy
     {
         return $authUser->can('Reorder:InspectionResource');
     }
-
 }

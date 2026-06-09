@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\InspectionItems\Pages;
 
 use App\Filament\Resources\InspectionItems\InspectionItemResource;
+use App\Mail\InspectionItemDisregardedMail;
 use App\Mail\WorkOrderAssignedMail;
 use App\Mail\WorkOrderConfirmationMail;
 use App\Models\Action as ModelsAction;
@@ -15,20 +16,18 @@ use App\Models\WorkOrderLog;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
-use Filament\Schemas\Schema;
-use Filament\Support\Enums\Width;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-
-use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
+use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class ViewInspectionItem extends ViewRecord
@@ -43,7 +42,7 @@ class ViewInspectionItem extends ViewRecord
                 ->label('Disregard Finding')
                 ->icon('heroicon-o-x-mark')
                 ->color('gray')
-                ->visible(fn() => $this->record->insi_status_id === 'pnd')
+                ->visible(fn () => $this->record->insi_status_id === 'pnd')
                 ->modalHeading('Disregard Inspection Finding')
                 ->modalWidth(Width::Large)
                 ->closeModalByClickingAway(false)
@@ -76,16 +75,36 @@ class ViewInspectionItem extends ViewRecord
                             ]);
 
                             InspectionItemLog::create([
-                                'inil_insi_id'     => $inspectionItem->insi_id,
-                                'inil_a_id'        => $action->a_id,
-                                'inil_status_id'   => $status->status_id,
+                                'inil_insi_id' => $inspectionItem->insi_id,
+                                'inil_a_id' => $action->a_id,
+                                'inil_status_id' => $status->status_id,
                                 'inil_action_made' => $action->a_past_tense,
-                                'inil_status_log'  => $status->status_title,
-                                'inil_remarks'     => $data['inil_remarks'],
-                                'inil_by'          => Auth::id(),
-                                'inil_dt'          => $now,
+                                'inil_status_log' => $status->status_title,
+                                'inil_remarks' => $data['inil_remarks'],
+                                'inil_by' => Auth::id(),
+                                'inil_dt' => $now,
                             ]);
                         });
+
+                        // Notify manager — Confirmation
+                        $inspection = $this->record->inspection;
+                        $inspection->load(['equipment', 'conductedBy', 'department']);
+
+                        $managers = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
+                            ->where('user_dep_id', $inspection->ins_dep_id)
+                            ->get();
+
+                        foreach ($managers as $manager) {
+                            if ($manager->user_email) {
+                                Mail::to($manager->user_email)
+                                    ->queue(new InspectionItemDisregardedMail(
+                                        inspection: $inspection,
+                                        inspectionItem: $this->record,
+                                        manager: $manager,
+                                        reason: $data['inil_remarks'],
+                                    ));
+                            }
+                        }
 
                         Notification::make()
                             ->title('Finding disregarded.')
@@ -107,7 +126,7 @@ class ViewInspectionItem extends ViewRecord
                 ->label('Create Work Order')
                 ->icon('heroicon-o-wrench-screwdriver')
                 ->color('warning')
-                ->visible(fn() => $this->record->insi_status_id === 'pnd')
+                ->visible(fn () => $this->record->insi_status_id === 'pnd')
                 ->modalHeading('Create Work Order from Inspection Finding')
                 ->modalWidth(Width::SevenExtraLarge)
                 ->closeModalByClickingAway(false)
@@ -126,7 +145,7 @@ class ViewInspectionItem extends ViewRecord
                                             ->label('Equipment')
                                             ->relationship('equipment', 'eqm_name')
                                             // ->default(fn($record) => $record?->inspection?->ins_eqm_id)
-                                            ->default(fn() => $this->record?->inspection?->ins_eqm_id)
+                                            ->default(fn () => $this->record?->inspection?->ins_eqm_id)
                                             ->searchable()
                                             ->disabled()
                                             ->dehydrated()
@@ -139,14 +158,14 @@ class ViewInspectionItem extends ViewRecord
                                             ->relationship(
                                                 'department',
                                                 'dep_name',
-                                                fn(Builder $query) => $query->where('is_maintenance', 1)
+                                                fn (Builder $query) => $query->where('is_maintenance', 1)
                                             )
                                             ->searchable()
                                             ->preload()
                                             ->required()
                                             ->native(false)
                                             ->live()
-                                            ->visible(fn() => Auth::user()->hasRole('super_admin')),
+                                            ->visible(fn () => Auth::user()->hasRole('super_admin')),
                                     ]),
 
                                 Section::make('Details')
@@ -200,10 +219,10 @@ class ViewInspectionItem extends ViewRecord
                                             return [];
                                         }
 
-                                        return AppUser::whereHas('roles', fn($q) => $q->where('name', 'technician'))
+                                        return AppUser::whereHas('roles', fn ($q) => $q->where('name', 'technician'))
                                             ->where('user_dep_id', $depId)
                                             ->get()
-                                            ->mapWithKeys(fn($user) => [
+                                            ->mapWithKeys(fn ($user) => [
                                                 $user->user_id => "{$user->user_fname} {$user->user_lname}",
                                             ]);
                                     })
@@ -269,46 +288,45 @@ class ViewInspectionItem extends ViewRecord
 
                             $workOrder = WorkOrder::create([
                                 ...$data,
-                                'wo_no'         => 'WO-' . $depCode . '-' . $now->format('ymd') . str_pad($count, 3, '0', STR_PAD_LEFT),
-                                'wo_eqm_id'     => $this->record?->inspection?->ins_eqm_id,
-                                'wo_insi_id'    => $inspectionItem->insi_id,
-                                'wo_dep_id'     => Auth::user()->hasRole('super_admin') ? $data['wo_dep_id'] : Auth::user()->user_dep_id,
-                                'wo_status_id'  => 'inprog',
+                                'wo_no' => 'WO-'.$depCode.'-'.$now->format('ymd').str_pad($count, 3, '0', STR_PAD_LEFT),
+                                'wo_eqm_id' => $this->record?->inspection?->ins_eqm_id,
+                                'wo_insi_id' => $inspectionItem->insi_id,
+                                'wo_dep_id' => Auth::user()->hasRole('super_admin') ? $data['wo_dep_id'] : Auth::user()->user_dep_id,
+                                'wo_status_id' => 'inprog',
                                 'wo_created_by' => Auth::id(),
                                 'wo_created_dt' => $now,
                             ]);
 
-                            $workOrder->load(['workers', 'priority', 'createdBy']);
-
                             $workOrder->workers()->sync($workerIds);
 
+                            $workOrder->load(['workers', 'priority', 'createdBy']);
+
                             WorkOrderLog::create([
-                                'wol_wo_id'      => $workOrder->wo_id,
-                                'wol_a_id'       => $woAction->a_id,
-                                'wol_status_id'  => $woStatusInProg->status_id,
-                                'wol_a_log'      => $woAction->a_past_tense,
+                                'wol_wo_id' => $workOrder->wo_id,
+                                'wol_a_id' => $woAction->a_id,
+                                'wol_status_id' => $woStatusInProg->status_id,
+                                'wol_a_log' => $woAction->a_past_tense,
                                 'wol_status_log' => $woStatusInProg->status_title,
-                                'wol_by'         => Auth::id(),
-                                'wol_dt'         => $now,
+                                'wol_by' => Auth::id(),
+                                'wol_dt' => $now,
                             ]);
 
                             $inspectionItem->update(['insi_status_id' => 'inprog']);
 
                             InspectionItemLog::create([
-                                'inil_insi_id'     => $inspectionItem->insi_id,
-                                'inil_a_id'        => $insiAction->a_id,
-                                'inil_status_id'   => $insiStatus->status_id,
+                                'inil_insi_id' => $inspectionItem->insi_id,
+                                'inil_a_id' => $insiAction->a_id,
+                                'inil_status_id' => $insiStatus->status_id,
                                 'inil_action_made' => $insiAction->a_past_tense,
-                                'inil_status_log'  => $insiStatus->status_title,
-                                'inil_remarks'     => null,
-                                'inil_wo_id'       => $insiAction->a_id === 'mwo' ? $workOrder->wo_id : null,
-                                'inil_by'          => Auth::id(),
-                                'inil_dt'          => $now,
+                                'inil_status_log' => $insiStatus->status_title,
+                                'inil_remarks' => null,
+                                'inil_wo_id' => $insiAction->a_id === 'mwo' ? $workOrder->wo_id : null,
+                                'inil_by' => Auth::id(),
+                                'inil_dt' => $now,
                             ]);
 
-
                             // Notify manager
-                            $manager = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
+                            $manager = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
                                 ->where('user_dep_id', $workOrder->wo_dep_id)
                                 ->first();
 

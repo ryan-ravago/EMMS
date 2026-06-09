@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Equipment extends Model
 {
     protected $table = 'equipment_units';
+
     protected $primaryKey = 'eqm_id';
 
     protected $fillable = [
@@ -51,7 +52,7 @@ class Equipment extends Model
                 'ets_due_effectivity_dt',
                 'ets_due_dt',
                 'ets_assigned_by',
-                'ets_assigned_at'
+                'ets_assigned_at',
             ]);
     }
 
@@ -60,8 +61,8 @@ class Equipment extends Model
         // return $this->hasMany(EquipmentTasksSchedule::class, 'ets_eqm_id', 'eqm_id');
         return $this->hasMany(EquipmentTasksSchedule::class, 'ets_eqm_id', 'eqm_id')
             ->when(
-                auth()->check() && !auth()->user()->hasRole('super_admin'),
-                fn($query) => $query->where('ets_dep_id', auth()->user()->user_dep_id)
+                auth()->check() && ! auth()->user()->hasRole('super_admin'),
+                fn ($query) => $query->where('ets_dep_id', auth()->user()->user_dep_id)
             );
     }
 
@@ -74,6 +75,17 @@ class Equipment extends Model
     {
         return $this->hasMany(Inspection::class, 'ins_eqm_id', 'eqm_id');
     }
+
+    public function workOrders(): HasMany
+    {
+        return $this->hasMany(WorkOrder::class, 'wo_eqm_id', 'eqm_id');
+    }
+
+    public function maintenanceTasks(): HasMany
+    {
+        return $this->hasMany(MaintenanceTask::class, 'mt_eqm_id', 'eqm_id');
+    }
+
     // protected static function booted(): void
     // {
     //     $bust = fn() => cache()->forget('equipment_count');

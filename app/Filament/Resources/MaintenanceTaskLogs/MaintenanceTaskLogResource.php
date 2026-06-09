@@ -20,7 +20,7 @@ class MaintenanceTaskLogResource extends Resource
 {
     protected static ?string $model = MaintenanceTaskLog::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
     public static function shouldRegisterNavigation(): bool
     {

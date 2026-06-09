@@ -9,6 +9,7 @@ use App\Filament\Resources\Equipment\Pages\ViewEquipment;
 use App\Filament\Resources\Equipment\RelationManagers\EquipmentTaskChecklistTemplatesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\EquipmentTasksSchedulesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\InspectionsRelationManager;
+use App\Filament\Resources\Equipment\RelationManagers\WorkOrdersRelationManager;
 use App\Filament\Resources\Equipment\Schemas\EquipmentForm;
 use App\Filament\Resources\Equipment\Schemas\EquipmentInfolist;
 use App\Filament\Resources\Equipment\Tables\EquipmentTable;
@@ -26,9 +27,13 @@ class EquipmentResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTruck;
 
     protected static ?string $recordTitleAttribute = 'eqm_name';
+
     protected static ?string $navigationLabel = 'Equipments';
+
     protected static ?string $modelLabel = 'Equipment';
+
     protected static ?string $pluralModelLabel = 'Equipments';
+
     protected static ?string $slug = 'equipments';
 
     // public static function getNavigationBadge(): ?string
@@ -59,9 +64,10 @@ class EquipmentResource extends Resource
     public static function getRelations(): array
     {
         return [
+            WorkOrdersRelationManager::class,
             EquipmentTasksSchedulesRelationManager::class,
             EquipmentTaskChecklistTemplatesRelationManager::class,
-            InspectionsRelationManager::class
+            InspectionsRelationManager::class,
         ];
     }
 

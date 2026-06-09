@@ -20,11 +20,14 @@ class CategoryResource extends Resource
 {
     protected static ?string $model = EquipmentCategory::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
     protected static ?string $recordTitleAttribute = 'eqmc_name';
+
     protected static ?string $navigationLabel = 'Categories';
+
     protected static ?string $modelLabel = 'Category';
+
     protected static ?string $pluralModelLabel = 'Categories';
 
     public static function getNavigationGroup(): ?string
@@ -67,6 +70,11 @@ class CategoryResource extends Resource
     public static function table(Table $table): Table
     {
         return CategoriesTable::configure($table);
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
     }
 
     public static function getRelations(): array

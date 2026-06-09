@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Task;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class TaskPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:TaskResource');
@@ -19,7 +19,15 @@ class TaskPolicy
 
     public function view(AuthUser $authUser, Task $task): bool
     {
-        return $authUser->can('View:TaskResource');
+        if ($authUser->hasRole('super_admin')) {
+            return $authUser->can('View:TaskResource');
+        }
+
+        if ($authUser->user_dep_id === $task->task_dep_id) {
+            return $authUser->can('View:TaskResource');
+        }
+
+        return false;
     }
 
     public function create(AuthUser $authUser): bool
@@ -71,5 +79,4 @@ class TaskPolicy
     {
         return $authUser->can('Reorder:TaskResource');
     }
-
 }

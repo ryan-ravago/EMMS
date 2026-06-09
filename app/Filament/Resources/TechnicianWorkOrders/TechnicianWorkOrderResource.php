@@ -28,7 +28,7 @@ class TechnicianWorkOrderResource extends Resource
     protected static ?string $modelLabel = 'Technician Work Order';
     protected static ?string $pluralModelLabel = 'Technician Work Orders';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
 
     protected static ?string $recordTitleAttribute = 'wo_no';
 

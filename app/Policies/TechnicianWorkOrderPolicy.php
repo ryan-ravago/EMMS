@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\TechnicianWorkOrder;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class TechnicianWorkOrderPolicy
 {
@@ -19,7 +19,17 @@ class TechnicianWorkOrderPolicy
 
     public function view(AuthUser $authUser, TechnicianWorkOrder $technicianWorkOrder): bool
     {
-        return $authUser->can('View:TechnicianWorkOrderResource');
+        if ($authUser->hasRole('super_admin')) {
+            return $authUser->can('View:TechnicianWorkOrderResource');
+        }
+
+        if (
+            $authUser->user_dep_id === $technicianWorkOrder->wo_dep_id
+        ) {
+            return $authUser->can('View:TechnicianWorkOrderResource');
+        }
+
+        return false;
     }
 
     public function create(AuthUser $authUser): bool

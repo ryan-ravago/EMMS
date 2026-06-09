@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class MaintenanceTask extends Model
 {
     protected $table = 'maintenance_tasks';
+
     protected $primaryKey = 'mt_id';
 
     protected $fillable = [
@@ -31,31 +32,31 @@ class MaintenanceTask extends Model
 
     public function department(): BelongsTo
     {
-        return $this->belongsTo(Department::class, 'mt_dep_id');
+        return $this->belongsTo(Department::class, 'mt_dep_id', 'dep_id');
     }
 
     public function equipmentUnit(): BelongsTo
     {
-        return $this->belongsTo(Equipment::class, 'mt_eqm_id');
+        return $this->belongsTo(Equipment::class, 'mt_eqm_id', 'eqm_id');
     }
 
     public function task(): BelongsTo
     {
-        return $this->belongsTo(Task::class, 'mt_task_id');
+        return $this->belongsTo(Task::class, 'mt_task_id', 'task_id');
     }
 
     public function maintenanceTaskLogs(): HasMany
     {
-        return $this->hasMany(MaintenanceTaskLog::class, 'mtl_mt_id');
+        return $this->hasMany(MaintenanceTaskLog::class, 'mtl_mt_id', 'mt_id');
     }
 
     public function status(): BelongsTo
     {
-        return $this->belongsTo(Status::class, 'mt_status_id');
+        return $this->belongsTo(Status::class, 'mt_status_id', 'status_id');
     }
 
     public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(AppUser::class, 'mt_by', 'user_id');
+        return $this->belongsTo(AppUser::class, 'mt_by', 'user_id', 'user_id');
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class MaintenanceTaskLog extends Model
 {
     protected $table = 'maintenance_task_logs';
+
     protected $primaryKey = 'mtl_id';
 
     protected $fillable = [
@@ -15,6 +16,7 @@ class MaintenanceTaskLog extends Model
         'mtl_status_id',
         'mtl_due_dt',
         'mtl_last_act_made',
+        'mtl_wo_id',
         'mtl_remarks',
         'mtl_by',
         'mtl_dt',
@@ -35,6 +37,11 @@ class MaintenanceTaskLog extends Model
     public function action(): BelongsTo
     {
         return $this->belongsTo(Action::class, 'mtl_last_act_made');
+    }
+
+    public function workOrder(): BelongsTo
+    {
+        return $this->belongsTo(WorkOrder::class, 'mtl_wo_id', 'wo_id');
     }
 
     public function logBy(): BelongsTo

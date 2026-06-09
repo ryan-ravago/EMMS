@@ -2,19 +2,19 @@
 
 namespace App\Filament\Resources\WorkOrders\Pages;
 
-use App\Filament\Resources\TechnicianWorkOrders\TechnicianWorkOrderResource;
 use App\Filament\Resources\WorkOrders\RelationManagers\LogsRelationManager;
 use App\Filament\Resources\WorkOrders\RelationManagers\LogUpdatesRelationManager;
 use App\Filament\Resources\WorkOrders\RelationManagers\ReportSubmissionsRelationManager;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use App\Mail\WorkOrderApprovalMail;
 use App\Mail\WorkOrderCancellationMail;
-use App\Mail\WorkOrderCompletionRequestedMail;
 use App\Mail\WorkOrderRejectionMail;
 use App\Models\Action as ModelsAction;
-use App\Models\Status;
 use App\Models\InspectionItem;
 use App\Models\InspectionItemLog;
+use App\Models\MaintenanceTask;
+use App\Models\MaintenanceTaskLog;
+use App\Models\Status;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderLog;
 use App\Models\WorkOrderLogUpdate;
@@ -89,11 +89,11 @@ class ViewWorkOrder extends ViewRecord
                     ])
                     ->action(function (array $data, WorkOrder $record) {
                         WorkOrderLogUpdate::create([
-                            'wolu_wo_id'      => $record->wo_id,
+                            'wolu_wo_id' => $record->wo_id,
                             'wolu_update_note' => $data['wolu_update_note'],
                             'wolu_attachments' => $data['wolu_attachments'] ?? null,
-                            'wolu_by'         => auth()->id(),
-                            'wolu_dt'         => now(),
+                            'wolu_by' => auth()->id(),
+                            'wolu_dt' => now(),
                         ]);
 
                         Notification::make()
@@ -131,19 +131,67 @@ class ViewWorkOrder extends ViewRecord
                                     throw new \Exception('Work order is not pending completion approval.');
                                 }
 
-                                $action = ModelsAction::find('reject');
-                                $status = Status::find('rej');
+                                $action = ModelsAction::firstWhere('a_id', 'reject');
+                                $status = Status::firstWhere('status_id', 'rej');
+                                $pendingStatus = Status::firstWhere('status_id', 'pnd');
 
                                 WorkOrderLog::create([
-                                    'wol_wo_id'      => $workOrder->wo_id,
-                                    'wol_a_id'       => $action->a_id,
-                                    'wol_status_id'  => $status->status_id,
-                                    'wol_a_log'      => $action->a_past_tense,
+                                    'wol_wo_id' => $workOrder->wo_id,
+                                    'wol_a_id' => $action->a_id,
+                                    'wol_status_id' => $status->status_id,
+                                    'wol_a_log' => $action->a_past_tense,
                                     'wol_status_log' => $status->status_title,
-                                    'wol_note'       => $data['wol_note'],
-                                    'wol_by'         => auth()->id(),
-                                    'wol_dt'         => $now,
+                                    'wol_note' => $data['wol_note'],
+                                    'wol_by' => Auth::id(),
+                                    'wol_dt' => $now,
                                 ]);
+
+                                if ($workOrder->wo_insi_id) {
+                                    $inspectionItem = InspectionItem::query()
+                                        ->where('insi_id', $workOrder->wo_insi_id)
+                                        ->lockForUpdate()
+                                        ->first();
+
+                                    if ($inspectionItem) {
+                                        $inspectionItem->update([
+                                            'insi_status_id' => $pendingStatus->status_id,
+                                        ]);
+
+                                        InspectionItemLog::create([
+                                            'inil_insi_id' => $inspectionItem->insi_id,
+                                            'inil_a_id' => $action->a_id,
+                                            'inil_status_id' => $pendingStatus->status_id,
+                                            'inil_action_made' => $action->a_past_tense,
+                                            'inil_status_log' => $pendingStatus->status_title,
+                                            'inil_remarks' => 'Completion request rejected; inspection finding moved back to pending.',
+                                            'inil_wo_id' => $workOrder->wo_id,
+                                            'inil_by' => Auth::id(),
+                                            'inil_dt' => $now,
+                                        ]);
+                                    }
+                                } elseif ($workOrder->wo_mt_id) {
+                                    $maintenanceTask = MaintenanceTask::query()
+                                        ->where('mt_id', $workOrder->wo_mt_id)
+                                        ->lockForUpdate()
+                                        ->first();
+
+                                    if ($maintenanceTask) {
+                                        $maintenanceTask->update([
+                                            'mt_status_id' => $pendingStatus->status_id,
+                                        ]);
+
+                                        MaintenanceTaskLog::create([
+                                            'mtl_mt_id' => $maintenanceTask->mt_id,
+                                            'mtl_status_id' => $pendingStatus->status_id,
+                                            'mtl_due_dt' => $maintenanceTask->mt_due_dt,
+                                            'mtl_last_act_made' => $action->a_id,
+                                            'mtl_wo_id' => $workOrder->wo_id,
+                                            'mtl_remarks' => 'Completion request rejected; maintenance task moved back to pending.',
+                                            'mtl_by' => Auth::id(),
+                                            'mtl_dt' => $now,
+                                        ]);
+                                    }
+                                }
 
                                 $workOrder->update([
                                     'wo_status_id' => $status->status_id,
@@ -208,6 +256,8 @@ class ViewWorkOrder extends ViewRecord
                     ->action(function (array $data, WorkOrder $record) {
                         try {
                             DB::transaction(function () use ($data, $record) {
+                                $now = now();
+
                                 $workOrder = WorkOrder::where('wo_id', $record->wo_id)
                                     ->lockForUpdate()
                                     ->first();
@@ -220,19 +270,64 @@ class ViewWorkOrder extends ViewRecord
                                 $status = Status::find('cmp');
 
                                 WorkOrderLog::create([
-                                    'wol_wo_id'      => $workOrder->wo_id,
-                                    'wol_a_id'       => $action->a_id,
-                                    'wol_status_id'  => $status->status_id,
-                                    'wol_a_log'      => $action->a_past_tense,
+                                    'wol_wo_id' => $workOrder->wo_id,
+                                    'wol_a_id' => $action->a_id,
+                                    'wol_status_id' => $status->status_id,
+                                    'wol_a_log' => $action->a_past_tense,
                                     'wol_status_log' => $status->status_title,
-                                    'wol_note'       => $data['wol_note'] ?? null,
-                                    'wol_by'         => auth()->id(),
-                                    'wol_dt'         => now(),
+                                    'wol_note' => $data['wol_note'] ?? null,
+                                    'wol_by' => auth()->id(),
+                                    'wol_dt' => $now,
                                 ]);
+
+                                if ($workOrder->wo_insi_id) {
+                                    $inspectionItem = InspectionItem::where('insi_id', $workOrder->wo_insi_id)
+                                        ->lockForUpdate()
+                                        ->first();
+
+                                    if ($inspectionItem) {
+                                        $inspectionItem->update([
+                                            'insi_status_id' => $status->status_id,
+                                        ]);
+
+                                        InspectionItemLog::create([
+                                            'inil_insi_id' => $inspectionItem->insi_id,
+                                            'inil_a_id' => $action->a_id,
+                                            'inil_status_id' => $status->status_id,
+                                            'inil_action_made' => $action->a_past_tense,
+                                            'inil_status_log' => $status->status_title,
+                                            'inil_remarks' => 'Completion approved by manager.',
+                                            'inil_wo_id' => $workOrder->wo_id,
+                                            'inil_by' => auth()->id(),
+                                            'inil_dt' => $now,
+                                        ]);
+                                    }
+                                } elseif ($workOrder->wo_mt_id) {
+                                    $maintenanceTask = MaintenanceTask::where('mt_id', $workOrder->wo_mt_id)
+                                        ->lockForUpdate()
+                                        ->first();
+
+                                    if ($maintenanceTask) {
+                                        $maintenanceTask->update([
+                                            'mt_status_id' => $status->status_id,
+                                        ]);
+
+                                        MaintenanceTaskLog::create([
+                                            'mtl_mt_id' => $maintenanceTask->mt_id,
+                                            'mtl_status_id' => $status->status_id,
+                                            'mtl_due_dt' => $maintenanceTask->mt_due_dt,
+                                            'mtl_last_act_made' => $action->a_id,
+                                            'mtl_wo_id' => $workOrder->wo_id,
+                                            'mtl_remarks' => 'Completion approved by manager.',
+                                            'mtl_by' => auth()->id(),
+                                            'mtl_dt' => $now,
+                                        ]);
+                                    }
+                                }
 
                                 $workOrder->update([
                                     'wo_status_id' => $status->status_id,
-                                    'wo_closed_dt' => now(),
+                                    'wo_closed_dt' => $now,
                                 ]);
                             });
 
@@ -299,7 +394,7 @@ class ViewWorkOrder extends ViewRecord
                                     ->lockForUpdate()
                                     ->first();
 
-                                if (!in_array($workOrder->wo_status_id, ['inprog', 'pca'])) {
+                                if (! in_array($workOrder->wo_status_id, ['inprog', 'pca'])) {
                                     throw new \Exception('Work order cannot be cancelled at its current status.');
                                 }
 
@@ -307,14 +402,14 @@ class ViewWorkOrder extends ViewRecord
                                 $status = Status::find('cnc');
 
                                 WorkOrderLog::create([
-                                    'wol_wo_id'      => $workOrder->wo_id,
-                                    'wol_a_id'       => $action->a_id,
-                                    'wol_status_id'  => $status->status_id,
-                                    'wol_a_log'      => $action->a_past_tense,
+                                    'wol_wo_id' => $workOrder->wo_id,
+                                    'wol_a_id' => $action->a_id,
+                                    'wol_status_id' => $status->status_id,
+                                    'wol_a_log' => $action->a_past_tense,
                                     'wol_status_log' => $status->status_title,
-                                    'wol_note'       => $data['wol_note'],
-                                    'wol_by'         => auth()->id(),
-                                    'wol_dt'         => $now,
+                                    'wol_note' => $data['wol_note'],
+                                    'wol_by' => auth()->id(),
+                                    'wol_dt' => $now,
                                 ]);
 
                                 if ($workOrder->wo_insi_id) {
@@ -325,22 +420,45 @@ class ViewWorkOrder extends ViewRecord
                                     if ($inspectionItem) {
                                         $inspectionItem->update([
                                             'insi_status_id' => 'pnd',
-                                            'insi_closed_dt' => $now,
                                         ]);
 
-                                        $inspectionAction = ModelsAction::find('upt');
+                                        $updateAction = ModelsAction::find('upt');
                                         $pendingStatus = Status::find('pnd');
 
                                         InspectionItemLog::create([
-                                            'inil_insi_id'     => $inspectionItem->insi_id,
-                                            'inil_a_id'        => $inspectionAction->a_id,
-                                            'inil_status_id'   => $pendingStatus->status_id,
-                                            'inil_action_made' => $inspectionAction->a_past_tense,
-                                            'inil_status_log'  => $pendingStatus->status_title,
-                                            'inil_remarks'     => 'Cancelled the linked work order and reverted this inspection finding to pending.',
-                                            'inil_wo_id'       => $workOrder->wo_id,
-                                            'inil_by'          => auth()->id(),
-                                            'inil_dt'          => $now,
+                                            'inil_insi_id' => $inspectionItem->insi_id,
+                                            'inil_a_id' => $updateAction->a_id,
+                                            'inil_status_id' => $pendingStatus->status_id,
+                                            'inil_action_made' => $updateAction->a_past_tense,
+                                            'inil_status_log' => $pendingStatus->status_title,
+                                            'inil_remarks' => 'Cancelled the linked work order and reverted this inspection finding to pending.',
+                                            'inil_wo_id' => $workOrder->wo_id,
+                                            'inil_by' => auth()->id(),
+                                            'inil_dt' => $now,
+                                        ]);
+                                    }
+                                } elseif ($workOrder->wo_mt_id) {
+                                    $maintenanceTask = MaintenanceTask::where('mt_id', $workOrder->wo_mt_id)
+                                        ->lockForUpdate()
+                                        ->first();
+
+                                    if ($maintenanceTask) {
+                                        $maintenanceTask->update([
+                                            'mt_status_id' => 'pnd',
+                                        ]);
+
+                                        $updateAction = ModelsAction::find('upt');
+                                        $pendingStatus = Status::find('pnd');
+
+                                        MaintenanceTaskLog::create([
+                                            'mtl_mt_id' => $maintenanceTask->mt_id,
+                                            'mtl_status_id' => $pendingStatus->status_id,
+                                            'mtl_due_dt' => $maintenanceTask->mt_due_dt,
+                                            'mtl_last_act_made' => $updateAction->a_id,
+                                            'mtl_wo_id' => $workOrder->wo_id,
+                                            'mtl_remarks' => 'Cancelled the linked work order and reverted this maintenance task finding to pending.',
+                                            'mtl_by' => auth()->id(),
+                                            'mtl_dt' => $now,
                                         ]);
                                     }
                                 }
@@ -392,14 +510,11 @@ class ViewWorkOrder extends ViewRecord
                         }
                     }),
 
-
-
-
             ])
                 ->label('Actions')
                 ->icon('heroicon-o-ellipsis-vertical')
                 ->color('gray')
-                ->button()
+                ->button(),
         ];
     }
 }

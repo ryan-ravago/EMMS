@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\MaintenanceTask;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class MaintenanceTaskPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:MaintenanceTaskResource');
@@ -19,7 +19,15 @@ class MaintenanceTaskPolicy
 
     public function view(AuthUser $authUser, MaintenanceTask $maintenanceTask): bool
     {
-        return $authUser->can('View:MaintenanceTaskResource');
+        if ($authUser->hasRole('super_admin')) {
+            return $authUser->can('View:MaintenanceTaskResource');
+        }
+
+        if ($authUser->user_dep_id === $maintenanceTask->mt_dep_id) {
+            return $authUser->can('View:MaintenanceTaskResource');
+        }
+
+        return false;
     }
 
     public function create(AuthUser $authUser): bool
@@ -71,5 +79,4 @@ class MaintenanceTaskPolicy
     {
         return $authUser->can('Reorder:MaintenanceTaskResource');
     }
-
 }

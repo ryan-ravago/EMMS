@@ -21,7 +21,7 @@ class InspectionResource extends Resource
 {
     protected static ?string $model = Inspection::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
 
     protected static ?string $recordTitleAttribute = 'ins_id';
 

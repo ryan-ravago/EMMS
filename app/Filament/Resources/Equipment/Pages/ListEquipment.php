@@ -10,6 +10,8 @@ use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Schemas\Components\Tabs\Tab;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -115,6 +117,21 @@ class ListEquipment extends ListRecords
         ];
     }
 
+    public function getTabs(): array
+    {
+        return [
+            'all' => Tab::make('All')
+                ->badge(fn() => Equipment::count()),
+
+            'active' => Tab::make('Active')
+                ->badge(fn() => Equipment::where('eqm_is_active', 1)->count())
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('eqm_is_active', 1)),
+
+            'inactive' => Tab::make('Inactive')
+                ->badge(fn() => Equipment::where('eqm_is_active', 0)->count())
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('eqm_is_active', 0)),
+        ];
+    }
 
     public function getSubheading(): ?string
     {

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MaintenanceTaskLogs\Schemas;
 
+use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use App\Models\MaintenanceTaskLog;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -20,8 +21,8 @@ class MaintenanceTaskLogInfolist
                         TextEntry::make('status.status_title')
                             ->label('Status')
                             ->badge()
-                            ->color(fn(MaintenanceTaskLog $record): string => $record->status->status_color)
-                            ->icon(fn(MaintenanceTaskLog $record): string => $record->status->status_icon)
+                            ->color(fn (MaintenanceTaskLog $record): string => $record->status->status_color)
+                            ->icon(fn (MaintenanceTaskLog $record): string => $record->status->status_icon)
                             ->placeholder('-'),
 
                         TextEntry::make('logBy.full_name')
@@ -37,9 +38,20 @@ class MaintenanceTaskLogInfolist
 
                         TextEntry::make('mtl_due_dt')
                             ->label('Due Date')
-                            ->dateTime('M j, Y h:i A')
+                            ->dateTime('M d, Y | h:i A')
                             ->icon('heroicon-m-clock')
                             ->placeholder('Not specified'),
+
+                        TextEntry::make('workOrder.wo_no')
+                            ->label('WO #')
+                            ->color('info')
+                            ->icon('heroicon-o-arrow-top-right-on-square')
+                            ->iconPosition('after')
+                            ->url(
+                                fn ($record) => $record->workOrder
+                                    ? WorkOrderResource::getUrl('view', ['record' => $record->workOrder->wo_id])
+                                    : null
+                            ),
                     ])
                     ->columns(['sm' => 1, 'md' => 2]),
 
@@ -55,7 +67,7 @@ class MaintenanceTaskLogInfolist
                             ->label('Remarks')
                             ->placeholder('No remarks provided.')
                             ->columnSpanFull(),
-                    ])
+                    ]),
             ]);
     }
 }
