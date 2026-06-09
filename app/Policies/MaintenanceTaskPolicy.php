@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\MaintenanceTask;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Foundation\Auth\User as AuthUser;
 
 class MaintenanceTaskPolicy
 {
@@ -23,7 +23,7 @@ class MaintenanceTaskPolicy
             return $authUser->can('View:MaintenanceTaskResource');
         }
 
-        if ($authUser->user_dep_id === $maintenanceTask->mt_dep_id) {
+        if ($authUser->hasRole('manager') && $authUser->user_dep_id === $maintenanceTask->mt_dep_id) {
             return $authUser->can('View:MaintenanceTaskResource');
         }
 
@@ -78,5 +78,68 @@ class MaintenanceTaskPolicy
     public function reorder(AuthUser $authUser): bool
     {
         return $authUser->can('Reorder:MaintenanceTaskResource');
+    }
+
+    public function makeWorkOrder(AuthUser $authUser, MaintenanceTask $maintenanceTask): bool
+    {
+        if (
+            $authUser->hasRole('super_admin') &&
+            in_array($maintenanceTask->mt_status_id, ['snz', 'pnd'])
+        ) {
+            return $authUser->can('MakeWorkOrder:MaintenanceTaskResource');
+        }
+
+        if ($authUser->hasRole('manager')) {
+            if (
+                $authUser->user_dep_id === $maintenanceTask->mt_dep_id &&
+                in_array($maintenanceTask->mt_status_id, ['snz', 'pnd'])
+            ) {
+                return $authUser->can('MakeWorkOrder:MaintenanceTaskResource');
+            }
+        }
+
+        return false;
+    }
+
+    public function snooze(AuthUser $authUser, MaintenanceTask $maintenanceTask): bool
+    {
+        if (
+            $authUser->hasRole('super_admin') &&
+            in_array($maintenanceTask->mt_status_id, ['pnd'])
+        ) {
+            return $authUser->can('Snooze:MaintenanceTaskResource');
+        }
+
+        if ($authUser->hasRole('manager')) {
+            if (
+                $authUser->user_dep_id === $maintenanceTask->mt_dep_id &&
+                in_array($maintenanceTask->mt_status_id, ['pnd'])
+            ) {
+                return $authUser->can('Snooze:MaintenanceTaskResource');
+            }
+        }
+
+        return false;
+    }
+
+    public function markAsComplete(AuthUser $authUser, MaintenanceTask $maintenanceTask): bool
+    {
+        if (
+            $authUser->hasRole('super_admin') &&
+            in_array($maintenanceTask->mt_status_id, ['snz', 'pnd'])
+        ) {
+            return $authUser->can('MarkAsComplete:MaintenanceTaskResource');
+        }
+
+        if ($authUser->hasRole('manager')) {
+            if (
+                $authUser->user_dep_id === $maintenanceTask->mt_dep_id &&
+                in_array($maintenanceTask->mt_status_id, ['snz', 'pnd'])
+            ) {
+                return $authUser->can('MarkAsComplete:MaintenanceTaskResource');
+            }
+        }
+
+        return false;
     }
 }

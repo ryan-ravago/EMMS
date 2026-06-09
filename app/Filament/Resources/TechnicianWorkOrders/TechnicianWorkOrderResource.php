@@ -19,6 +19,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class TechnicianWorkOrderResource extends Resource
 {
@@ -32,10 +33,26 @@ class TechnicianWorkOrderResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'wo_no';
 
-    // public static function canAccess(): bool
-    // {
-    //     return auth()->user()->hasRole('technician');
-    // }
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (Auth::user()?->hasRole('super_admin')) {
+            return $query;
+        }
+
+        $query->where('wo_dep_id', Auth::user()?->user_dep_id);
+
+        // Moved from TechnicianWorkOrder::booted()
+        $query->whereHas('workers', fn($q) => $q->where('user_id', Auth::id()));
+
+        return $query;
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getEloquentQuery()->count();
+    }
 
     public static function form(Schema $schema): Schema
     {

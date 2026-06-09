@@ -25,7 +25,9 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules\Unique;
 
 class EquipmentTasksSchedulesRelationManager extends RelationManager
@@ -75,7 +77,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                             ->relationship(
                                 name: 'task',
                                 titleAttribute: 'task_name',
-                                modifyQueryUsing: fn ($query) => $query
+                                modifyQueryUsing: fn($query) => $query
                                     ->where('task_tut_id', 2)
                                     ->where('task_dep_id', auth()->user()->user_dep_id)
                             )
@@ -93,7 +95,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                                     ->unique(
                                         table: Task::class,
                                         column: 'task_name',
-                                        modifyRuleUsing: fn (Unique $rule) => $rule->where('task_dep_id', auth()->user()->user_dep_id),
+                                        modifyRuleUsing: fn(Unique $rule) => $rule->where('task_dep_id', auth()->user()->user_dep_id),
                                         ignoreRecord: true,
                                     )->validationMessages([
                                         'unique' => 'The task name has already been taken.',
@@ -113,7 +115,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                             ])
                             ->createOptionModalHeading('Add New Preventive Task')
                             ->createOptionAction(
-                                fn (Action $action) => $action
+                                fn(Action $action) => $action
                                     ->modalWidth(Width::Large)
                                     ->mutateFormDataUsing(function (array $data) {
                                         $data['task_tut_id'] = 2;
@@ -121,10 +123,10 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                                         return $data;
                                     })
                             ),
-                        TextInput::make('ets_sort_order')
-                            ->label('Sort Order')
-                            ->numeric()
-                            ->default(0),
+                        // TextInput::make('ets_sort_order')
+                        //     ->label('Sort Order')
+                        //     ->numeric()
+                        //     ->default(0),
                     ]),
 
                 Section::make('Interval')
@@ -185,11 +187,11 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                     ->schema([
                         TextEntry::make('task.task_name')
                             ->label('Task'),
-                        TextEntry::make('ets_sort_order')
-                            ->label('Sort Order'),
+                        // TextEntry::make('ets_sort_order')
+                        //     ->label('Sort Order'),
                         TextEntry::make('department.dep_name')
                             ->label('Department')
-                            ->visible(fn () => auth()->user()->hasRole('super_admin')),
+                            ->visible(fn() => auth()->user()->hasRole('super_admin')),
                     ]),
 
                 Section::make('Interval')
@@ -220,7 +222,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                             ->placeholder('-'),
                         TextEntry::make('ets_due_effectivity_dt')
                             ->label('Due Effectivity Date')
-                            ->dateTime('M d, Y | h:i A'),
+                            ->date('M d, Y'),
                         TextEntry::make('ets_due_dt')
                             ->label('Due Date')
                             ->dateTime('M d, Y | h:i A')
@@ -259,7 +261,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                 TextColumn::make('department.dep_name')
                     ->label('Department')
                     ->sortable()
-                    ->visible(fn () => auth()->user()->hasRole('super_admin')),
+                    ->visible(fn() => auth()->user()->hasRole('super_admin')),
                 TextColumn::make('ets_due_effectivity_dt')
                     ->label('Effectivity Date')
                     ->dateTime('M d, Y')
@@ -269,10 +271,10 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                     ->dateTime('M d, Y | h:i A')
                     ->placeholder('-')
                     ->sortable(),
-                TextColumn::make('ets_sort_order')
-                    ->label('Sort Order')
-                    ->numeric()
-                    ->sortable(),
+                // TextColumn::make('ets_sort_order')
+                //     ->label('Sort Order')
+                //     ->numeric()
+                //     ->sortable(),
             ])
             ->modifyQueryUsing(function (Builder $query) {
                 if (! auth()->user()->hasRole('super_admin')) {
@@ -305,7 +307,40 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                     ->modalHeading('Edit Task Schedule')
                     ->modalWidth(Width::SevenExtraLarge)
                     ->closeModalByClickingAway(false)
-                    ->closeModalByEscaping(false),
+                    ->closeModalByEscaping(false)
+                    ->using(function (Model $record, array $data, RelationManager $livewire): Model {
+                        return DB::transaction(function () use ($record, $data, $livewire) {
+                            // 1. Stage the new form entries onto the model instance
+                            $record->fill($data);
+
+                            // 2. Track who updated the record
+                            $record->ets_last_assigned_by = auth()->id();
+                            $record->ets_last_assigned_at = now();
+
+                            // 3. Look for existing active tasks
+                            $hasOpenTask = DB::table('maintenance_tasks')
+                                ->where('mt_dep_id', auth()->user()->user_dep_id)
+                                ->where('mt_task_id', $record->ets_task_id)
+                                ->where('mt_eqm_id', $livewire->getOwnerRecord()->getKey())
+                                ->whereIn('mt_status_id', ['pnd', 'snz', 'inprog'])
+                                ->exists();
+
+                            // 4. Recalculate next due date if no open items block it
+                            if (!$hasOpenTask) {
+                                $record->ets_due_dt = Carbon::parse($record->ets_due_effectivity_dt)
+                                    ->addYears($record->ets_itrv_years ?? 0)
+                                    ->addMonths($record->ets_itrv_months ?? 0)
+                                    ->addWeeks($record->ets_itrv_weeks ?? 0)
+                                    ->addDays($record->ets_itrv_days ?? 0)
+                                    ->setTimeFromTimeString($record->ets_sched_time ?? '00:00:00');
+                            }
+
+                            // 5. Save all updates to the database cleanly in a single action
+                            $record->save();
+
+                            return $record;
+                        });
+                    }),
                 DeleteAction::make()
                     ->authorize(true),
             ])

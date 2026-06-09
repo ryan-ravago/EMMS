@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Filament\Resources\InspectionItems\InspectionItemResource;
+use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
 use App\Filament\Resources\TechnicianWorkOrders\TechnicianWorkOrderResource;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use App\Models\TechnicianWorkOrder;
@@ -205,6 +207,15 @@ return [
                 'addUpdate',
                 'addReport',
                 'requestCompletion'
+            ],
+            MaintenanceTaskResource::class => [
+                'makeWorkOrder',
+                'snooze',
+                'markAsComplete'
+            ],
+            InspectionItemResource::class => [
+                'disregard',
+                'makeWorkOrder'
             ]
         ],
         'exclude' => [

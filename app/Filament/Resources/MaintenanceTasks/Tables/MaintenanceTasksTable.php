@@ -63,6 +63,7 @@ class MaintenanceTasksTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('mt_dt', 'desc')
             ->filters([
                 //
             ])

@@ -7,13 +7,13 @@ use App\Mail\WorkOrderAssignedMail;
 use App\Mail\WorkOrderConfirmationMail;
 use App\Models\Action as ModelsAction;
 use App\Models\AppUser;
+use App\Models\EquipmentTasksSchedule;
 use App\Models\MaintenanceTask;
 use App\Models\MaintenanceTaskLog;
 use App\Models\Priority;
 use App\Models\Status;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderLog;
-use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
@@ -29,6 +29,7 @@ use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -56,8 +57,8 @@ class ViewMaintenanceTask extends ViewRecord
                     ->modalHeading('Make Work Order')
                     ->modalCloseButton(false)
                     ->modalWidth(Width::SevenExtraLarge)
-                    ->icon(fn () => DB::table('actions')->where('a_id', 'mwo')->value('a_icon'))
-                    ->visible(fn (MaintenanceTask $record): bool => in_array($record->mt_status_id, ['snz', 'pnd']))
+                    ->icon(fn() => DB::table('actions')->where('a_id', 'mwo')->value('a_icon'))
+                    ->visible(fn() => Auth::user()->can('makeWorkOrder', $this->record))
                     ->schema([
                         Wizard::make([
                             Step::make('Work Order Details')
@@ -71,7 +72,7 @@ class ViewMaintenanceTask extends ViewRecord
                                             Select::make('wo_eqm_id')
                                                 ->label('Equipment')
                                                 ->relationship('equipmentUnit', 'eqm_name')
-                                                ->default(fn () => $this->record->mt_eqm_id)
+                                                ->default(fn() => $this->record->mt_eqm_id)
                                                 ->searchable()
                                                 ->disabled()
                                                 ->dehydrated()
@@ -84,14 +85,14 @@ class ViewMaintenanceTask extends ViewRecord
                                                 ->relationship(
                                                     'department',
                                                     'dep_name',
-                                                    fn (Builder $query) => $query->where('is_maintenance', 1)
+                                                    fn(Builder $query) => $query->where('is_maintenance', 1)
                                                 )
                                                 ->searchable()
                                                 ->preload()
                                                 ->required()
                                                 ->native(false)
                                                 ->live()
-                                                ->visible(fn () => Auth::user()->hasRole('super_admin')),
+                                                ->visible(fn() => Auth::user()->hasRole('super_admin')),
                                         ]),
 
                                     Section::make('Details')
@@ -145,10 +146,10 @@ class ViewMaintenanceTask extends ViewRecord
                                                 return [];
                                             }
 
-                                            return AppUser::whereHas('roles', fn ($q) => $q->where('name', 'technician'))
+                                            return AppUser::whereHas('roles', fn($q) => $q->where('name', 'technician'))
                                                 ->where('user_dep_id', $depId)
                                                 ->get()
-                                                ->mapWithKeys(fn ($user) => [
+                                                ->mapWithKeys(fn($user) => [
                                                     $user->user_id => "{$user->user_fname} {$user->user_lname}",
                                                 ]);
                                         })
@@ -212,7 +213,7 @@ class ViewMaintenanceTask extends ViewRecord
 
                                 $workOrder = WorkOrder::create([
                                     ...$data,
-                                    'wo_no' => 'WO-'.$depCode.'-'.$now->format('ymd').str_pad($count, 3, '0', STR_PAD_LEFT),
+                                    'wo_no' => 'WO-' . $depCode . '-' . $now->format('ymd') . str_pad($count, 3, '0', STR_PAD_LEFT),
                                     'wo_eqm_id' => $maintenanceTask->mt_eqm_id,
                                     'wo_mt_id' => $maintenanceTask->mt_id, // 👈 prefilled from maintenance task
                                     'wo_dep_id' => Auth::user()->hasRole('super_admin') ? $data['wo_dep_id'] : Auth::user()->user_dep_id,
@@ -250,7 +251,7 @@ class ViewMaintenanceTask extends ViewRecord
                                 ]);
 
                                 // Notify manager
-                                $managers = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
+                                $managers = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
                                     ->where('user_dep_id', $workOrder->wo_dep_id)
                                     ->get();
 
@@ -291,8 +292,8 @@ class ViewMaintenanceTask extends ViewRecord
                     ->closeModalByClickingAway(false)
                     ->modalHeading('Snooze Task')
                     ->modalCloseButton(false)
-                    ->icon(fn () => DB::table('actions')->where('a_id', 'snz')->value('a_icon'))
-                    ->visible(fn (MaintenanceTask $record): bool => in_array($record->mt_status_id, ['pnd']))
+                    ->icon(fn() => DB::table('actions')->where('a_id', 'snz')->value('a_icon'))
+                    ->visible(fn() => Auth::user()->can('snooze', $this->record))
                     ->schema([
                         DateTimePicker::make('mtl_due_dt')
                             ->label('Extend Due Date')
@@ -301,8 +302,14 @@ class ViewMaintenanceTask extends ViewRecord
                             ->required()
                             // ->minDate(fn(MaintenanceTask $record) => Carbon::parse($record->mt_due_dt)->addDay())
                             ->rules([
-                                fn (MaintenanceTask $record) => function (string $attribute, $value, $fail) use ($record) {
-                                    if (Carbon::parse($value)->lte(Carbon::parse($record->mt_due_dt))) {
+                                fn(MaintenanceTask $record) => function (string $attribute, $value, $fail) use ($record) {
+                                    $newDate = Carbon::parse($value);
+
+                                    if ($newDate->lte(now())) {
+                                        $fail('New due date must be in the future.');
+                                    }
+
+                                    if ($newDate->lte(Carbon::parse($record->mt_due_dt))) {
                                         $fail('New due date must be later than the current due date.');
                                     }
                                 },
@@ -342,6 +349,17 @@ class ViewMaintenanceTask extends ViewRecord
                                     'mtl_by' => auth()->id(),
                                     'mtl_dt' => $now,
                                 ]);
+
+                                $schedule = EquipmentTasksSchedule::where('ets_eqm_id', $record->mt_eqm_id)
+                                    ->where('ets_dep_id', $record->mt_dep_id)
+                                    ->where('ets_task_id', $record->mt_task_id)
+                                    ->first();
+
+                                if ($schedule) {
+                                    $schedule->update([
+                                        'ets_due_dt' => $data['mtl_due_dt'],
+                                    ]);
+                                }
                             });
 
                             Notification::make()
@@ -353,7 +371,7 @@ class ViewMaintenanceTask extends ViewRecord
                         } catch (Throwable $th) {
                             Notification::make()
                                 ->title('Action Failed')
-                                ->body('An error occurred while updating the task. No changes were saved.'.''.$th->getMessage())
+                                ->body('An error occurred while updating the task. No changes were saved.' . '' . $th->getMessage())
                                 ->danger()
                                 ->send();
                         }
@@ -365,8 +383,8 @@ class ViewMaintenanceTask extends ViewRecord
                     ->closeModalByClickingAway(false)
                     ->modalHeading('Complete Task')
                     ->modalCloseButton(false)
-                    ->icon(fn () => DB::table('actions')->where('a_id', 'mac')->value('a_icon'))
-                    ->visible(fn (MaintenanceTask $record): bool => in_array($record->mt_status_id, ['snz', 'pnd']))
+                    ->icon(fn() => DB::table('actions')->where('a_id', 'mac')->value('a_icon'))
+                    ->visible(fn() => Auth::user()->can('markAsComplete', $this->record))
                     ->schema([
                         Textarea::make('mtl_remarks')
                             ->label('Remarks')
@@ -393,13 +411,29 @@ class ViewMaintenanceTask extends ViewRecord
                                 ]);
 
                                 MaintenanceTaskLog::create([
-                                    'mtl_mt_id' => $record->mt_id,
-                                    'mtl_status_id' => 'cmp',
+                                    'mtl_mt_id'         => $record->mt_id,
+                                    'mtl_status_id'     => 'cmp',
                                     'mtl_last_act_made' => 'mac',
-                                    'mtl_remarks' => $data['mtl_remarks'],
-                                    'mtl_by' => auth()->id(),
-                                    'mtl_dt' => $now,
+                                    'mtl_remarks'       => $data['mtl_remarks'],
+                                    'mtl_by'            => auth()->id(),
+                                    'mtl_dt'            => $now,
                                 ]);
+
+                                $schedule = EquipmentTasksSchedule::where('ets_eqm_id', $record->mt_eqm_id)
+                                    ->where('ets_dep_id', $record->mt_dep_id)
+                                    ->where('ets_task_id', $record->mt_task_id)
+                                    ->first();
+
+                                if ($schedule) {
+                                    $schedule->update([
+                                        'ets_due_dt' => Carbon::parse($now)
+                                            ->addYears($schedule->ets_itrv_years ?? 0)
+                                            ->addMonths($schedule->ets_itrv_months ?? 0)
+                                            ->addWeeks($schedule->ets_itrv_weeks ?? 0)
+                                            ->addDays($schedule->ets_itrv_days ?? 0)
+                                            ->setTimeFromTimeString($schedule->ets_sched_time ?? '00:00:00'),
+                                    ]);
+                                }
                             });
 
                             Notification::make()
@@ -411,12 +445,12 @@ class ViewMaintenanceTask extends ViewRecord
                         } catch (Throwable $th) {
                             Notification::make()
                                 ->title('Action Failed')
-                                ->body('An error occurred while updating the task. No changes were saved.'.''.$th->getMessage())
+                                ->body('An error occurred while updating the task. No changes were saved.' . '' . $th->getMessage())
                                 ->danger()
                                 ->send();
                         }
                     }),
-                EditAction::make(),
+                // EditAction::make(),
             ]),
         ];
     }

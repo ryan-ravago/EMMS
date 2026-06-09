@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\InspectionItem;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Foundation\Auth\User as AuthUser;
 
 class InspectionItemPolicy
 {
@@ -79,5 +79,42 @@ class InspectionItemPolicy
     public function reorder(AuthUser $authUser): bool
     {
         return $authUser->can('Reorder:InspectionItemResource');
+    }
+
+    public function disregard(AuthUser $authUser, InspectionItem $inspectionItem): bool
+    {
+        if ($authUser->hasRole('super_admin')) {
+            if ($inspectionItem->insi_status_id === 'pnd') {
+                return $authUser->can('Disregard:InspectionItemResource');
+            }
+        }
+
+        if ($authUser->hasRole('manager')) {
+            if ($inspectionItem->inspection->ins_dep_id === $authUser->user_dep_id && $inspectionItem->insi_status_id === 'pnd') {
+                return $authUser->can('Disregard:InspectionItemResource');
+            }
+        }
+
+        return false;
+    }
+
+    public function makeWorkOrder(AuthUser $authUser, InspectionItem $inspectionItem): bool
+    {
+        if ($authUser->hasRole('super_admin')) {
+            if ($inspectionItem->insi_status_id === 'pnd') {
+                return $authUser->can('MakeWorkOrder:InspectionItemResource');
+            }
+        }
+
+        if ($authUser->hasRole('manager')) {
+            if (
+                $inspectionItem->inspection->ins_dep_id === $authUser->user_dep_id &&
+                $inspectionItem->insi_status_id === 'pnd'
+            ) {
+                return $authUser->can('MakeWorkOrder:InspectionItemResource');
+            }
+        }
+
+        return false;
     }
 }

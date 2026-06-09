@@ -66,29 +66,29 @@ class EquipmentTasksSchedule extends Model
             }
         });
 
-        static::updating(function (EquipmentTasksSchedule $schedule) {
-            $now = now();
+        // static::updating(function (EquipmentTasksSchedule $schedule) {
+        //     $now = now();
 
-            $schedule->ets_last_assigned_by = auth()->id();
-            $schedule->ets_last_assigned_at = $now;
+        //     $schedule->ets_last_assigned_by = auth()->id();
+        //     $schedule->ets_last_assigned_at = $now;
 
-            // Only recalculate due date if no open maintenance task exists for this specific combination
-            $hasOpenTask = DB::table('maintenance_tasks')
-                ->where('mt_dep_id', $schedule->ets_dep_id)   // Matching Department ID
-                ->where('mt_task_id', $schedule->ets_task_id) // Matching Task ID
-                ->where('mt_eqm_id', $schedule->ets_eqm_id)   // Matching Equipment ID
-                ->whereIn('mt_status_id', ['pnd', 'snz', 'inprog']) // Active "open" states
-                ->exists();
+        //     // Only recalculate due date if no open maintenance task exists for this specific combination
+        //     $hasOpenTask = DB::table('maintenance_tasks')
+        //         ->where('mt_dep_id', $schedule->ets_dep_id)   // Matching Department ID
+        //         ->where('mt_task_id', $schedule->ets_task_id) // Matching Task ID
+        //         ->where('mt_eqm_id', $schedule->ets_eqm_id)   // Matching Equipment ID
+        //         ->whereIn('mt_status_id', ['pnd', 'snz', 'inprog']) // Active "open" states
+        //         ->exists();
 
-            if (!$hasOpenTask) {
-                $schedule->ets_due_dt = Carbon::parse($schedule->ets_due_effectivity_dt)
-                    ->addYears($schedule->ets_itrv_years ?? 0)
-                    ->addMonths($schedule->ets_itrv_months ?? 0)
-                    ->addWeeks($schedule->ets_itrv_weeks ?? 0)
-                    ->addDays($schedule->ets_itrv_days ?? 0)
-                    ->setTimeFromTimeString($schedule->ets_sched_time ?? '00:00:00');
-            }
-        });
+        //     if (!$hasOpenTask) {
+        //         $schedule->ets_due_dt = Carbon::parse($schedule->ets_due_effectivity_dt)
+        //             ->addYears($schedule->ets_itrv_years ?? 0)
+        //             ->addMonths($schedule->ets_itrv_months ?? 0)
+        //             ->addWeeks($schedule->ets_itrv_weeks ?? 0)
+        //             ->addDays($schedule->ets_itrv_days ?? 0)
+        //             ->setTimeFromTimeString($schedule->ets_sched_time ?? '00:00:00');
+        //     }
+        // });
     }
 
     public function department(): BelongsTo
