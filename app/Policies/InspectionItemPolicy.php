@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\InspectionItem;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class InspectionItemPolicy
 {
@@ -24,6 +24,15 @@ class InspectionItemPolicy
         }
 
         $inspection = $inspectionItem->inspection;
+
+        if ($authUser->hasRole('technician')) {
+            if ($inspection && $authUser->user_id === $inspection->ins_by) {
+                return $authUser->can('View:InspectionItemResource');
+            }
+
+            return false;
+        }
+
         if ($inspection && $authUser->user_dep_id === $inspection->ins_dep_id) {
             return $authUser->can('View:InspectionItemResource');
         }

@@ -25,6 +25,10 @@ class InspectionItemsTable
                     ->color(fn (InspectionItem $record) => $record->status->status_color)
                     ->icon(fn (InspectionItem $record) => $record->status->status_icon)
                     ->sortable(),
+                TextColumn::make('inspection.ins_id')
+                    ->label('Inspection ID')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('inspection.equipment.eqm_name')
                     ->label('Equipment')
                     ->searchable()
@@ -70,11 +74,21 @@ class InspectionItemsTable
             ])
             ->defaultSort('inspection.ins_submitted_dt', 'desc')
             ->modifyQueryUsing(function (Builder $query) {
-                if (! Auth::user()->hasRole('super_admin')) {
-                    $query->whereHas('inspection', function (Builder $query) {
-                        $query->where('ins_dep_id', Auth::user()->user_dep_id);
-                    });
+                if (Auth::user()->hasRole('super_admin')) {
+                    return;
                 }
+
+                if (Auth::user()->hasRole('technician')) {
+                    $query->whereHas('inspection', function (Builder $query) {
+                        $query->where('ins_by', Auth::user()->user_id);
+                    });
+
+                    return;
+                }
+
+                $query->whereHas('inspection', function (Builder $query) {
+                    $query->where('ins_dep_id', Auth::user()->user_dep_id);
+                });
             })
             ->filters([
                 SelectFilter::make('insi_result')

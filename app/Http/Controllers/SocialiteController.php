@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\AppUser;
 use App\Models\User;
 use App\Models\Usr;
-use Laravel\Socialite\Facades\Socialite;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Laravel\Socialite\Facades\Socialite;
 
 class SocialiteController extends Controller
 {
@@ -128,7 +128,7 @@ class SocialiteController extends Controller
 
     public function handleGoogleCallback()
     {
-        $key = 'google-login-attempt:' . request()->ip();
+        $key = 'google-login-attempt:'.request()->ip();
         $maxAttempts = 3;
         $decaySeconds = 60;
 
@@ -152,7 +152,7 @@ class SocialiteController extends Controller
             $usrUser = Usr::where('email', $email)->first();
             $appUser = AppUser::where('user_email', $email)->first();
 
-            if (!$usrUser || !$appUser) {
+            if (! $usrUser || ! $appUser) {
                 RateLimiter::hit($key, $decaySeconds);
 
                 $remaining = $maxAttempts - RateLimiter::attempts($key);
@@ -165,11 +165,18 @@ class SocialiteController extends Controller
                             ? "You are now locked out for {$decaySeconds} seconds."
                             : "User not found. Attempts remaining: {$remaining}"
                     )
-                    ->when($lockedOut, fn($n) => $n->danger())
-                    ->when(!$lockedOut, fn($n) => $n->warning())
+                    ->when($lockedOut, fn ($n) => $n->danger())
+                    ->when(! $lockedOut, fn ($n) => $n->warning())
                     ->send();
 
                 return redirect('/login');
+            }
+
+            // Save/update avatar from Google
+            if ($googleUser->getAvatar() && $appUser->user_avatar !== $googleUser->getAvatar()) {
+                $appUser->update([
+                    'user_avatar' => $googleUser->getAvatar(),
+                ]);
             }
 
             RateLimiter::clear($key);
@@ -190,7 +197,7 @@ class SocialiteController extends Controller
         } catch (\Exception $e) {
             Log::error('Google login failed', [
                 'message' => $e->getMessage(),
-                'ip'      => request()->ip(),
+                'ip' => request()->ip(),
             ]);
 
             RateLimiter::hit($key, $decaySeconds);

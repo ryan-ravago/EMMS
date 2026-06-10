@@ -33,6 +33,10 @@ class InspectionResource extends Resource
             return $query;
         }
 
+        if (auth()->user()->hasRole('technician')) {
+            return $query->where('ins_by', auth()->id());
+        }
+
         return $query->where('ins_dep_id', auth()->user()->user_dep_id);
     }
 
@@ -40,6 +44,10 @@ class InspectionResource extends Resource
     {
         if (auth()->user()->hasRole('super_admin')) {
             return static::getModel()::count();
+        }
+
+        if (auth()->user()->hasRole('technician')) {
+            return static::getModel()::where('ins_by', auth()->id())->count();
         }
 
         return static::getModel()::where('ins_dep_id', auth()->user()->user_dep_id)->count();

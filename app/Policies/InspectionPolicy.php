@@ -23,6 +23,14 @@ class InspectionPolicy
             return $authUser->can('View:InspectionResource');
         }
 
+        if ($authUser->hasRole('technician')) {
+            if ($authUser->user_id === $inspection->ins_by) {
+                return $authUser->can('View:InspectionResource');
+            }
+
+            return false;
+        }
+
         if ($authUser->user_dep_id === $inspection->ins_dep_id) {
             return $authUser->can('View:InspectionResource');
         }

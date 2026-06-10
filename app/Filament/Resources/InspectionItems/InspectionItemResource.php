@@ -45,10 +45,16 @@ class InspectionItemResource extends Resource
             return $query;
         }
 
+        if (Auth::user()?->hasRole('technician')) {
+            return $query->whereHas(
+                'inspection',
+                fn (Builder $query) => $query->where('ins_by', Auth::user()?->user_id)
+            );
+        }
+
         return $query->whereHas(
             'inspection',
-            fn(Builder $query) =>
-            $query->where('ins_dep_id', Auth::user()?->user_dep_id)
+            fn (Builder $query) => $query->where('ins_dep_id', Auth::user()?->user_dep_id)
         );
     }
 
@@ -65,7 +71,7 @@ class InspectionItemResource extends Resource
     public static function getRelations(): array
     {
         return [
-            LogsRelationManager::class
+            LogsRelationManager::class,
         ];
     }
 

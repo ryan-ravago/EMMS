@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Filament\Models\Contracts\FilamentUser;
-use Illuminate\Database\Eloquent\Model;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,11 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Traits\HasRoles;
 
-class AppUser extends Authenticatable implements HasName, FilamentUser
+class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasName
 {
     use HasRoles;
 
     protected $table = 'app_users';
+
     protected $primaryKey = 'user_id';
 
     protected $fillable = [
@@ -23,6 +24,7 @@ class AppUser extends Authenticatable implements HasName, FilamentUser
         'user_mname',
         'user_lname',
         'user_email',
+        'user_avatar',
         'user_contact_no',
         'user_fb_profile_link',
         'user_dep_id',
@@ -68,5 +70,10 @@ class AppUser extends Authenticatable implements HasName, FilamentUser
             'user_id',
             'rs_id'
         );
+    }
+
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->user_avatar;
     }
 }
