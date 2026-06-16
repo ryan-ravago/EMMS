@@ -6,10 +6,14 @@ use App\Filament\Resources\WorkOrders\RelationManagers\LogsRelationManager;
 use App\Filament\Resources\WorkOrders\RelationManagers\LogUpdatesRelationManager;
 use App\Filament\Resources\WorkOrders\RelationManagers\ReportSubmissionsRelationManager;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
+use App\Mail\WorkOrderAssignedMail;
+use App\Mail\WorkOrderApprovedMail;
+use App\Mail\WorkOrderRejectedMail;
 use App\Mail\WorkOrderApprovalMail;
 use App\Mail\WorkOrderCancellationMail;
 use App\Mail\WorkOrderRejectionMail;
 use App\Models\Action as ModelsAction;
+use App\Models\AppUser;
 use App\Models\InspectionItem;
 use App\Models\InspectionItemLog;
 use App\Models\MaintenanceTask;
@@ -22,6 +26,7 @@ use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
@@ -132,7 +137,7 @@ class ViewWorkOrder extends ViewRecord
                                 }
 
                                 $action = ModelsAction::firstWhere('a_id', 'reject');
-                                $status = Status::firstWhere('status_id', 'rej');
+                                $status = Status::firstWhere('status_id', 'rca');
                                 $pendingStatus = Status::firstWhere('status_id', 'pnd');
 
                                 WorkOrderLog::create([
@@ -504,6 +509,188 @@ class ViewWorkOrder extends ViewRecord
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Failed to cancel work order.')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+                Action::make('approveWorkOrder')
+                    ->label('Approve Work Order')
+                    ->visible(fn() => Auth::user()->can('approveWorkOrder', $this->record))
+                    ->icon('heroicon-o-hand-thumb-up')
+                    ->color('success')
+                    ->modalHeading('Approve Work Order')
+                    ->modalWidth(Width::TwoExtraLarge)
+                    ->closeModalByClickingAway(false)
+                    ->modalCloseButton(false)
+                    ->schema([
+                        Select::make('worker_ids')
+                            ->label('Assign Technicians')
+                            ->options(function () {
+                                $depId = auth()->user()->user_dep_id;
+                                if (! $depId) {
+                                    return [];
+                                }
+
+                                return AppUser::whereHas('roles', fn($q) => $q->where('name', 'technician'))
+                                    ->where('user_dep_id', $depId)
+                                    ->get()
+                                    ->mapWithKeys(fn($user) => [
+                                        $user->user_id => "{$user->user_fname} {$user->user_lname}",
+                                    ]);
+                            })
+                            ->multiple()
+                            ->required()
+                            ->native(false)
+                            ->searchable(),
+                        Textarea::make('wo_desc')
+                            ->label('Note')
+                            ->required()
+                            ->rows(4),
+                    ])
+                    ->action(function (array $data, WorkOrder $record) {
+                        try {
+                            DB::transaction(function () use ($data, $record) {
+                                $now = now();
+
+                                $workOrder = WorkOrder::where('wo_id', $record->wo_id)
+                                    ->lockForUpdate()
+                                    ->first();
+
+                                if ($workOrder->wo_status_id !== 'pnd') {
+                                    throw new \Exception('Work order is not pending approval.');
+                                }
+
+                                $action = ModelsAction::find('approve');
+                                $status = Status::find('inprog');
+
+                                WorkOrderLog::create([
+                                    'wol_wo_id' => $workOrder->wo_id,
+                                    'wol_a_id' => $action->a_id,
+                                    'wol_status_id' => $status->status_id,
+                                    'wol_a_log' => $action->a_past_tense,
+                                    'wol_status_log' => $status->status_title,
+                                    'wol_note' => $data['wo_desc'],
+                                    'wol_by' => auth()->id(),
+                                    'wol_dt' => $now,
+                                ]);
+
+                                $workOrder->update([
+                                    'wo_status_id' => $status->status_id,
+                                    'wo_desc' => $data['wo_desc'],
+                                ]);
+
+                                // Sync technicians
+                                $workerIds = $data['worker_ids'] ?? [];
+                                $workOrder->workers()->sync($workerIds);
+                            });
+
+                            $record->load(['workers', 'createdBy', 'priority']);
+                            $manager = auth()->user();
+
+                            // 1. Notify Manager (Confirmation)
+                            Mail::to($manager->user_email)
+                                ->queue(new WorkOrderApprovedMail($record, $manager, 'manager'));
+
+                            // 2. Notify Requestor (Update)
+                            if ($record->createdBy && $record->createdBy->user_email) {
+                                Mail::to($record->createdBy->user_email)
+                                    ->queue(new WorkOrderApprovedMail($record, $record->createdBy, 'requestor'));
+                            }
+
+                            // 3. Notify Technicians (Action Required)
+                            foreach ($record->workers as $technician) {
+                                if ($technician->user_email) {
+                                    Mail::to($technician->user_email)
+                                        ->queue(new WorkOrderAssignedMail($record, $technician));
+                                }
+                            }
+
+                            Notification::make()
+                                ->title('Work order approved successfully.')
+                                ->success()
+                                ->send();
+
+                            $this->redirect(WorkOrderResource::getUrl('view', ['record' => $record->wo_id]), navigate: true);
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Failed to approve work order.')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+                Action::make('rejectWorkOrder')
+                    ->label('Reject Work Order')
+                    ->visible(fn() => Auth::user()->can('rejectWorkOrder', $this->record))
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->modalHeading('Reject Work Order')
+                    ->modalWidth(Width::Large)
+                    ->closeModalByClickingAway(false)
+                    ->modalCloseButton(false)
+                    ->schema([
+                        Textarea::make('wol_note')
+                            ->label('Reason for Rejection')
+                            ->required()
+                            ->rows(4),
+                    ])
+                    ->action(function (array $data, WorkOrder $record) {
+                        try {
+                            DB::transaction(function () use ($data, $record) {
+                                $now = now();
+
+                                $workOrder = WorkOrder::where('wo_id', $record->wo_id)
+                                    ->lockForUpdate()
+                                    ->first();
+
+                                if ($workOrder->wo_status_id !== 'pnd') {
+                                    throw new \Exception('Work order is not pending approval.');
+                                }
+
+                                $action = ModelsAction::find('reject');
+                                $status = Status::find('rej');
+
+                                WorkOrderLog::create([
+                                    'wol_wo_id' => $workOrder->wo_id,
+                                    'wol_a_id' => $action->a_id,
+                                    'wol_status_id' => $status->status_id,
+                                    'wol_a_log' => $action->a_past_tense,
+                                    'wol_status_log' => $status->status_title,
+                                    'wol_note' => $data['wol_note'],
+                                    'wol_by' => auth()->id(),
+                                    'wol_dt' => $now,
+                                ]);
+
+                                $workOrder->update([
+                                    'wo_status_id' => $status->status_id,
+                                    'wo_closed_dt' => $now,
+                                ]);
+                            });
+
+                            $record->load(['createdBy', 'priority']);
+                            $manager = auth()->user();
+                            $reason = $data['wol_note'];
+
+                            // 1. Notify Manager (Confirmation)
+                            Mail::to($manager->user_email)
+                                ->queue(new WorkOrderRejectedMail($record, $manager, $reason, 'manager'));
+
+                            // 2. Notify Requestor (Update)
+                            if ($record->createdBy && $record->createdBy->user_email) {
+                                Mail::to($record->createdBy->user_email)
+                                    ->queue(new WorkOrderRejectedMail($record, $record->createdBy, $reason, 'requestor'));
+                            }
+
+                            Notification::make()
+                                ->title('Work order rejected.')
+                                ->success()
+                                ->send();
+
+                            $this->redirect(WorkOrderResource::getUrl('view', ['record' => $record->wo_id]), navigate: true);
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Failed to reject work order.')
                                 ->body($e->getMessage())
                                 ->danger()
                                 ->send();

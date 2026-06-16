@@ -58,6 +58,7 @@ class WorkOrdersRelationManager extends RelationManager
         return $table
             ->headerActions([
                 CreateAction::make()
+                    ->visible(fn (): bool => (bool) $this->getOwnerRecord()->eqm_is_active)
                     ->authorize(true)
                     ->label('Make Work Order')
                     ->color('primary')

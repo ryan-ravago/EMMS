@@ -20,7 +20,7 @@ class CategoryResource extends Resource
 {
     protected static ?string $model = EquipmentCategory::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquare3Stack3d;
 
     protected static ?string $recordTitleAttribute = 'eqmc_name';
 

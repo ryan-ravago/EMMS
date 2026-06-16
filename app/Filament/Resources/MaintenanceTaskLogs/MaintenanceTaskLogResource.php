@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class MaintenanceTaskLogResource extends Resource
 {
@@ -35,6 +36,12 @@ class MaintenanceTaskLogResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return MaintenanceTaskLogInfolist::configure($schema);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['status', 'action', 'workOrder', 'logBy']);
     }
 
     public static function table(Table $table): Table

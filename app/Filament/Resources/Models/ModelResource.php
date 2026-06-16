@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ModelResource extends Resource
 {
@@ -37,6 +38,12 @@ class ModelResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return ModelInfolist::configure($schema);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['type', 'category', 'brand', 'fuel_type']);
     }
 
     public static function table(Table $table): Table

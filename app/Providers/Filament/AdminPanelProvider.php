@@ -2,27 +2,31 @@
 
 namespace App\Providers\Filament;
 
-use Andreia\FilamentUiSwitcher\FilamentUiSwitcherPlugin;
 use App\Filament\Helper\CustomLogin;
+use App\Filament\Widgets\DashboardStatsOverview;
+use App\Models\SiteSetting;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use Filament\FontProviders\GoogleFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use App\Filament\Pages\SapSyncManager;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Width;
 use Filament\View\PanelsRenderHook;
-use App\Filament\Widgets\DashboardStatsOverview;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Foundation\Vite;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use SolutionForest\FilamentSimpleLightBox\SimpleLightBoxPlugin;
 
@@ -34,24 +38,94 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('')
-            ->spa()
+            ->spa(hasPrefetching: true)
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
-                fn() => new \Illuminate\Support\HtmlString(
-                    app(\Illuminate\Foundation\Vite::class)(['resources/css/app.css', 'resources/js/app.js'])
-                )
+                function () {
+                    $font = rescue(
+                        fn () => SiteSetting::instance()->site_font_family ?? 'Inter',
+                        'Inter',
+                        report: false
+                    );
+
+                    $encoded = str_replace(' ', '+', $font);
+
+                    $vite = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
+
+                    return new HtmlString(
+                        $vite.
+                            "<link href=\"https://fonts.googleapis.com/css2?family={$encoded}:wght@300;400;500;600;700&display=swap\" rel=\"stylesheet\">
+                            <style>
+                                body, html { font-family: '{$font}', sans-serif !important; }
+                            </style>
+                            "
+                    );
+                }
             )
             ->sidebarCollapsibleOnDesktop()
             ->login(CustomLogin::class)
-            ->colors([
-                'danger' => Color::Red,
-                'gray' => Color::Zinc,
-                'info' => Color::Blue,
-                'primary' => Color::Amber,
-                'success' => Color::Green,
-                'warning' => Color::Yellow,
-            ])
-            ->brandName('EMMS')
+            ->colors(function () {
+                try {
+                    $settings = SiteSetting::instance();
+                    $primaryColor = match ($settings->site_primary_color) {
+                        'red' => Color::Red,
+                        'orange' => Color::Orange,
+                        'amber' => Color::Amber,
+                        'yellow' => Color::Yellow,
+                        'lime' => Color::Lime,
+                        'green' => Color::Green,
+                        'emerald' => Color::Emerald,
+                        'teal' => Color::Teal,
+                        'cyan' => Color::Cyan,
+                        'sky' => Color::Sky,
+                        'blue' => Color::Blue,
+                        'indigo' => Color::Indigo,
+                        'violet' => Color::Violet,
+                        'purple' => Color::Purple,
+                        'fuchsia' => Color::Fuchsia,
+                        'pink' => Color::Pink,
+                        'rose' => Color::Rose,
+                        default => Color::Amber,
+                    };
+                } catch (\Throwable) {
+                    $primaryColor = Color::Amber;
+                }
+
+                return [
+                    'danger' => Color::Red,
+                    'gray' => Color::Zinc,
+                    'info' => Color::Blue,
+                    'primary' => $primaryColor,
+                    'success' => Color::Green,
+                    'warning' => Color::Yellow,
+                ];
+            })
+            ->brandName(function () {
+                try {
+                    return SiteSetting::instance()->site_name;
+                } catch (\Throwable) {
+                    return 'EMMS';
+                }
+            })
+            ->brandLogo(function () {
+                $logo = SiteSetting::instance()->site_logo;
+
+                return filled($logo)
+                    ? Storage::disk('public')->url($logo)
+                    : null;
+            })
+            ->brandLogoHeight(request()->is('login') ? '5rem' : '2.5rem')
+            ->favicon(function () {
+                try {
+                    $favicon = SiteSetting::instance()->site_favicon;
+
+                    return filled($favicon) ? Storage::disk('public')->url($favicon) : null;
+                } catch (\Throwable) {
+                    return null;
+                }
+            })
+            // ->font(SiteSetting::instance()->site_font_family ?? 'Inter', provider: GoogleFontProvider::class)
+            ->maxContentWidth(Width::Full)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
@@ -76,7 +150,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 'panels::auth.login.form.after',
-                fn() => view('auth.socialite.google')
+                fn () => view('auth.socialite.google')
             )
             ->plugins([
                 FilamentShieldPlugin::make()
@@ -100,7 +174,7 @@ class AdminPanelProvider extends PanelProvider
                     ->gridColumns([
                         'default' => 1,
                         'sm' => 2,
-                        'lg' => 3
+                        'lg' => 3,
                     ])
                     ->sectionColumnSpan(1)
                     ->checkboxListColumns([
@@ -112,7 +186,7 @@ class AdminPanelProvider extends PanelProvider
                         'default' => 1,
                         'sm' => 2,
                     ]),
-                SimpleLightBoxPlugin::make()
+                SimpleLightBoxPlugin::make(),
             ])
             ->authMiddleware([
                 Authenticate::class,

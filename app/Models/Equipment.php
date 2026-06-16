@@ -5,9 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Equipment extends Model
 {
+    use LogsActivity;
+
     protected $table = 'equipment_units';
 
     protected $primaryKey = 'eqm_id';
@@ -86,12 +90,11 @@ class Equipment extends Model
         return $this->hasMany(MaintenanceTask::class, 'mt_eqm_id', 'eqm_id');
     }
 
-    // protected static function booted(): void
-    // {
-    //     $bust = fn() => cache()->forget('equipment_count');
-
-    //     static::created($bust);
-    //     static::updated($bust);
-    //     static::deleted($bust);
-    // }
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['eqm_name', 'eqm_is_active'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 }

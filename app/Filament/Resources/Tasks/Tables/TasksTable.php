@@ -24,11 +24,22 @@ class TasksTable
                     ->label('Usage Type')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('department.dep_name')
+                    ->label('Department')
+                    ->badge()
+                    ->color('info')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('task_tut_id')
                     ->label('Usage Type')
                     ->relationship('taskUsageType', 'tut_name')
+                    ->searchable()
+                    ->preload(),
+                SelectFilter::make('task_dep_id')
+                    ->label('Department')
+                    ->relationship('department', 'dep_name')
                     ->searchable()
                     ->preload(),
             ])

@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class AppUserResource extends Resource
 {
@@ -22,7 +23,8 @@ class AppUserResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
-    protected static ?string $navigationLabel = "Users";
+    protected static ?string $navigationLabel = 'Users';
+
     protected static ?string $modelLabel = 'User'; // Singular
 
     protected static ?string $pluralModelLabel = 'Users'; // Plural
@@ -49,6 +51,12 @@ class AppUserResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return AppUserInfolist::configure($schema);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['department', 'roles']);
     }
 
     public static function table(Table $table): Table

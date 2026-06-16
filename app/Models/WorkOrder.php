@@ -6,12 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\DB;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class WorkOrder extends Model
 {
+    use LogsActivity;
+
     protected $table = 'work_orders';
+
     protected $primaryKey = 'wo_id';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -21,6 +26,7 @@ class WorkOrder extends Model
         'wo_mt_id',
         'wo_insi_id',
         'wo_title',
+        'wo_req_desc',
         'wo_desc',
         'wo_prio_id',
         'wo_status_id',
@@ -86,6 +92,14 @@ class WorkOrder extends Model
 
     public function reportSubmissions(): HasMany
     {
-        return $this->hasMany(ReportSubmission::class, 'rs_wo_id', 'wo_id',);
+        return $this->hasMany(ReportSubmission::class, 'rs_wo_id', 'wo_id');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['wo_title', 'wo_status_id', 'wo_dep_id'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 }

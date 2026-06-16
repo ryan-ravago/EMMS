@@ -9,6 +9,8 @@ use App\Filament\Resources\Equipment\Pages\ViewEquipment;
 use App\Filament\Resources\Equipment\RelationManagers\EquipmentTaskChecklistTemplatesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\EquipmentTasksSchedulesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\InspectionsRelationManager;
+use App\Filament\Resources\Equipment\RelationManagers\MaintenanceTasksRelationManager;
+use App\Filament\Resources\Equipment\RelationManagers\RequestorWorkOrdersRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\WorkOrdersRelationManager;
 use App\Filament\Resources\Equipment\Schemas\EquipmentForm;
 use App\Filament\Resources\Equipment\Schemas\EquipmentInfolist;
@@ -19,6 +21,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class EquipmentResource extends Resource
 {
@@ -56,6 +59,12 @@ class EquipmentResource extends Resource
         return EquipmentInfolist::configure($schema);
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['model']);
+    }
+
     public static function table(Table $table): Table
     {
         return EquipmentTable::configure($table);
@@ -63,12 +72,27 @@ class EquipmentResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            WorkOrdersRelationManager::class,
-            EquipmentTasksSchedulesRelationManager::class,
-            EquipmentTaskChecklistTemplatesRelationManager::class,
-            InspectionsRelationManager::class,
-        ];
+        $relations = [];
+
+        $user = auth()->user();
+
+        // Standard maintenance tabs for maintenance roles
+        if ($user?->hasAnyRole(['super_admin', 'manager', 'technician'])) {
+            $relations = [
+                WorkOrdersRelationManager::class,
+                EquipmentTasksSchedulesRelationManager::class,
+                EquipmentTaskChecklistTemplatesRelationManager::class,
+                InspectionsRelationManager::class,
+                MaintenanceTasksRelationManager::class,
+            ];
+        }
+
+        // Requestor specific tab
+        if ($user?->hasRole('requestor')) {
+            $relations[] = RequestorWorkOrdersRelationManager::class;
+        }
+
+        return $relations;
     }
 
     public static function getPages(): array

@@ -77,15 +77,36 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                             ->relationship(
                                 name: 'task',
                                 titleAttribute: 'task_name',
-                                modifyQueryUsing: fn($query) => $query
+                                modifyQueryUsing: fn ($query, Select $component) => $query
                                     ->where('task_tut_id', 2)
                                     ->where('task_dep_id', auth()->user()->user_dep_id)
+                                    ->whereDoesntHave('equipmentUnitsForSchedule', function ($query) use ($component) {
+                                        $query->where('equipment_tasks_schedules.ets_eqm_id', $this->getOwnerRecord()->getKey())
+                                            ->where('equipment_tasks_schedules.ets_dep_id', auth()->user()->user_dep_id);
+
+                                        if ($record = $component->getRecord()) {
+                                            $query->where('equipment_tasks_schedules.ets_id', '!=', $record->getKey());
+                                        }
+                                    })
                             )
                             ->searchable()
                             ->preload()
                             ->columnSpan(3)
                             ->required()
                             ->native(false)
+                            ->unique(
+                                table: 'equipment_tasks_schedules',
+                                column: 'ets_task_id',
+                                modifyRuleUsing: function (Unique $rule) {
+                                    return $rule
+                                        ->where('ets_dep_id', auth()->user()->user_dep_id)
+                                        ->where('ets_eqm_id', $this->getOwnerRecord()->getKey());
+                                },
+                                ignoreRecord: true,
+                            )
+                            ->validationMessages([
+                                'unique' => 'Preventive item or task is already added.',
+                            ])
                             ->createOptionForm([
                                 TextInput::make('task_name')
                                     ->label('Task Name')
@@ -95,7 +116,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                                     ->unique(
                                         table: Task::class,
                                         column: 'task_name',
-                                        modifyRuleUsing: fn(Unique $rule) => $rule->where('task_dep_id', auth()->user()->user_dep_id),
+                                        modifyRuleUsing: fn (Unique $rule) => $rule->where('task_dep_id', auth()->user()->user_dep_id),
                                         ignoreRecord: true,
                                     )->validationMessages([
                                         'unique' => 'The task name has already been taken.',
@@ -115,7 +136,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                             ])
                             ->createOptionModalHeading('Add New Preventive Task')
                             ->createOptionAction(
-                                fn(Action $action) => $action
+                                fn (Action $action) => $action
                                     ->modalWidth(Width::Large)
                                     ->mutateFormDataUsing(function (array $data) {
                                         $data['task_tut_id'] = 2;
@@ -191,7 +212,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                         //     ->label('Sort Order'),
                         TextEntry::make('department.dep_name')
                             ->label('Department')
-                            ->visible(fn() => auth()->user()->hasRole('super_admin')),
+                            ->visible(fn () => auth()->user()->hasRole('super_admin')),
                     ]),
 
                 Section::make('Interval')
@@ -261,7 +282,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                 TextColumn::make('department.dep_name')
                     ->label('Department')
                     ->sortable()
-                    ->visible(fn() => auth()->user()->hasRole('super_admin')),
+                    ->visible(fn () => auth()->user()->hasRole('super_admin')),
                 TextColumn::make('ets_due_effectivity_dt')
                     ->label('Effectivity Date')
                     ->dateTime('M d, Y')
@@ -326,7 +347,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                                 ->exists();
 
                             // 4. Recalculate next due date if no open items block it
-                            if (!$hasOpenTask) {
+                            if (! $hasOpenTask) {
                                 $record->ets_due_dt = Carbon::parse($record->ets_due_effectivity_dt)
                                     ->addYears($record->ets_itrv_years ?? 0)
                                     ->addMonths($record->ets_itrv_months ?? 0)

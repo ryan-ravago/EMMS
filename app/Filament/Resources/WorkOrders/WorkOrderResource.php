@@ -31,7 +31,8 @@ class WorkOrderResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()
+            ->with(['equipment', 'department', 'priority', 'status', 'workers', 'createdBy']);
 
         if (Auth::user()?->hasRole('super_admin')) {
             return $query;
@@ -65,7 +66,7 @@ class WorkOrderResource extends Resource
         return [
             LogsRelationManager::class,
             LogUpdatesRelationManager::class,
-            ReportSubmissionsRelationManager::class
+            ReportSubmissionsRelationManager::class,
         ];
     }
 

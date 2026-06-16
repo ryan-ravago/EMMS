@@ -23,6 +23,10 @@ class WorkOrderPolicy
             return $authUser->can('View:WorkOrderResource');
         }
 
+        if ($authUser->user_id === $workOrder->wo_created_by && $authUser->hasRole('requestor')) {
+            return true;
+        }
+
         if (
             $authUser->user_dep_id === $workOrder->wo_dep_id
         ) {
@@ -141,6 +145,30 @@ class WorkOrderPolicy
             $authUser->user_dep_id === $workOrder->wo_dep_id
         ) {
             return $authUser->can('CancelWorkOrder:WorkOrderResource');
+        }
+
+        return false;
+    }
+
+    public function approveWorkOrder(AuthUser $authUser, WorkOrder $workOrder): bool
+    {
+        if (
+            $workOrder->wo_status_id === 'pnd' &&
+            $authUser->user_dep_id === $workOrder->wo_dep_id
+        ) {
+            return $authUser->can('ApproveWorkOrder:WorkOrderResource');
+        }
+
+        return false;
+    }
+
+    public function rejectWorkOrder(AuthUser $authUser, WorkOrder $workOrder): bool
+    {
+        if (
+            $workOrder->wo_status_id === 'pnd' &&
+            $authUser->user_dep_id === $workOrder->wo_dep_id
+        ) {
+            return $authUser->can('RejectWorkOrder:WorkOrderResource');
         }
 
         return false;

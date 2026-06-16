@@ -5,9 +5,9 @@ declare(strict_types=1);
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Filament\Resources\InspectionItems\InspectionItemResource;
 use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
+use App\Filament\Resources\RequestorWorkOrders\RequestorWorkOrderResource;
 use App\Filament\Resources\TechnicianWorkOrders\TechnicianWorkOrderResource;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
-use App\Models\TechnicianWorkOrder;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Pages\Dashboard;
 use Filament\Widgets\AccountWidget;
@@ -194,9 +194,11 @@ return [
                 'delete',
             ],
             EquipmentResource::class => [
-                'sync'
+                'sync',
             ],
             WorkOrderResource::class => [
+                'approveWorkOrder',
+                'rejectWorkOrder',
                 'addUpdate',
                 'addReport',
                 'rejectCompletion',
@@ -206,17 +208,20 @@ return [
             TechnicianWorkOrderResource::class => [
                 'addUpdate',
                 'addReport',
-                'requestCompletion'
+                'requestCompletion',
+            ],
+            RequestorWorkOrderResource::class => [
+                'cancel',
             ],
             MaintenanceTaskResource::class => [
                 'makeWorkOrder',
                 'snooze',
-                'markAsComplete'
+                'markAsComplete',
             ],
             InspectionItemResource::class => [
                 'disregard',
-                'makeWorkOrder'
-            ]
+                'makeWorkOrder',
+            ],
         ],
         'exclude' => [
             //

@@ -39,7 +39,8 @@ class InspectionItemResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()
+            ->with(['inspection.equipment', 'status']);
 
         if (Auth::user()?->hasRole('super_admin')) {
             return $query;

@@ -2,7 +2,15 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\AppUsers\AppUserResource;
+use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Filament\Resources\Inspections\InspectionResource;
+use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
+use App\Filament\Resources\RequestorWorkOrders\RequestorWorkOrderResource;
+use App\Filament\Resources\TechnicianWorkOrders\TechnicianWorkOrderResource;
+use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use App\Models\AppUser;
+use App\Models\Department;
 use App\Models\Equipment;
 use App\Models\Inspection;
 use App\Models\MaintenanceTask;
@@ -27,55 +35,149 @@ class DashboardStatsOverview extends StatsOverviewWidget
         }
 
         $user = Auth::user();
+        $preventiveDepId = Department::where('dep_code', 'PREV')->value('dep_id');
 
         if ($user->hasRole('super_admin')) {
+            $overdueCount = MaintenanceTask::where('mt_dep_id', $preventiveDepId)->where('mt_due_dt', '<', now())->where('mt_status_id', '!=', 'cmp')->count();
+
             return [
                 Stat::make('Total Equipment', Equipment::count())
                     ->icon(Heroicon::CubeTransparent)
-                    ->color('primary'),
+                    ->description('All registered assets')
+                    ->descriptionIcon(Heroicon::InformationCircle)
+                    ->color('primary')
+                    ->url(EquipmentResource::getUrl()),
                 Stat::make('Total Inspections', Inspection::count())
                     ->icon(Heroicon::ClipboardDocumentList)
-                    ->color('success'),
-                Stat::make('Total Maintenance Tasks', MaintenanceTask::count())
-                    ->icon(Heroicon::WrenchScrewdriver)
-                    ->color('warning'),
+                    ->description('Conducted inspections')
+                    ->color('success')
+                    ->url(InspectionResource::getUrl()),
+                Stat::make('Overdue Maintenance', $overdueCount)
+                    ->icon(Heroicon::ExclamationTriangle)
+                    ->description($overdueCount > 0 ? 'Urgent attention required' : 'All tasks on track')
+                    ->descriptionIcon($overdueCount > 0 ? Heroicon::ArrowTrendingUp : Heroicon::CheckBadge)
+                    ->color($overdueCount > 0 ? 'danger' : 'success')
+                    ->url(MaintenanceTaskResource::getUrl()),
                 Stat::make('Total Work Orders', WorkOrder::count())
                     ->icon(Heroicon::DocumentCheck)
-                    ->color('danger'),
+                    ->description('Total created')
+                    ->color('info')
+                    ->url(WorkOrderResource::getUrl()),
             ];
         }
 
         if ($user->hasRole('manager')) {
-            return [
+            $stats = [
                 Stat::make('Department Inspections', Inspection::where('ins_dep_id', $user->user_dep_id)->count())
                     ->icon(Heroicon::ClipboardDocumentList)
-                    ->color('success'),
-                Stat::make('Department Maintenance Tasks', MaintenanceTask::where('mt_dep_id', $user->user_dep_id)->count())
-                    ->icon(Heroicon::WrenchScrewdriver)
-                    ->color('warning'),
-                Stat::make('Awaiting Completion', WorkOrder::where('wo_dep_id', $user->user_dep_id)->where('wo_status_id', 'pca')->count())
-                    ->icon(Heroicon::Clock)
-                    ->color('danger'),
-                Stat::make('Technicians in Department', AppUser::role('technician')->where('user_dep_id', $user->user_dep_id)->count())
-                    ->icon(Heroicon::Users)
-                    ->color('info'),
+                    ->color('success')
+                    ->url(InspectionResource::getUrl()),
             ];
+
+            if ($user->user_dep_id == $preventiveDepId) {
+                $overdueTasks = MaintenanceTask::where('mt_dep_id', $user->user_dep_id)->where('mt_due_dt', '<', now())->where('mt_status_id', '!=', 'cmp')->count();
+                $stats[] = Stat::make('Overdue Tasks', $overdueTasks)
+                    ->icon(Heroicon::ExclamationTriangle)
+                    ->description($overdueTasks > 0 ? 'Action required immediately' : 'Department is clear')
+                    ->descriptionIcon($overdueTasks > 0 ? Heroicon::ShieldExclamation : Heroicon::CheckCircle)
+                    ->color($overdueTasks > 0 ? 'danger' : 'success')
+                    ->url(MaintenanceTaskResource::getUrl());
+            }
+
+            $awaiting = WorkOrder::where('wo_dep_id', $user->user_dep_id)->where('wo_status_id', 'pca')->count();
+            $stats[] = Stat::make('Awaiting Completion', $awaiting)
+                ->icon(Heroicon::Clock)
+                ->description('Pending approval')
+                ->color($awaiting > 0 ? 'warning' : 'gray')
+                ->url(WorkOrderResource::getUrl('index', ['tableFilters[wo_status_id][value]' => 'pca', 'tab' => 'pca']));
+
+            $pendingApproval = WorkOrder::where('wo_dep_id', $user->user_dep_id)->where('wo_status_id', 'pnd')->count();
+            $stats[] = Stat::make('Pending Approval', $pendingApproval)
+                ->icon(Heroicon::DocumentPlus)
+                ->description('Requested by requestor')
+                ->color($pendingApproval > 0 ? 'info' : 'gray')
+                ->url(WorkOrderResource::getUrl('index', ['tableFilters[wo_status_id][value]' => 'pnd', 'tab' => 'pnd']));
+
+            $stats[] = Stat::make('Technicians', AppUser::role('technician')->where('user_dep_id', $user->user_dep_id)->count())
+                ->icon(Heroicon::Users)
+                ->description('In your department')
+                ->color('info')
+                ->url(AppUserResource::getUrl());
+
+            return $stats;
         }
 
         if ($user->hasRole('technician')) {
-            return [
+            $stats = [
                 Stat::make('Assigned Work Orders', $user->workOrders()->count())
                     ->icon(Heroicon::DocumentCheck)
-                    ->color('primary'),
-                Stat::make('In Progress', $user->workOrders()->where('wo_status_id', 'inprog')->count())
-                    ->icon(Heroicon::ArrowPath)
-                    ->color('warning'),
-                Stat::make('Completion Requests', $user->workOrders()->where('wo_status_id', 'pca')->count())
+                    ->description('Total active assignments')
+                    ->color('primary')
+                    ->url(TechnicianWorkOrderResource::getUrl()),
+            ];
+
+            if ($user->user_dep_id == $preventiveDepId) {
+                $overdueAssigned = MaintenanceTask::where('mt_dep_id', $user->user_dep_id)
+                    ->whereHas('workOrders', function ($query) use ($user) {
+                        $query->whereHas('workers', function ($q) use ($user) {
+                            $q->where('app_users.user_id', $user->user_id);
+                        });
+                    })
+                    ->where('mt_due_dt', '<', now())
+                    ->where('mt_status_id', '!=', 'cmp')
+                    ->count();
+
+                $stats[] = Stat::make('Overdue Assigned Tasks', $overdueAssigned)
+                    ->icon(Heroicon::ExclamationTriangle)
+                    ->description($overdueAssigned > 0 ? 'Your overdue tasks' : 'No overdue tasks')
+                    ->descriptionIcon($overdueAssigned > 0 ? Heroicon::ChevronDoubleRight : Heroicon::HandThumbUp)
+                    ->color($overdueAssigned > 0 ? 'danger' : 'success')
+                    ->url(MaintenanceTaskResource::getUrl());
+            }
+
+            $requests = $user->workOrders()->where('wo_status_id', 'pca')->count();
+            $stats[] = Stat::make('Completion Requests', $requests)
+                ->icon(Heroicon::Clock)
+                ->description('Pending manager review')
+                ->color($requests > 0 ? 'warning' : 'gray')
+                ->url(TechnicianWorkOrderResource::getUrl('index', ['tableFilters[wo_status_id][value]' => 'pca', 'tab' => 'pca']));
+
+            $stats[] = Stat::make('Submitted Reports', $user->reportSubmissions()->count())
+                ->icon(Heroicon::ClipboardDocument)
+                ->description('Your performance history')
+                ->color('success');
+
+            return $stats;
+        }
+
+        if ($user->hasRole('requestor')) {
+            $totalCreated = WorkOrder::where('wo_created_by', $user->user_id)->count();
+            $pendingCount = WorkOrder::where('wo_created_by', $user->user_id)->where('wo_status_id', 'pnd')->count();
+            // "inprog" is "Approved" from requestor's perspective
+            $approvedCount = WorkOrder::where('wo_created_by', $user->user_id)->where('wo_status_id', 'inprog')->count();
+            $rejectedCount = WorkOrder::where('wo_created_by', $user->user_id)->where('wo_status_id', 'rej')->count();
+
+            return [
+                Stat::make('Total Work Orders', $totalCreated)
+                    ->icon(Heroicon::DocumentCheck)
+                    ->description('All created work orders')
+                    ->color('primary')
+                    ->url(RequestorWorkOrderResource::getUrl()),
+                Stat::make('Pending', $pendingCount)
                     ->icon(Heroicon::Clock)
-                    ->color('danger'),
-                Stat::make('Submitted Reports', $user->reportSubmissions()->count())
-                    ->icon(Heroicon::ClipboardDocument)
-                    ->color('success'),
+                    ->description('Awaiting manager review')
+                    ->color($pendingCount > 0 ? 'warning' : 'gray')
+                    ->url(RequestorWorkOrderResource::getUrl('index', ['tableFilters[wo_status_id][value]' => 'pnd', 'tab' => 'pnd'])),
+                Stat::make('Approved', $approvedCount)
+                    ->icon(Heroicon::CheckBadge)
+                    ->description('Work orders approved')
+                    ->color('success')
+                    ->url(RequestorWorkOrderResource::getUrl('index', ['tableFilters[wo_status_id][value]' => 'inprog', 'tab' => 'approved'])),
+                Stat::make('Rejected', $rejectedCount)
+                    ->icon(Heroicon::XCircle)
+                    ->description('Rejected work orders')
+                    ->color('danger')
+                    ->url(RequestorWorkOrderResource::getUrl('index', ['tableFilters[wo_status_id][value]' => 'rej', 'tab' => 'rej'])),
             ];
         }
 

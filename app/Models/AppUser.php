@@ -74,6 +74,6 @@ class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasNam
 
     public function getFilamentAvatarUrl(): ?string
     {
-        return $this->user_avatar;
+        return $this->user_avatar ?: 'https://ui-avatars.com/api/?name='.urlencode($this->user_fname.' '.$this->user_lname).'&color=FFFFFF&background=03449d';
     }
 }

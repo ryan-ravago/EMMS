@@ -76,7 +76,7 @@
                             <table cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td style="border-radius:6px;background-color:#16a34a;">
-                                        <a href="{{ config('app.url') }}/admin/work-orders/{{ $workOrder->wo_id }}"
+                                        <a href="{{ config('app.url') }}/{{ $workOrder->createdBy?->hasRole('requestor') ? 'requestor-work-orders' : 'work-orders' }}/{{ $workOrder->wo_id }}"
                                             style="display:inline-block;padding:12px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;border-radius:6px;">
                                             View Work Order →
                                         </a>

@@ -263,6 +263,7 @@ class InspectionsRelationManager extends RelationManager
             ])
             ->headerActions([
                 CreateAction::make()
+                    ->visible(fn (): bool => (bool) $this->getOwnerRecord()->eqm_is_active)
                     ->authorize(true)
                     ->schema([
                         Section::make('Inspection Details')

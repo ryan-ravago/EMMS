@@ -28,7 +28,8 @@ class TaskResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()
+            ->with(['taskUsageType', 'department']);
 
         if (Auth::user()?->hasRole('super_admin')) {
             return $query;

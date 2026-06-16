@@ -172,6 +172,17 @@ class SocialiteController extends Controller
                 return redirect('/login');
             }
 
+            // Check if user is active in Usr model
+            if ($usrUser->isActive != 1) {
+                Notification::make()
+                    ->title('Account Inactive')
+                    ->body('Your account is currently inactive. Please contact your administrator.')
+                    ->danger()
+                    ->send();
+
+                return redirect('/login');
+            }
+
             // Save/update avatar from Google
             if ($googleUser->getAvatar() && $appUser->user_avatar !== $googleUser->getAvatar()) {
                 $appUser->update([

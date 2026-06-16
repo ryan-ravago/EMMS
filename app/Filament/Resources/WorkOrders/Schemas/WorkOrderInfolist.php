@@ -34,8 +34,13 @@ class WorkOrderInfolist
                         TextEntry::make('wo_title')
                             ->label('Title')
                             ->columnSpanFull(),
+                        TextEntry::make('wo_req_desc')
+                            ->label('Requestor Description')
+                            ->visible(fn ($record) => filled($record->wo_req_desc))
+                            ->columnSpanFull(),
                         TextEntry::make('wo_desc')
-                            ->label('Description')
+                            ->label(fn ($record) => filled($record->wo_req_desc) ? 'Manager Description' : 'Description')
+                            ->placeholder('-')
                             ->columnSpanFull(),
                         TextEntry::make('priority.prio_name')
                             ->label('Priority')

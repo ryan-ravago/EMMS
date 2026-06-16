@@ -27,7 +27,8 @@ class MaintenanceTaskResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()
+            ->with(['department', 'equipmentUnit', 'task', 'maintenanceTaskLogs', 'status', 'workOrders', 'createdBy']);
 
         if (Auth::user()?->hasRole('super_admin')) {
             return $query;
@@ -59,7 +60,7 @@ class MaintenanceTaskResource extends Resource
     public static function getRelations(): array
     {
         return [
-            MaintenanceTaskLogsRelationManager::class
+            MaintenanceTaskLogsRelationManager::class,
         ];
     }
 

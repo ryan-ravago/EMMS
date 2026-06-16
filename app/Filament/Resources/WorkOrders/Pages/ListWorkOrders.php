@@ -38,6 +38,10 @@ class ListWorkOrders extends ListRecords
             'all' => Tab::make('All')
                 ->badge(fn() => $this->getBaseQuery()->count()),
 
+            'pnd' => Tab::make('Pending')
+                ->badge(fn() => $this->getBaseQuery()->where('wo_status_id', 'pnd')->count())
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_status_id', 'pnd')),
+
             'inprog' => Tab::make('In Progress')
                 ->badge(fn() => $this->getBaseQuery()->where('wo_status_id', 'inprog')->count())
                 ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_status_id', 'inprog')),
@@ -45,6 +49,10 @@ class ListWorkOrders extends ListRecords
             'pca' => Tab::make('Pending Completion Approval')
                 ->badge(fn() => $this->getBaseQuery()->where('wo_status_id', 'pca')->count())
                 ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_status_id', 'pca')),
+
+            'rca' => Tab::make('Rejected Completion Approval')
+                ->badge(fn() => $this->getBaseQuery()->where('wo_status_id', 'rca')->count())
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_status_id', 'rca')),
 
             'rej' => Tab::make('Rejected')
                 ->badge(fn() => $this->getBaseQuery()->where('wo_status_id', 'rej')->count())

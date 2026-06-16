@@ -5,9 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class MaintenanceTask extends Model
 {
+    use LogsActivity;
+
     protected $table = 'maintenance_tasks';
 
     protected $primaryKey = 'mt_id';
@@ -55,8 +59,21 @@ class MaintenanceTask extends Model
         return $this->belongsTo(Status::class, 'mt_status_id', 'status_id');
     }
 
+    public function workOrders(): HasMany
+    {
+        return $this->hasMany(WorkOrder::class, 'wo_mt_id', 'mt_id');
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(AppUser::class, 'mt_by', 'user_id', 'user_id');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['mt_task_log', 'mt_status_id', 'mt_due_dt'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 }

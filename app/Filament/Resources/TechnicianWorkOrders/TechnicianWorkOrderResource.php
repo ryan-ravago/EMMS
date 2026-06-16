@@ -24,9 +24,13 @@ use Illuminate\Support\Facades\Auth;
 class TechnicianWorkOrderResource extends Resource
 {
     protected static ?string $model = TechnicianWorkOrder::class;
+
     protected static ?string $navigationLabel = 'Technician Work Orders';
+
     protected static ?string $slug = 'technician-work-orders';
+
     protected static ?string $modelLabel = 'Technician Work Order';
+
     protected static ?string $pluralModelLabel = 'Technician Work Orders';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
@@ -35,7 +39,8 @@ class TechnicianWorkOrderResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()
+            ->with(['equipment', 'department', 'priority', 'status', 'workers', 'createdBy']);
 
         if (Auth::user()?->hasRole('super_admin')) {
             return $query;
@@ -44,7 +49,7 @@ class TechnicianWorkOrderResource extends Resource
         $query->where('wo_dep_id', Auth::user()?->user_dep_id);
 
         // Moved from TechnicianWorkOrder::booted()
-        $query->whereHas('workers', fn($q) => $q->where('user_id', Auth::id()));
+        $query->whereHas('workers', fn ($q) => $q->where('user_id', Auth::id()));
 
         return $query;
     }
@@ -74,7 +79,7 @@ class TechnicianWorkOrderResource extends Resource
         return [
             LogsRelationManager::class,
             LogUpdatesRelationManager::class,
-            ReportSubmissionsRelationManager::class
+            ReportSubmissionsRelationManager::class,
         ];
     }
 

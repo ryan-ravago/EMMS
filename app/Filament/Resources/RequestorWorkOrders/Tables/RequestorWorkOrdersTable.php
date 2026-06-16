@@ -1,0 +1,109 @@
+<?php
+
+namespace App\Filament\Resources\RequestorWorkOrders\Tables;
+
+use App\Models\Status;
+use App\Models\WorkOrder;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+
+class RequestorWorkOrdersTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('wo_no')
+                    ->label('WO No.')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('equipment.eqm_name')
+                    ->label('Equipment')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('department.dep_name')
+                    ->label('Department')
+                    ->sortable(),
+                TextColumn::make('wo_title')
+                    ->label('Title')
+                    ->searchable()
+                    ->wrap(),
+                TextColumn::make('priority.prio_name')
+                    ->label('Priority')
+                    ->badge()
+                    ->sortable(),
+                TextColumn::make('status.status_title')
+                    ->label('Status')
+                    ->badge()
+                    ->state(function (WorkOrder $record): string {
+                        $hasApprovedLog = $record->logs()->where('wol_status_id', 'inprog')->exists();
+
+                        if ($hasApprovedLog) {
+                            return Status::find('appr')->status_title ?? 'Approved';
+                        }
+
+                        return $record->status->status_title;
+                    })
+                    ->color(function (WorkOrder $record) {
+                        $hasApprovedLog = $record->logs()->where('wol_status_id', 'inprog')->exists();
+
+                        return $hasApprovedLog
+                            ? (Status::find('appr')->status_color ?? 'success')
+                            : $record->status->status_color;
+                    })
+                    ->icon(function (WorkOrder $record) {
+                        $hasApprovedLog = $record->logs()->where('wol_status_id', 'inprog')->exists();
+
+                        return $hasApprovedLog
+                            ? (Status::find('appr')->status_icon ?? 'heroicon-o-check-badge')
+                            : $record->status->status_icon;
+                    })
+                    ->sortable(),
+                TextColumn::make('wo_created_dt')
+                    ->label('Created At')
+                    ->dateTime('M d, Y h:i A')
+                    ->sortable(),
+            ])
+            ->filters([
+                SelectFilter::make('wo_prio_id')
+                    ->label('Priority')
+                    ->relationship('priority', 'prio_name')
+                    ->searchable()
+                    ->preload(),
+                SelectFilter::make('wo_status_id')
+                    ->label('Status')
+                    ->relationship('status', 'status_title')
+                    ->searchable()
+                    ->preload(),
+                Filter::make('wo_created_dt')
+                    ->label('Created At')
+                    ->schema([
+                        DatePicker::make('from')->label('From')->native(false),
+                        DatePicker::make('until')->label('Until')->native(false),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        return $query
+                            ->when($data['from'], fn($q) => $q->whereDate('wo_created_dt', '>=', $data['from']))
+                            ->when($data['until'], fn($q) => $q->whereDate('wo_created_dt', '<=', $data['until']));
+                    }),
+            ])
+            ->recordActions([
+                ViewAction::make(),
+                EditAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ])
+            ->defaultSort('wo_created_dt', 'desc');
+    }
+}
