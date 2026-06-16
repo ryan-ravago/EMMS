@@ -98,8 +98,10 @@ class WorkOrder extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['wo_title', 'wo_status_id', 'wo_dep_id'])
+            ->logAll()
             ->logOnlyDirty()
+            ->useLogName('WorkOrder')
+            ->setDescriptionForEvent(fn (string $eventName) => "Work Order has been {$eventName}")
             ->dontSubmitEmptyLogs();
     }
 }

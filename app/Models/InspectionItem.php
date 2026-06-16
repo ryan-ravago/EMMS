@@ -5,11 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class InspectionItem extends Model
 {
+    use LogsActivity;
+
     protected $table = 'inspection_items';
+
     protected $primaryKey = 'insi_id';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -54,5 +60,15 @@ class InspectionItem extends Model
     public function workOrders(): HasMany
     {
         return $this->hasMany(WorkOrder::class, 'wo_insi_id', 'insi_id');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->useLogName('Inspection')
+            ->setDescriptionForEvent(fn (string $eventName) => "Inspection Item has been {$eventName}")
+            ->dontSubmitEmptyLogs();
     }
 }

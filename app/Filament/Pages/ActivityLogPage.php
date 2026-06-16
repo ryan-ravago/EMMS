@@ -30,7 +30,9 @@ class ActivityLogPage extends Page implements HasTable
     {
         return $table
             ->query(
-                Activity::query()->latest()
+                Activity::query()
+                    ->with(['causer', 'subject'])
+                    ->latest()
             )
             ->columns([
                 TextColumn::make('causer.user_fname')
@@ -50,9 +52,10 @@ class ActivityLogPage extends Page implements HasTable
                     ->label('Event')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'created' => 'success',
-                        'updated' => 'warning',
-                        'deleted' => 'danger',
+                        'created', 'create', 'approve', 'mac' => 'success',
+                        'updated', 'upt', 'reqcom', 'mwo' => 'info',
+                        'deleted', 'cancel', 'reject', 'drg' => 'danger',
+                        'snz' => 'warning',
                         default => 'gray',
                     }),
 

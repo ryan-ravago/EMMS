@@ -6,11 +6,11 @@ use App\Filament\Resources\WorkOrders\RelationManagers\LogsRelationManager;
 use App\Filament\Resources\WorkOrders\RelationManagers\LogUpdatesRelationManager;
 use App\Filament\Resources\WorkOrders\RelationManagers\ReportSubmissionsRelationManager;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
-use App\Mail\WorkOrderAssignedMail;
-use App\Mail\WorkOrderApprovedMail;
-use App\Mail\WorkOrderRejectedMail;
 use App\Mail\WorkOrderApprovalMail;
+use App\Mail\WorkOrderApprovedMail;
+use App\Mail\WorkOrderAssignedMail;
 use App\Mail\WorkOrderCancellationMail;
+use App\Mail\WorkOrderRejectedMail;
 use App\Mail\WorkOrderRejectionMail;
 use App\Models\Action as ModelsAction;
 use App\Models\AppUser;
@@ -22,6 +22,7 @@ use App\Models\Status;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderLog;
 use App\Models\WorkOrderLogUpdate;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
@@ -62,6 +63,42 @@ class ViewWorkOrder extends ViewRecord
     {
         return [
             EditAction::make(),
+            Action::make('exportPdf')
+                ->label('Export PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('gray')
+                ->visible(fn() => auth()->user()->hasRole('manager'))
+                ->action(function (WorkOrder $record) {
+                    $record->load([
+                        'workers',
+                        'createdBy',
+                        'priority',
+                        'status',
+                        'equipment',
+                        'department',
+                        'logUpdates' => fn($q) => $q->with('by'),
+                        'logs' => fn($q) => $q->with('by')->orderByDesc('wol_dt'),
+                        'reportSubmissions' => fn($q) => $q->with(['submittedBy', 'workers']),
+                    ]);
+
+                    $pdf = Pdf::loadView('reports.work-order-report', [
+                        'workOrder' => $record,
+                    ])
+                        ->setPaper('a4', 'portrait')
+                        ->setOption('isRemoteEnabled', false)
+                        ->setOption('isHtml5ParserEnabled', true)
+                        ->setOption('defaultFont', 'Helvetica')
+                        ->setOption('margin_left', 12.7)
+                        ->setOption('margin_right', 12.7)
+                        ->setOption('margin_top', 12.7)
+                        ->setOption('margin_bottom', 12.7);
+
+                    return response()->streamDownload(
+                        fn() => print($pdf->output()),
+                        $record->wo_no . '.pdf',
+                        ['Content-Type' => 'application/pdf'],
+                    );
+                }),
             ActionGroup::make([
                 Action::make('addUpdate')
                     ->label('Add Update')
@@ -202,6 +239,17 @@ class ViewWorkOrder extends ViewRecord
                                     'wo_status_id' => $status->status_id,
                                     'wo_closed_dt' => $now,
                                 ]);
+
+                                activity()
+                                    ->performedOn($workOrder)
+                                    ->useLog('WorkOrder')
+                                    ->event($action->a_id)
+                                    ->withProperties([
+                                        'action_id' => $action->a_id,
+                                        'status_id' => $status->status_id,
+                                        'note' => $data['wol_note'] ?? ($data['wo_desc'] ?? null),
+                                    ])
+                                    ->log($action->a_past_tense);
                             });
 
                             $record->load(['workers', 'createdBy', 'priority']);
@@ -334,6 +382,17 @@ class ViewWorkOrder extends ViewRecord
                                     'wo_status_id' => $status->status_id,
                                     'wo_closed_dt' => $now,
                                 ]);
+
+                                activity()
+                                    ->performedOn($workOrder)
+                                    ->useLog('WorkOrder')
+                                    ->event($action->a_id)
+                                    ->withProperties([
+                                        'action_id' => $action->a_id,
+                                        'status_id' => $status->status_id,
+                                        'note' => $data['wol_note'] ?? ($data['wo_desc'] ?? null),
+                                    ])
+                                    ->log($action->a_past_tense);
                             });
 
                             $record->load(['workers', 'createdBy', 'priority']);
@@ -472,6 +531,17 @@ class ViewWorkOrder extends ViewRecord
                                     'wo_status_id' => $status->status_id,
                                     'wo_closed_dt' => $now,
                                 ]);
+
+                                activity()
+                                    ->performedOn($workOrder)
+                                    ->useLog('WorkOrder')
+                                    ->event($action->a_id)
+                                    ->withProperties([
+                                        'action_id' => $action->a_id,
+                                        'status_id' => $status->status_id,
+                                        'note' => $data['wol_note'] ?? ($data['wo_desc'] ?? null),
+                                    ])
+                                    ->log($action->a_past_tense);
                             });
 
                             $record->load(['workers', 'createdBy', 'priority']);
@@ -583,6 +653,18 @@ class ViewWorkOrder extends ViewRecord
                                 // Sync technicians
                                 $workerIds = $data['worker_ids'] ?? [];
                                 $workOrder->workers()->sync($workerIds);
+
+                                activity()
+                                    ->performedOn($workOrder)
+                                    ->useLog('WorkOrder')
+                                    ->event($action->a_id)
+                                    ->withProperties([
+                                        'action_id' => $action->a_id,
+                                        'status_id' => $status->status_id,
+                                        'worker_ids' => $workerIds,
+                                        'note' => $data['wo_desc'],
+                                    ])
+                                    ->log($action->a_past_tense);
                             });
 
                             $record->load(['workers', 'createdBy', 'priority']);
@@ -666,6 +748,17 @@ class ViewWorkOrder extends ViewRecord
                                     'wo_status_id' => $status->status_id,
                                     'wo_closed_dt' => $now,
                                 ]);
+
+                                activity()
+                                    ->performedOn($workOrder)
+                                    ->useLog('WorkOrder')
+                                    ->event($action->a_id)
+                                    ->withProperties([
+                                        'action_id' => $action->a_id,
+                                        'status_id' => $status->status_id,
+                                        'note' => $data['wol_note'] ?? ($data['wo_desc'] ?? null),
+                                    ])
+                                    ->log($action->a_past_tense);
                             });
 
                             $record->load(['createdBy', 'priority']);

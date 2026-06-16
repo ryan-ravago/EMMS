@@ -72,8 +72,10 @@ class MaintenanceTask extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['mt_task_log', 'mt_status_id', 'mt_due_dt'])
+            ->logAll()
             ->logOnlyDirty()
+            ->useLogName('Maintenance')
+            ->setDescriptionForEvent(fn (string $eventName) => "Maintenance Task has been {$eventName}")
             ->dontSubmitEmptyLogs();
     }
 }
