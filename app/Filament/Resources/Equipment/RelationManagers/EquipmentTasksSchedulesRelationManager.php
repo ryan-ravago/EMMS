@@ -134,7 +134,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                                 //         column: 'tut_id',
                                 //     ),
                             ])
-                            ->createOptionModalHeading('Add New Preventive Task')
+                            ->createOptionModalHeading('New Preventive Task')
                             ->createOptionAction(
                                 fn (Action $action) => $action
                                     ->modalWidth(Width::Large)
@@ -311,8 +311,8 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
             ])
             ->headerActions([
                 CreateAction::make()
-                    ->label('Create Preventive Task')
-                    ->modalHeading('Create Equipment Task Schedule')
+                    ->label('Add Preventive Task')
+                    ->modalHeading('Add Equipment Task Schedule')
                     ->modalWidth(Width::SevenExtraLarge)
                     ->authorize(true)
                     ->closeModalByClickingAway(false)

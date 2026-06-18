@@ -41,7 +41,7 @@ class ViewInspectionItem extends ViewRecord
             Action::make('disregard')
                 ->label('Disregard Finding')
                 ->icon('heroicon-o-x-mark')
-                ->visible(fn() => Auth::user()->can('disregard', $this->record))
+                ->visible(fn () => Auth::user()->can('disregard', $this->record))
                 ->color('gray')
                 ->modalHeading('Disregard Inspection Finding')
                 ->modalWidth(Width::Large)
@@ -90,7 +90,7 @@ class ViewInspectionItem extends ViewRecord
                         $inspection = $this->record->inspection;
                         $inspection->load(['equipment', 'conductedBy', 'department']);
 
-                        $managers = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
+                        $managers = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
                             ->where('user_dep_id', $inspection->ins_dep_id)
                             ->get();
 
@@ -123,11 +123,11 @@ class ViewInspectionItem extends ViewRecord
 
             Action::make('makeWorkOrder')
                 ->model(WorkOrder::class)
-                ->label('Create Work Order')
-                ->visible(fn() => Auth::user()->can('makeWorkOrder', $this->record))
+                ->label('New Work Order')
+                ->visible(fn () => Auth::user()->can('makeWorkOrder', $this->record))
                 ->icon('heroicon-o-wrench-screwdriver')
                 ->color('warning')
-                ->modalHeading('Create Work Order from Inspection Finding')
+                ->modalHeading('New Work Order from Inspection Finding')
                 ->modalWidth(Width::SevenExtraLarge)
                 ->closeModalByClickingAway(false)
                 ->modalCloseButton(false)
@@ -145,7 +145,7 @@ class ViewInspectionItem extends ViewRecord
                                             ->label('Equipment')
                                             ->relationship('equipment', 'eqm_name')
                                             // ->default(fn($record) => $record?->inspection?->ins_eqm_id)
-                                            ->default(fn() => $this->record?->inspection?->ins_eqm_id)
+                                            ->default(fn () => $this->record?->inspection?->ins_eqm_id)
                                             ->searchable()
                                             ->disabled()
                                             ->dehydrated()
@@ -158,14 +158,14 @@ class ViewInspectionItem extends ViewRecord
                                             ->relationship(
                                                 'department',
                                                 'dep_name',
-                                                fn(Builder $query) => $query->where('is_maintenance', 1)
+                                                fn (Builder $query) => $query->where('is_maintenance', 1)
                                             )
                                             ->searchable()
                                             ->preload()
                                             ->required()
                                             ->native(false)
                                             ->live()
-                                            ->visible(fn() => Auth::user()->hasRole('super_admin')),
+                                            ->visible(fn () => Auth::user()->hasRole('super_admin')),
                                     ]),
 
                                 Section::make('Details')
@@ -219,10 +219,10 @@ class ViewInspectionItem extends ViewRecord
                                             return [];
                                         }
 
-                                        return AppUser::whereHas('roles', fn($q) => $q->where('name', 'technician'))
+                                        return AppUser::whereHas('roles', fn ($q) => $q->where('name', 'technician'))
                                             ->where('user_dep_id', $depId)
                                             ->get()
-                                            ->mapWithKeys(fn($user) => [
+                                            ->mapWithKeys(fn ($user) => [
                                                 $user->user_id => "{$user->user_fname} {$user->user_lname}",
                                             ]);
                                     })
@@ -288,7 +288,7 @@ class ViewInspectionItem extends ViewRecord
 
                             $workOrder = WorkOrder::create([
                                 ...$data,
-                                'wo_no' => 'WO-' . $depCode . '-' . $now->format('ymd') . str_pad($count, 3, '0', STR_PAD_LEFT),
+                                'wo_no' => 'WO-'.$depCode.'-'.$now->format('ymd').str_pad($count, 3, '0', STR_PAD_LEFT),
                                 'wo_eqm_id' => $this->record?->inspection?->ins_eqm_id,
                                 'wo_insi_id' => $inspectionItem->insi_id,
                                 'wo_dep_id' => Auth::user()->hasRole('super_admin') ? $data['wo_dep_id'] : Auth::user()->user_dep_id,
@@ -326,7 +326,7 @@ class ViewInspectionItem extends ViewRecord
                             ]);
 
                             // Notify manager
-                            $manager = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
+                            $manager = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
                                 ->where('user_dep_id', $workOrder->wo_dep_id)
                                 ->first();
 

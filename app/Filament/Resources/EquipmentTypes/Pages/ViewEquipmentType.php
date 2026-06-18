@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\EquipmentTypes\Pages;
 
 use App\Filament\Resources\EquipmentTypes\EquipmentTypeResource;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
@@ -14,6 +15,7 @@ class ViewEquipmentType extends ViewRecord
     {
         return [
             EditAction::make(),
+            DeleteAction::make(),
         ];
     }
 }

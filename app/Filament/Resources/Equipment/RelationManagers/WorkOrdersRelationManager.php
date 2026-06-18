@@ -60,10 +60,10 @@ class WorkOrdersRelationManager extends RelationManager
                 CreateAction::make()
                     ->visible(fn (): bool => (bool) $this->getOwnerRecord()->eqm_is_active)
                     ->authorize(true)
-                    ->label('Make Work Order')
+                    ->label('New Work Order')
                     ->color('primary')
                     ->closeModalByClickingAway(false)
-                    ->modalHeading('Make Work Order')
+                    ->modalHeading('New Work Order')
                     ->modalCloseButton(false)
                     ->modalWidth(Width::SevenExtraLarge)
                     ->schema([

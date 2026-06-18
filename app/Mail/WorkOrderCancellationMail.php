@@ -5,7 +5,6 @@ namespace App\Mail;
 use App\Models\AppUser;
 use App\Models\WorkOrder;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
@@ -23,7 +22,7 @@ class WorkOrderCancellationMail extends Mailable
         public WorkOrder $workOrder,
         public AppUser $canceller,
         public string $reason,
-        public string $recipientType, // 'manager' | 'technician'
+        public string $recipientType, // 'manager' | 'technician' | 'requestor'
     ) {
         //
     }
@@ -34,9 +33,10 @@ class WorkOrderCancellationMail extends Mailable
     public function envelope(): Envelope
     {
         $subject = match ($this->recipientType) {
-            'manager'    => "Work Order Cancelled – {$this->workOrder->wo_no}",
+            'manager' => "Work Order Cancelled – {$this->workOrder->wo_no}",
             'technician' => "Work Order Cancelled – {$this->workOrder->wo_no}",
-            default      => "Work Order Update – {$this->workOrder->wo_no}",
+            'requestor' => "Work Order Cancelled – {$this->workOrder->wo_no}",
+            default => "Work Order Update – {$this->workOrder->wo_no}",
         };
 
         return new Envelope(subject: $subject);

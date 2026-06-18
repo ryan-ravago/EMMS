@@ -6,7 +6,6 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Schema;
 
 class AppUserForm
@@ -57,7 +56,7 @@ class AppUserForm
                     ->required()
                     ->relationship('roles', 'name')
                     ->getOptionLabelFromRecordUsing(
-                        fn($record) => str($record->name)->replace('_', ' ')->title()
+                        fn ($record) => $record->display_name ?? str($record->name)->replace('_', ' ')->title()
                     )
                     ->searchable()
                     ->bulkToggleable(),

@@ -65,7 +65,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                     ->relationship(
                         name: 'task',
                         titleAttribute: 'task_name',
-                        modifyQueryUsing: fn($query) => $query
+                        modifyQueryUsing: fn ($query) => $query
                             ->where('task_tut_id', 1)
                             ->where('task_dep_id', auth()->user()->user_dep_id)
                             ->whereNotIn(
@@ -89,7 +89,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                             ->unique(
                                 table: Task::class,
                                 column: 'task_name',
-                                modifyRuleUsing: fn(Unique $rule) => $rule->where('task_dep_id', Auth::user()->user_dep_id),
+                                modifyRuleUsing: fn (Unique $rule) => $rule->where('task_dep_id', Auth::user()->user_dep_id),
                                 ignoreRecord: true,
                             )->validationMessages([
                                 'unique' => 'The task name has already been taken.',
@@ -107,9 +107,9 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                         //         column: 'tut_id',
                         //     ),
                     ])
-                    ->createOptionModalHeading('Add New Inspection Task')
+                    ->createOptionModalHeading('New Inspection Task')
                     ->createOptionAction(
-                        fn(Action $action) => $action
+                        fn (Action $action) => $action
                             ->modalWidth(Width::Large)
                             ->mutateFormDataUsing(function (array $data) {
                                 $data['task_tut_id'] = 1;
@@ -143,7 +143,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                     ->schema([
                         TextEntry::make('creator.user_fname')
                             ->label('Added By')
-                            ->formatStateUsing(fn($record) => $record->creator
+                            ->formatStateUsing(fn ($record) => $record->creator
                                 ? "{$record->creator->user_fname} {$record->creator->user_lname}"
                                 : '—'),
                         TextEntry::make('etct_created_at')
@@ -165,7 +165,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                 TextColumn::make('creator.user_fname')
                     ->label('Added By')
                     ->formatStateUsing(
-                        fn($record) => $record->creator
+                        fn ($record) => $record->creator
                             ? "{$record->creator->user_fname} {$record->creator->user_lname}"
                             : '—'
                     ),
@@ -184,8 +184,8 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
             ])
             ->headerActions([
                 CreateAction::make()
-                    ->label('Create Inspection Task')
-                    ->modalHeading('Create Equipment Inspection Task')
+                    ->label('Add Inspection Task')
+                    ->modalHeading('Add Equipment Inspection Task')
                     ->modalWidth('lg')
                     ->authorize(true)
                     ->closeModalByClickingAway(false)

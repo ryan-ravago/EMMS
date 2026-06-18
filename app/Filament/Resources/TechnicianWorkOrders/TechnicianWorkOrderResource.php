@@ -25,13 +25,22 @@ class TechnicianWorkOrderResource extends Resource
 {
     protected static ?string $model = TechnicianWorkOrder::class;
 
-    protected static ?string $navigationLabel = 'Technician Work Orders';
-
     protected static ?string $slug = 'technician-work-orders';
 
-    protected static ?string $modelLabel = 'Technician Work Order';
+    public static function getNavigationLabel(): string
+    {
+        return Auth::user()?->hasRole('technician') ? 'Work Orders' : 'Technician Work Orders';
+    }
 
-    protected static ?string $pluralModelLabel = 'Technician Work Orders';
+    public static function getLabel(): ?string
+    {
+        return Auth::user()?->hasRole('technician') ? 'Work Order' : 'Technician Work Order';
+    }
+
+    public static function getPluralLabel(): ?string
+    {
+        return Auth::user()?->hasRole('technician') ? 'Work Orders' : 'Technician Work Orders';
+    }
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
 

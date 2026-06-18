@@ -265,6 +265,7 @@ class InspectionsRelationManager extends RelationManager
                 CreateAction::make()
                     ->visible(fn (): bool => (bool) $this->getOwnerRecord()->eqm_is_active)
                     ->authorize(true)
+                    ->modalHeading('New Inspection')
                     ->schema([
                         Section::make('Inspection Details')
                             ->icon('heroicon-o-clipboard-document-check')

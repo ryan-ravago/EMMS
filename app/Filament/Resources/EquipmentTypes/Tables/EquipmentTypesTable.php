@@ -4,6 +4,7 @@ namespace App\Filament\Resources\EquipmentTypes\Tables;
 
 use App\Filament\Resources\EquipmentTypes\EquipmentTypeResource;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -25,11 +26,12 @@ class EquipmentTypesTable
             ->filters([
                 //
             ])->recordUrl(
-                fn(Model $record): string => EquipmentTypeResource::getUrl('view', ['record' => $record]),
+                fn (Model $record): string => EquipmentTypeResource::getUrl('view', ['record' => $record]),
             )
             ->recordActions([
                 // ViewAction::make(),
                 EditAction::make(),
+                DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

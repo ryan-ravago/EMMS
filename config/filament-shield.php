@@ -211,7 +211,7 @@ return [
                 'requestCompletion',
             ],
             RequestorWorkOrderResource::class => [
-                'cancel',
+                'cancelWorkOrder',
             ],
             MaintenanceTaskResource::class => [
                 'makeWorkOrder',

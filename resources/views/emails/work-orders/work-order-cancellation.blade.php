@@ -17,8 +17,8 @@
                     <!-- Header -->
                     <tr>
                         <td
-                            style="background-color:{{ $recipientType === 'manager' ? '#6b7280' : '#dc2626' }};padding:30px 40px;">
-                            @if ($recipientType === 'manager')
+                            style="background-color:{{ $recipientType === 'requestor' ? '#10b981' : '#dc2626' }};padding:30px 40px;">
+                            @if ($recipientType === 'requestor')
                                 <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;">🚫 Cancellation
                                     Confirmed</h1>
                                 <p style="margin:6px 0 0;color:#e5e7eb;font-size:13px;">You have successfully cancelled
@@ -36,9 +36,8 @@
                     <tr>
                         <td style="padding:32px 40px;">
                             <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
-                                @if ($recipientType === 'manager')
-                                    You have cancelled the following work order. The assigned technicians have been
-                                    notified.
+                                @if ($recipientType === 'requestor')
+                                    You have cancelled the following work order. The manager has been notified.
                                 @else
                                     The following work order has been cancelled by
                                     <strong style="color:#111827;">{{ $canceller->user_fname }}
@@ -100,8 +99,8 @@
                             <table cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td
-                                        style="border-radius:6px;background-color:{{ $recipientType === 'manager' ? '#6b7280' : '#dc2626' }};">
-                                        <a href="{{ config('app.url') . ($recipientType === 'manager' ? '/work-orders/' : '/technician-work-orders/') . $workOrder->wo_id }}"
+                                        style="border-radius:6px;background-color:{{ $recipientType === 'requestor' ? '#10b981' : '#dc2626' }};">
+                                        <a href="{{ config('app.url') . ($recipientType === 'manager' ? '/work-orders/' : ($recipientType === 'requestor' ? '/requestor-work-orders/' : '/technician-work-orders/')) . $workOrder->wo_id }}"
                                             style="display:inline-block;padding:12px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;border-radius:6px;">
                                             View Work Order →
                                         </a>

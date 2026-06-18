@@ -87,4 +87,9 @@ class RequestorWorkOrderPolicy
     {
         return $authUser->can('Reorder:RequestorWorkOrderResource');
     }
+
+    public function cancelWorkOrder(AuthUser $authUser, RequestorWorkOrder $requestorWorkOrder): bool
+    {
+        return $requestorWorkOrder->wo_status_id === 'pnd' && $authUser->can('ViewAny:RequestorWorkOrderResource');
+    }
 }
