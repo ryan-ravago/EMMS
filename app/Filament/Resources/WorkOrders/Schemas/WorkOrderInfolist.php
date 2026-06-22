@@ -95,7 +95,7 @@ class WorkOrderInfolist
                         TextEntry::make('equipment.eqm_name')
                             ->label('Equipment')
                             ->url(fn ($record) => EquipmentResource::getUrl('view', ['record' => $record->wo_eqm_id]))
-                            ->openUrlInNewTab()
+                            // ->openUrlInNewTab()
                             ->icon('heroicon-o-arrow-top-right-on-square')
                             ->iconPosition(IconPosition::After),
                         TextEntry::make('department.dep_name')
@@ -114,8 +114,8 @@ class WorkOrderInfolist
                             ->placeholder('-')
                             ->icon('heroicon-o-arrow-top-right-on-square')
                             ->iconPosition(IconPosition::After),
-                        TextEntry::make('wo_insi_id')
-                            ->label('Inspection')
+                        TextEntry::make('inspectionItem.insi_no')
+                            ->label('Inspection Item')
                             ->url(fn ($record) => $record->wo_insi_id
                                 ? InspectionItemResource::getUrl('view', ['record' => $record->wo_insi_id])
                                 : null)

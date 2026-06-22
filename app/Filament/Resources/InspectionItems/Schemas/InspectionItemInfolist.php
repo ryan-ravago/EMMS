@@ -20,8 +20,11 @@ class InspectionItemInfolist
                     ->columns(3)
                     ->columnSpanFull()
                     ->schema([
-                        TextEntry::make('inspection.ins_id')
-                            ->label('Inspection ID')
+                        TextEntry::make('insi_no')
+                            ->label('Item #')
+                            ->weight('bold'),
+                        TextEntry::make('inspection.ins_no')
+                            ->label('Inspection #')
                             ->url(fn (InspectionItem $record) => InspectionResource::getUrl('view', ['record' => $record->insi_ins_id]))
                             ->icon('heroicon-o-arrow-top-right-on-square')
                             ->iconPosition(IconPosition::After),

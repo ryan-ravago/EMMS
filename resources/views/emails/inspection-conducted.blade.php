@@ -71,6 +71,13 @@
                                 <tr style="border-top:1px solid #e5e7eb;">
                                     <td
                                         style="padding:12px 16px;font-size:13px;color:#6b7280;width:35%;border-right:1px solid #e5e7eb;">
+                                        Inspection #</td>
+                                    <td style="padding:12px 16px;font-size:13px;color:#111827;font-weight:600;">
+                                        {{ $inspection->ins_no }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td
+                                        style="padding:12px 16px;font-size:13px;color:#6b7280;width:35%;border-right:1px solid #e5e7eb;">
                                         Equipment</td>
                                     <td style="padding:12px 16px;font-size:13px;color:#111827;font-weight:600;">
                                         {{ $inspection->equipment->eqm_name }}</td>

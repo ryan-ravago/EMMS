@@ -19,14 +19,19 @@ class InspectionItemsTable
     {
         return $table
             ->columns([
+                TextColumn::make('insi_no')
+                    ->label('Item #')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold'),
                 TextColumn::make('status.status_title')
                     ->label('Status')
                     ->badge()
                     ->color(fn (InspectionItem $record) => $record->status->status_color)
                     ->icon(fn (InspectionItem $record) => $record->status->status_icon)
                     ->sortable(),
-                TextColumn::make('inspection.ins_id')
-                    ->label('Inspection ID')
+                TextColumn::make('inspection.ins_no')
+                    ->label('Inspection #')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('inspection.equipment.eqm_name')

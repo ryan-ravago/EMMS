@@ -147,6 +147,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                'throttle:filament',
             ])
             ->renderHook(
                 'panels::auth.login.form.after',

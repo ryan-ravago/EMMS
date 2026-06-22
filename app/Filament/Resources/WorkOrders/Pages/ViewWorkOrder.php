@@ -341,6 +341,7 @@ class ViewWorkOrder extends ViewRecord
                                     if ($inspectionItem) {
                                         $inspectionItem->update([
                                             'insi_status_id' => $status->status_id,
+                                            'insi_closed_dt' => $now,
                                         ]);
 
                                         InspectionItemLog::create([

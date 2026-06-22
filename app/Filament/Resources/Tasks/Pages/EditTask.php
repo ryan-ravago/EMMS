@@ -18,4 +18,13 @@ class EditTask extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        if (in_array(auth()->user()?->department?->dep_code, ['MECH', 'ELEC'])) {
+            $data['task_tut_id'] = 1;
+        }
+
+        return $data;
+    }
 }

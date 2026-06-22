@@ -38,6 +38,7 @@ class WorkOrder extends Model
 
     protected $casts = [
         'wo_attachments' => 'array',
+        'wo_created_dt' => 'datetime',
     ];
 
     public function equipment(): BelongsTo

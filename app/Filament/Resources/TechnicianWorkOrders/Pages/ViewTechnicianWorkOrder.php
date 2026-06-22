@@ -47,7 +47,7 @@ class ViewTechnicianWorkOrder extends ViewRecord
         return [
             LogsRelationManager::class,
             LogUpdatesRelationManager::class,
-            ReportSubmissionsRelationManager::class
+            ReportSubmissionsRelationManager::class,
         ];
     }
 
@@ -57,7 +57,7 @@ class ViewTechnicianWorkOrder extends ViewRecord
             EditAction::make(),
             Action::make('addUpdate')
                 ->label('Add Update')
-                ->visible(fn() => Auth::user()->can('addUpdate', $this->record))
+                ->visible(fn () => Auth::user()->can('addUpdate', $this->record))
                 ->icon('heroicon-o-chat-bubble-left-ellipsis')
                 ->color('info')
                 ->modalHeading('Add Work Order Update')
@@ -95,11 +95,11 @@ class ViewTechnicianWorkOrder extends ViewRecord
                                 throw new \Exception('Work order status is not In-Progress.');
                             }
                             WorkOrderLogUpdate::create([
-                                'wolu_wo_id'      => $record->wo_id,
+                                'wolu_wo_id' => $record->wo_id,
                                 'wolu_update_note' => $data['wolu_update_note'],
                                 'wolu_attachments' => $data['wolu_attachments'] ?? null,
-                                'wolu_by'         => auth()->id(),
-                                'wolu_dt'         => now(),
+                                'wolu_by' => auth()->id(),
+                                'wolu_dt' => now(),
                             ]);
 
                             Notification::make()
@@ -119,7 +119,7 @@ class ViewTechnicianWorkOrder extends ViewRecord
                 }),
             Action::make('addReport')
                 ->label('Add Report')
-                ->visible(fn() => Auth::user()->can('addReport', $this->record))
+                ->visible(fn () => Auth::user()->can('addReport', $this->record))
                 ->icon('heroicon-o-document-text')
                 ->color('success')
                 ->modalHeading('Add Work Order Report')
@@ -132,10 +132,13 @@ class ViewTechnicianWorkOrder extends ViewRecord
                         ->required()
                         ->live(onBlur: false)
                         ->default(today())
-                        ->minDate(fn() => $this->record->wo_created_dt)
+                        // ->minDate(fn() => $this->record->wo_created_dt)
+                        ->minDate(fn () => $this->record->wo_created_dt->toDateString())
                         ->maxDate(today())
                         ->hint(function (Get $get) {
-                            if (!$get('rs_work_date')) return null;
+                            if (! $get('rs_work_date')) {
+                                return null;
+                            }
 
                             $exists = ReportSubmission::where('rs_wo_id', $this->record->wo_id)
                                 ->whereDate('rs_work_date', $get('rs_work_date'))
@@ -147,10 +150,10 @@ class ViewTechnicianWorkOrder extends ViewRecord
                     Select::make('rs_worker_ids')
                         ->label('Workers')
                         ->options(function (Get $get) {
-                            return AppUser::whereHas('roles', fn($q) => $q->where('name', 'technician'))
+                            return AppUser::whereHas('roles', fn ($q) => $q->where('name', 'technician'))
                                 ->where('user_dep_id', auth()->user()->user_dep_id)
                                 ->get()
-                                ->mapWithKeys(fn($user) => [
+                                ->mapWithKeys(fn ($user) => [
                                     $user->user_id => "{$user->user_fname} {$user->user_lname}",
                                 ]);
                         })
@@ -172,8 +175,8 @@ class ViewTechnicianWorkOrder extends ViewRecord
                             }
 
                             $report = ReportSubmission::create([
-                                'rs_wo_id'        => $record->wo_id,
-                                'rs_work_date'    => $data['rs_work_date'],
+                                'rs_wo_id' => $record->wo_id,
+                                'rs_work_date' => $data['rs_work_date'],
                                 'rs_submitted_by' => auth()->id(),
                                 'rs_submitted_dt' => now(),
                             ]);
@@ -190,14 +193,14 @@ class ViewTechnicianWorkOrder extends ViewRecord
                     } catch (\Throwable $e) {
                         Notification::make()
                             ->title('Failed to submit report.')
-                            ->body('Please try again or contact support.' . ' ' . $e)
+                            ->body('Please try again or contact support.'.' '.$e)
                             ->danger()
                             ->send();
                     }
                 }),
             Action::make('requestCompletion')
                 ->label('Request Completion')
-                ->visible(fn() => Auth::user()->can('requestCompletion', $this->record))
+                ->visible(fn () => Auth::user()->can('requestCompletion', $this->record))
                 ->icon('heroicon-o-check-circle')
                 ->color('warning')
                 ->modalHeading('Request Completion')
@@ -224,14 +227,14 @@ class ViewTechnicianWorkOrder extends ViewRecord
                             $status = Status::find('pca');
 
                             WorkOrderLog::create([
-                                'wol_wo_id'      => $workOrder->wo_id,
-                                'wol_a_id'       => $action->a_id,
-                                'wol_status_id'  => $status->status_id,
-                                'wol_a_log'      => $action->a_past_tense,
+                                'wol_wo_id' => $workOrder->wo_id,
+                                'wol_a_id' => $action->a_id,
+                                'wol_status_id' => $status->status_id,
+                                'wol_a_log' => $action->a_past_tense,
                                 'wol_status_log' => $status->status_title,
-                                'wol_note'       => $data['wol_note'] ?? null,
-                                'wol_by'         => auth()->id(),
-                                'wol_dt'         => now(),
+                                'wol_note' => $data['wol_note'] ?? null,
+                                'wol_by' => auth()->id(),
+                                'wol_dt' => now(),
                             ]);
 
                             $workOrder->update([
@@ -243,30 +246,30 @@ class ViewTechnicianWorkOrder extends ViewRecord
                         $record->load(['workers', 'createdBy', 'priority']);
                         $requestor = auth()->user();
                         $note = $data['wol_note'] ?? null;
-                        $woUrl = config('app.url') . '/technician-work-orders/' . $record->wo_id; // adjust panel path as needed
+                        $woUrl = config('app.url').'/technician-work-orders/'.$record->wo_id; // adjust panel path as needed
 
                         $sharedData = [
                             'workOrder' => $record,
                             'requestor' => $requestor,
-                            'note'      => $note,
-                            'ctaUrl'    => $woUrl,
+                            'note' => $note,
+                            'ctaUrl' => $woUrl,
                         ];
 
                         // 1. Notify requestor — Confirmation
                         Mail::to($requestor->user_email)
                             ->queue((new WorkOrderCompletionRequestedMail($record, $requestor, 'requestor', $note))
                                 ->with(array_merge($sharedData, [
-                                    'headerColor'    => '#16a34a',
+                                    'headerColor' => '#16a34a',
                                     'headerSubColor' => '#bbf7d0',
-                                    'headerIcon'     => '✅',
-                                    'headerTitle'    => 'Completion Request Submitted',
+                                    'headerIcon' => '✅',
+                                    'headerTitle' => 'Completion Request Submitted',
                                     'headerSubtitle' => 'Your completion request has been submitted and is awaiting approval.',
-                                    'bodyMessage'    => 'Your request to complete the following work order has been successfully submitted. You will be notified once it has been reviewed.',
-                                    'ctaLabel'       => 'View Work Order',
+                                    'bodyMessage' => 'Your request to complete the following work order has been successfully submitted. You will be notified once it has been reviewed.',
+                                    'ctaLabel' => 'View Work Order',
                                 ])));
 
                         // 2. Notify managers of the same department — Action Required
-                        $managers = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
+                        $managers = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
                             ->where('user_dep_id', $requestor->user_dep_id)
                             ->get();
 
@@ -275,13 +278,13 @@ class ViewTechnicianWorkOrder extends ViewRecord
                                 Mail::to($manager->user_email)
                                     ->queue((new WorkOrderCompletionRequestedMail($record, $requestor, 'manager', $note))
                                         ->with(array_merge($sharedData, [
-                                            'headerColor'    => '#d97706',
+                                            'headerColor' => '#d97706',
                                             'headerSubColor' => '#fde68a',
-                                            'headerIcon'     => '⚠️',
-                                            'headerTitle'    => 'Action Required: Completion Approval',
+                                            'headerIcon' => '⚠️',
+                                            'headerTitle' => 'Action Required: Completion Approval',
                                             'headerSubtitle' => 'A technician has requested completion approval for a work order.',
-                                            'bodyMessage'    => 'The following work order has been submitted for completion approval. Please review and take the appropriate action.',
-                                            'ctaLabel'       => 'Review Work Order',
+                                            'bodyMessage' => 'The following work order has been submitted for completion approval. Please review and take the appropriate action.',
+                                            'ctaLabel' => 'Review Work Order',
                                         ])));
                             }
                         }
@@ -293,13 +296,13 @@ class ViewTechnicianWorkOrder extends ViewRecord
                                 Mail::to($technician->user_email)
                                     ->queue((new WorkOrderCompletionRequestedMail($record, $requestor, 'technician', $note))
                                         ->with(array_merge($sharedData, [
-                                            'headerColor'    => '#2563eb',
+                                            'headerColor' => '#2563eb',
                                             'headerSubColor' => '#bfdbfe',
-                                            'headerIcon'     => '📋',
-                                            'headerTitle'    => 'Work Order Update',
+                                            'headerIcon' => '📋',
+                                            'headerTitle' => 'Work Order Update',
                                             'headerSubtitle' => 'A completion request has been submitted for your work order.',
-                                            'bodyMessage'    => 'Your teammate has submitted a completion request for the following work order. No action is required from you at this time.',
-                                            'ctaLabel'       => 'View Work Order',
+                                            'bodyMessage' => 'Your teammate has submitted a completion request for the following work order. No action is required from you at this time.',
+                                            'ctaLabel' => 'View Work Order',
                                         ])));
                             }
                         }

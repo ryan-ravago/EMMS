@@ -6,6 +6,7 @@ use App\Filament\Resources\Inspections\InspectionResource;
 use App\Models\Action;
 use App\Models\Department;
 use App\Models\EquipmentTaskChecklistTemplate;
+use App\Models\Inspection;
 use App\Models\InspectionItem;
 use App\Models\InspectionItemLog;
 use App\Models\Status;
@@ -264,7 +265,7 @@ class InspectionsRelationManager extends RelationManager
             ->headerActions([
                 CreateAction::make()
                     ->visible(fn (): bool => (bool) $this->getOwnerRecord()->eqm_is_active)
-                    ->authorize(true)
+                    ->authorize(fn () => Auth::user()->can('create', Inspection::class))
                     ->modalHeading('New Inspection')
                     ->schema([
                         Section::make('Inspection Details')
@@ -297,16 +298,7 @@ class InspectionsRelationManager extends RelationManager
                                     ->dehydrated()
                                     ->relationship(
                                         name: 'equipment',
-                                        titleAttribute: 'eqm_name',
-                                        modifyQueryUsing: function ($query, Get $get) {
-                                            $depId = auth()->user()->hasRole('super_admin')
-                                                ? $get('ins_dep_id')
-                                                : auth()->user()->user_dep_id;
-
-                                            return $query
-                                                ->where('eqm_is_active', true)
-                                                ->whereHas('equipmentTaskChecklistTemplates', fn ($q) => $q->where('etct_dep_id', $depId));
-                                        }
+                                        titleAttribute: 'eqm_name'
                                     )
                                     ->live()
                                     ->afterStateUpdated(function (Set $set, Get $get, $state) {
@@ -467,12 +459,25 @@ class InspectionsRelationManager extends RelationManager
 
                                 $ownerRecord = $table->getRelationship()->getParent();
 
+                                $depId = auth()->user()->hasRole('super_admin')
+                                    ? $data['ins_dep_id']
+                                    : auth()->user()->user_dep_id;
+
+                                $depCode = DB::table('departments')
+                                    ->where('dep_id', $depId)
+                                    ->value('dep_code');
+
+                                $insCount = DB::table('inspections')
+                                    ->where('ins_dep_id', $depId)
+                                    ->whereDate('ins_submitted_dt', $this->now()->toDateString())
+                                    ->count() + 1;
+
+                                $data['ins_no'] = 'INS-'.$depCode.'-'.$this->now()->format('ymd').str_pad($insCount, 3, '0', STR_PAD_LEFT);
+
                                 $inspection = $table->getRelationship()->create([
                                     ...$data,
                                     'ins_eqm_id' => $ownerRecord->getKey(),
-                                    'ins_dep_id' => auth()->user()->hasRole('super_admin')
-                                        ? $data['ins_dep_id']
-                                        : auth()->user()->user_dep_id,
+                                    'ins_dep_id' => $depId,
                                     'ins_submitted_by' => auth()->id(),
                                     'ins_submitted_dt' => $this->now(),
                                 ]);
@@ -481,16 +486,27 @@ class InspectionsRelationManager extends RelationManager
                                 $statusPnd = Status::find('pnd');
                                 $statusCmp = Status::find('cmp');
 
+                                $itemsCount = DB::table('inspection_items')
+                                    ->join('inspections', 'inspection_items.insi_ins_id', '=', 'inspections.ins_id')
+                                    ->where('inspections.ins_dep_id', $depId)
+                                    ->whereDate('inspections.ins_submitted_dt', $this->now()->toDateString())
+                                    ->count();
+
                                 DB::table('inspection_items')->insert(
-                                    collect($items)->map(fn ($item) => [
-                                        'insi_ins_id' => $inspection->ins_id,
-                                        'insi_task_id' => $item['insi_task_id'],
-                                        'insi_status_id' => in_array($item['insi_result'], ['P', 'N']) ? 'cmp' : 'pnd',
-                                        'insi_cli_name_for_record' => $item['insi_cli_name_for_record'],
-                                        'insi_result' => $item['insi_result'],
-                                        'insi_remarks' => $item['insi_remarks'] ?? null,
-                                        'insi_closed_dt' => in_array($item['insi_result'], ['P', 'N']) ? $this->now() : null,
-                                    ])->toArray()
+                                    collect($items)->map(function ($item) use (&$itemsCount, $depCode) {
+                                        $itemsCount++;
+
+                                        return [
+                                            'insi_no' => 'INI-'.$depCode.'-'.$this->now()->format('ymd').str_pad($itemsCount, 4, '0', STR_PAD_LEFT),
+                                            'insi_ins_id' => $item['insi_ins_id'] ?? null,
+                                            'insi_task_id' => $item['insi_task_id'],
+                                            'insi_status_id' => in_array($item['insi_result'], ['P', 'N']) ? 'cmp' : 'pnd',
+                                            'insi_cli_name_for_record' => $item['insi_cli_name_for_record'],
+                                            'insi_result' => $item['insi_result'],
+                                            'insi_remarks' => $item['insi_remarks'] ?? null,
+                                            'insi_closed_dt' => in_array($item['insi_result'], ['P', 'N']) ? $this->now() : null,
+                                        ];
+                                    })->toArray()
                                 );
 
                                 $createdItems = InspectionItem::where('insi_ins_id', $inspection->ins_id)->get();

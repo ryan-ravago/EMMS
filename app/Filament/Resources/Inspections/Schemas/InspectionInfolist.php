@@ -19,16 +19,19 @@ class InspectionInfolist
                     ->columns(3)
                     ->columnSpanFull()
                     ->schema([
+                        TextEntry::make('ins_no')
+                            ->label('Inspection #')
+                            ->weight('bold'),
                         TextEntry::make('department.dep_name')
                             ->label('Department')
-                            ->visible(fn() => auth()->user()->hasRole('super_admin')),
+                            ->visible(fn () => auth()->user()->hasRole('super_admin')),
 
                         TextEntry::make('equipment.eqm_name')
                             ->label('Equipment'),
 
                         TextEntry::make('conductedBy.user_fname')
                             ->label('Inspected By')
-                            ->formatStateUsing(fn($record) => "{$record->conductedBy->user_fname} {$record->conductedBy->user_lname}"),
+                            ->formatStateUsing(fn ($record) => "{$record->conductedBy->user_fname} {$record->conductedBy->user_lname}"),
 
                         TextEntry::make('ins_dt')
                             ->label('Inspection Date & Time')
@@ -36,7 +39,7 @@ class InspectionInfolist
 
                         TextEntry::make('submittedBy.user_fname')
                             ->label('Submitted By')
-                            ->formatStateUsing(fn($record) => $record->submittedBy
+                            ->formatStateUsing(fn ($record) => $record->submittedBy
                                 ? "{$record->submittedBy->user_fname} {$record->submittedBy->user_lname}"
                                 : '—'),
 
@@ -62,13 +65,13 @@ class InspectionInfolist
                                 TextEntry::make('insi_result')
                                     ->label('Result')
                                     ->badge()
-                                    ->color(fn($state) => match ($state) {
+                                    ->color(fn ($state) => match ($state) {
                                         'P' => 'success',
                                         'F' => 'danger',
                                         'N' => 'gray',
                                         default => 'gray',
                                     })
-                                    ->formatStateUsing(fn($state) => match ($state) {
+                                    ->formatStateUsing(fn ($state) => match ($state) {
                                         'P' => 'Passed',
                                         'F' => 'Failed',
                                         'N' => 'N/A',
@@ -80,8 +83,8 @@ class InspectionInfolist
                                     ->label('Status')
                                     ->badge()
                                     ->columnSpan(1)
-                                    ->color(fn(InspectionItem $record) => $record->status->status_color)
-                                    ->icon(fn(InspectionItem $record) => $record->status->status_icon),
+                                    ->color(fn (InspectionItem $record) => $record->status->status_color)
+                                    ->icon(fn (InspectionItem $record) => $record->status->status_icon),
 
                                 TextEntry::make('insi_remarks')
                                     ->label('Remarks')
@@ -91,7 +94,7 @@ class InspectionInfolist
                                 TextEntry::make('view_link')
                                     ->hiddenLabel()
                                     ->default('View details →')
-                                    ->url(fn($record) => url("/inspection-items/{$record->insi_id}"))
+                                    ->url(fn ($record) => url("/inspection-items/{$record->insi_id}"))
                                     ->columnSpan(2)
                                     ->extraAttributes([
                                         'class' => 'text-right fi-link text-primary-600 hover:text-primary-500 hover:underline font-medium cursor-pointer',

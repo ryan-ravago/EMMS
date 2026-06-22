@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Action;
 use BackedEnum;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Pages\Page;
@@ -40,6 +41,7 @@ class ActivityLogPage extends Page implements HasTable
                     ->formatStateUsing(fn ($record): string => $record->causer
                         ? "{$record->causer->user_fname} {$record->causer->user_lname}"
                         : 'System')
+                    ->url(fn ($record) => $record->causer ? url('/app-users/'.$record->causer->getKey()) : null)
                     ->searchable(),
 
                 TextColumn::make('subject_type')
@@ -50,6 +52,11 @@ class ActivityLogPage extends Page implements HasTable
 
                 TextColumn::make('event')
                     ->label('Event')
+                    ->formatStateUsing(function (string $state): string {
+                        $action = Action::find($state);
+
+                        return $action ? strtolower($action->a_present_tense) : $state;
+                    })
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'created', 'create', 'approve', 'mac' => 'success',

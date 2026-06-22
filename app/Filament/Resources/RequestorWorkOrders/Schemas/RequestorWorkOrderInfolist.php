@@ -117,8 +117,8 @@ class RequestorWorkOrderInfolist
                             ->placeholder('-')
                             ->icon('heroicon-o-arrow-top-right-on-square')
                             ->iconPosition(IconPosition::After),
-                        TextEntry::make('wo_insi_id')
-                            ->label('Inspection')
+                        TextEntry::make('inspectionItem.insi_no')
+                            ->label('Inspection Item')
                             ->url(fn ($record) => $record->wo_insi_id
                                 ? InspectionItemResource::getUrl('view', ['record' => $record->wo_insi_id])
                                 : null)

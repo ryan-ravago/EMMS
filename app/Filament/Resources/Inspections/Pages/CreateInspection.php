@@ -56,21 +56,43 @@ class CreateInspection extends CreateRecord
 
         return DB::transaction(function () use ($data, $items) {
             try {
+                $depCode = DB::table('departments')
+                    ->where('dep_id', $data['ins_dep_id'])
+                    ->value('dep_code');
+
+                $insCount = DB::table('inspections')
+                    ->where('ins_dep_id', $data['ins_dep_id'])
+                    ->whereDate('ins_submitted_dt', $this->now()->toDateString())
+                    ->count() + 1;
+
+                $data['ins_no'] = 'INS-'.$depCode.'-'.$this->now()->format('ymd').str_pad($insCount, 3, '0', STR_PAD_LEFT);
+
                 $inspection = static::getModel()::create($data);
 
                 $action = Action::find('create');
                 $statusPnd = Status::find('pnd');
                 $statusCmp = Status::find('cmp');
 
+                $itemsCount = DB::table('inspection_items')
+                    ->join('inspections', 'inspection_items.insi_ins_id', '=', 'inspections.ins_id')
+                    ->where('inspections.ins_dep_id', $data['ins_dep_id'])
+                    ->whereDate('inspections.ins_submitted_dt', $this->now()->toDateString())
+                    ->count();
+
                 $createdItems = $inspection->inspectionItems()->createMany(
-                    collect($items)->map(fn ($item) => [
-                        'insi_task_id' => $item['insi_task_id'],
-                        'insi_status_id' => in_array($item['insi_result'], ['P', 'N']) ? 'cmp' : 'pnd',
-                        'insi_cli_name_for_record' => $item['insi_cli_name_for_record'],
-                        'insi_result' => $item['insi_result'],
-                        'insi_remarks' => $item['insi_remarks'] ?? null,
-                        'insi_closed_dt' => in_array($item['insi_result'], ['P', 'N']) ? $this->now() : null,
-                    ])->toArray()
+                    collect($items)->map(function ($item) use (&$itemsCount, $depCode) {
+                        $itemsCount++;
+
+                        return [
+                            'insi_no' => 'INI-'.$depCode.'-'.$this->now()->format('ymd').str_pad($itemsCount, 4, '0', STR_PAD_LEFT),
+                            'insi_task_id' => $item['insi_task_id'],
+                            'insi_status_id' => in_array($item['insi_result'], ['P', 'N']) ? 'cmp' : 'pnd',
+                            'insi_cli_name_for_record' => $item['insi_cli_name_for_record'],
+                            'insi_result' => $item['insi_result'],
+                            'insi_remarks' => $item['insi_remarks'] ?? null,
+                            'insi_closed_dt' => in_array($item['insi_result'], ['P', 'N']) ? $this->now() : null,
+                        ];
+                    })->toArray()
                 );
 
                 $logs = $createdItems->map(fn ($item) => [

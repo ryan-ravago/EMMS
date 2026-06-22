@@ -19,6 +19,7 @@ class Inspection extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'ins_no',
         'ins_dep_id',
         'ins_eqm_id',
         'ins_by',

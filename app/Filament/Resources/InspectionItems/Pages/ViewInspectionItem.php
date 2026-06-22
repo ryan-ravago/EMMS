@@ -175,6 +175,7 @@ class ViewInspectionItem extends ViewRecord
                                     ->schema([
                                         Textarea::make('wo_title')
                                             ->label('Title')
+                                            ->default(fn () => 'Resolve Failed Inspection: '.$this->record->insi_cli_name_for_record)
                                             ->required(),
                                         Select::make('wo_prio_id')
                                             ->label('Priority')

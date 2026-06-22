@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class EquipmentModel extends Model
 {
     protected $table = 'equipment_models';
+
     protected $primaryKey = 'eqmm_id';
 
     protected $fillable = [
@@ -41,5 +42,10 @@ class EquipmentModel extends Model
     public function type(): BelongsTo
     {
         return $this->belongsTo(EquipmentType::class, 'eqmm_eqmt_id', 'eqmt_id');
+    }
+
+    public function equipments()
+    {
+        return $this->hasMany(Equipment::class, 'eqm_eqmm_id', 'eqmm_id');
     }
 }

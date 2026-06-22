@@ -19,6 +19,7 @@ class InspectionItem extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'insi_no',
         'insi_ins_id',
         'insi_task_id',
         'insi_status_id',
