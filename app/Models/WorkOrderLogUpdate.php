@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class WorkOrderLogUpdate extends Model
 {
     protected $table = 'work_order_log_updates';
+
     protected $primaryKey = 'wolu_id';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -17,11 +19,20 @@ class WorkOrderLogUpdate extends Model
         'wolu_attachments',
         'wolu_by',
         'wolu_dt',
+        'wolu_source',
+        'wolu_gmail_message_id',
+        'wolu_gmail_thread_id',
+        'wolu_sender_email',
+        'wolu_reply_subject',
+        'wolu_reply_token',
     ];
 
-    protected $casts = [
-        'wolu_attachments' => 'array',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'wolu_attachments' => 'array',
+        ];
+    }
 
     public function workOrder(): BelongsTo
     {

@@ -11,12 +11,23 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\GoogleProvider;
 
 class SocialiteController extends Controller
 {
     public function redirectToGoogle()
     {
-        return Socialite::driver('google')->stateless()->redirect();
+        /** @var GoogleProvider $googleProvider */
+        $googleProvider = Socialite::driver('google');
+
+        return $googleProvider
+            ->scopes(config('work_orders.google_scopes'))
+            ->with([
+                'access_type' => 'offline',
+                'prompt' => 'consent',
+                'include_granted_scopes' => 'true',
+            ])
+            ->redirect();
     }
 
     // public function handleGoogleCallback()
@@ -146,11 +157,11 @@ class SocialiteController extends Controller
         }
 
         try {
-            $googleUser = Socialite::driver('google')->stateless()->user();
+            $googleUser = Socialite::driver('google')->user();
             $email = $googleUser->getEmail();
 
-            $usrUser = Usr::where('email', $email)->first();
-            $appUser = AppUser::where('user_email', $email)->first();
+            $usrUser = Usr::query()->where('email', $email)->first();
+            $appUser = AppUser::query()->where('user_email', $email)->first();
 
             if (! $usrUser || ! $appUser) {
                 RateLimiter::hit($key, $decaySeconds);
@@ -182,6 +193,19 @@ class SocialiteController extends Controller
 
                 return redirect('/login');
             }
+
+            $tokenData = [
+                'google_access_token' => $googleUser->token,
+                'google_token_expires_at' => $googleUser->expiresIn
+                    ? now()->addSeconds((int) $googleUser->expiresIn)
+                    : null,
+            ];
+
+            if ($googleUser->refreshToken) {
+                $tokenData['google_refresh_token'] = $googleUser->refreshToken;
+            }
+
+            $appUser->forceFill($tokenData)->save();
 
             // Save/update avatar from Google
             if ($googleUser->getAvatar() && $appUser->user_avatar !== $googleUser->getAvatar()) {
