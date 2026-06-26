@@ -156,7 +156,7 @@ class ProcessDueDateChecks implements ShouldQueue
             ->whereDate('mt_dt', '!=', $now->toDateString())
             ->whereNotNull('mt_due_dt')
             ->whereNull('mt_closed_dt')
-            ->whereIn('mt_status_id', ['snz', 'pnd'])
+            ->where('mt_status_id', 'snz')
             ->select('mt_id', 'mt_status_id', 'mt_due_dt')
             ->orderBy('mt_due_dt')
             ->chunk(200, function ($tasks) use ($now) {
@@ -226,21 +226,7 @@ class ProcessDueDateChecks implements ShouldQueue
             ])
             ->get();
 
-        // Overdue tasks
-        $overdueTasks = DB::table('maintenance_tasks as mt')
-            ->join('equipment_units as eqm', 'eqm.eqm_id', '=', 'mt.mt_eqm_id')
-            ->join('departments as dep', 'dep.dep_id', '=', 'mt.mt_dep_id')
-            ->join('tasks as t', 't.task_id', '=', 'mt.mt_task_id')
-            ->join('statuses as s', 's.status_id', '=', 'mt.mt_status_id')
-            ->where('eqm.eqm_is_active', 1)
-            ->whereNull('mt.mt_closed_dt')
-            ->where('mt.mt_status_id', 'pnd')
-            ->whereRaw('DATE(mt.mt_due_dt) < ?', [$now->toDateString()]) // exclude today's new ones
-            ->select(['mt.mt_id', 'mt.mt_task_log', 'mt.mt_due_dt', 'mt.mt_dep_id', 'eqm.eqm_name', 'dep.dep_name', 't.task_name', 's.status_title'])
-            ->get();
-
         $this->dispatchEmails($newTasks, 'due');
-        $this->dispatchEmails($overdueTasks, 'overdue');
     }
 
     private function dispatchEmails($tasks, string $type): void

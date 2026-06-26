@@ -28,9 +28,21 @@ class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasNam
         'user_contact_no',
         'user_fb_profile_link',
         'user_dep_id',
+        'google_access_token',
+        'google_refresh_token',
+        'google_token_expires_at',
     ];
 
     public $timestamps = false;
+
+    protected function casts(): array
+    {
+        return [
+            'google_access_token' => 'encrypted',
+            'google_refresh_token' => 'encrypted',
+            'google_token_expires_at' => 'datetime',
+        ];
+    }
 
     // This method tells Filament what to display in the user menu
     public function getFullNameAttribute(): string

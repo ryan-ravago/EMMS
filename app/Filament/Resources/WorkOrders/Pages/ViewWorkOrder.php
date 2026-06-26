@@ -40,24 +40,24 @@ class ViewWorkOrder extends ViewRecord
 {
     protected static string $resource = WorkOrderResource::class;
 
-    public function hasCombinedRelationManagerTabsWithContent(): bool
-    {
-        return true; // merges infolist + relation manager tabs together
-    }
+    // public function hasCombinedRelationManagerTabsWithContent(): bool
+    // {
+    //     return true; // merges infolist + relation manager tabs together
+    // }
 
-    public function getContentTabLabel(): string
-    {
-        return 'Details'; // label for the main infolist tab
-    }
+    // public function getContentTabLabel(): string
+    // {
+    //     return 'Details'; // label for the main infolist tab
+    // }
 
-    public function getRelationManagers(): array
-    {
-        return [
-            LogsRelationManager::class,
-            LogUpdatesRelationManager::class,
-            ReportSubmissionsRelationManager::class,
-        ];
-    }
+    // public function getRelationManagers(): array
+    // {
+    //     return [
+    //         LogsRelationManager::class,
+    //         LogUpdatesRelationManager::class,
+    //         ReportSubmissionsRelationManager::class,
+    //     ];
+    // }
 
     protected function getHeaderActions(): array
     {

@@ -30,7 +30,7 @@
                             </p>
                             <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
                                 You have been assigned to a new work order. Please review the details below and take
-                                action immediately.
+                                action immediately. Reply to this email to add updates for the work order.
                             </p>
 
                             <!-- Details Card -->
@@ -91,7 +91,9 @@
                         <td
                             style="background-color:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center;">
                             <p style="margin:0;font-size:12px;color:#9ca3af;">
-                                This is a system-generated email. Please do not reply to this message.
+                                Reply above this line to add your update:
+                                <br>
+                                --- Please reply above this line ---
                             </p>
                             <p style="margin:6px 0 0;font-size:12px;color:#d1d5db;">
                                 © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.

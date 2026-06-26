@@ -5,9 +5,8 @@ namespace App\Mail;
 use App\Models\AppUser;
 use App\Models\WorkOrder;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -31,8 +30,11 @@ class WorkOrderAssignedMail extends Mailable
      */
     public function envelope(): Envelope
     {
+        $replyToAddress = $this->buildReplyToAddress();
+
         return new Envelope(
-            subject: "Action Required: {$this->workOrder->wo_no}",
+            subject: "[WO:{$this->workOrder->wo_no}] Action Required",
+            replyTo: $replyToAddress ? [new Address($replyToAddress, config('app.name'))] : [],
         );
     }
 
@@ -46,13 +48,21 @@ class WorkOrderAssignedMail extends Mailable
         );
     }
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, Attachment>
-     */
-    public function attachments(): array
+    private function buildReplyToAddress(): ?string
     {
-        return [];
+        $replyToAddress = config('work_orders.reply_to_address');
+
+        if (! $replyToAddress || ! str_contains($replyToAddress, '@')) {
+            return $replyToAddress;
+        }
+
+        [$localPart, $domainPart] = explode('@', $replyToAddress, 2);
+        $threadToken = trim($this->workOrder->wo_no);
+
+        if ($threadToken === '') {
+            return $replyToAddress;
+        }
+
+        return sprintf('%s+%s@%s', $localPart, $threadToken, $domainPart);
     }
 }
