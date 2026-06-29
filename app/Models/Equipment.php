@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -31,15 +33,27 @@ class Equipment extends Model
 
     public $timestamps = false;
 
+    public function type(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            EquipmentType::class,
+            EquipmentModel::class,
+            'eqmm_id',
+            'eqmt_id',
+            'eqm_eqmm_id',
+            'eqmm_eqmt_id'
+        );
+    }
+
     public function model()
     {
         return $this->belongsTo(EquipmentModel::class, 'eqm_eqmm_id', 'eqmm_id');
     }
 
-    public function tasks(): BelongsToMany
-    {
-        return $this->belongsToMany(Task::class, 'equipment_task_checklist_template', 'etct_eqm_id', 'etct_task_id');
-    }
+    // public function tasks(): BelongsToMany
+    // {
+    //     return $this->belongsToMany(Task::class, 'equipment_type_task_checklist_template', 'etct_eqmt_id', 'etct_task_id');
+    // }
 
     public function scheduledTasks(): BelongsToMany
     {
@@ -65,14 +79,14 @@ class Equipment extends Model
         // return $this->hasMany(EquipmentTasksSchedule::class, 'ets_eqm_id', 'eqm_id');
         return $this->hasMany(EquipmentTasksSchedule::class, 'ets_eqm_id', 'eqm_id')
             ->when(
-                auth()->check() && ! auth()->user()->hasRole('super_admin'),
-                fn ($query) => $query->where('ets_dep_id', auth()->user()->user_dep_id)
+                Auth::check() && ! Auth::user()->hasRole('super_admin'),
+                fn($query) => $query->where('ets_dep_id', Auth::user()->user_dep_id)
             );
     }
 
     public function equipmentTaskChecklistTemplates(): HasMany
     {
-        return $this->hasMany(EquipmentTaskChecklistTemplate::class, 'etct_eqm_id', 'eqm_id');
+        return $this->hasMany(EquipmentTaskChecklistTemplate::class, 'etct_eqmt_id', 'eqm_id');
     }
 
     public function inspections(): HasMany

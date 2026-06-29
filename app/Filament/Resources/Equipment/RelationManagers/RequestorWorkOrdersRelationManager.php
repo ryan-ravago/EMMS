@@ -9,6 +9,7 @@ use App\Models\AppUser;
 use App\Models\Department;
 use App\Models\Equipment;
 use App\Models\Priority;
+use App\Models\RequestorWorkOrder;
 use App\Models\WorkOrderLog;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
@@ -59,7 +60,7 @@ class RequestorWorkOrdersRelationManager extends RelationManager
             ->headerActions([
                 CreateAction::make()
                     ->visible(fn(): bool => (bool) $this->getOwnerRecord()->eqm_is_active)
-                    ->authorize(true)
+                    ->authorize(fn() => Auth::user()->can('create', RequestorWorkOrder::class))
                     ->label('Request Work Order')
                     ->color('primary')
                     ->closeModalByClickingAway(false)

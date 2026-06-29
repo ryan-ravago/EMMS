@@ -4,13 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Auth;
 
 class Task extends Model
 {
     protected $table = 'tasks';
+
     protected $primaryKey = 'task_id';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -28,19 +30,19 @@ class Task extends Model
         static::creating(function (Task $task) {
             $now = now();
 
-            if (!$task->task_created_by) {
-                $task->task_created_by = auth()->id();
+            if (! $task->task_created_by) {
+                $task->task_created_by = Auth::id();
             }
-            if (!$task->task_created_at) {
+            if (! $task->task_created_at) {
                 $task->task_created_at = $now;
             }
-            if (!$task->task_dep_id) {
-                $task->task_dep_id = auth()->user()?->user_dep_id; // ← current user's dept
+            if (! $task->task_dep_id) {
+                $task->task_dep_id = Auth::user()?->user_dep_id; // ← current user's dept
             }
-            if (!$task->task_last_updated_by) {
-                $task->task_last_updated_by = auth()->id();
+            if (! $task->task_last_updated_by) {
+                $task->task_last_updated_by = Auth::id();
             }
-            if (!$task->task_last_updated_at) {
+            if (! $task->task_last_updated_at) {
                 $task->task_last_updated_at = $now;
             }
         });
@@ -48,7 +50,7 @@ class Task extends Model
         static::updating(function (Task $task) {
             $now = now();
 
-            $task->task_last_updated_by = auth()->id();
+            $task->task_last_updated_by = Auth::id();
             $task->task_last_updated_at = $now;
         });
     }
@@ -80,7 +82,12 @@ class Task extends Model
 
     public function equipmentUnitsForTemplate(): BelongsToMany
     {
-        return $this->belongsToMany(Equipment::class, 'equipment_task_checklist_template', 'etct_task_id', 'etct_eqm_id');
+        return $this->equipmentTypesForTemplate();
+    }
+
+    public function equipmentTypesForTemplate(): BelongsToMany
+    {
+        return $this->belongsToMany(EquipmentType::class, 'equipment_type_task_checklist_template', 'etct_task_id', 'etct_eqmt_id');
     }
 
     public function equipmentUnitsForSchedule(): BelongsToMany
@@ -98,7 +105,7 @@ class Task extends Model
                 'ets_due_effectivity_dt',
                 'ets_due_dt',
                 'ets_assigned_by',
-                'ets_assigned_at'
+                'ets_assigned_at',
             ]);
     }
 }

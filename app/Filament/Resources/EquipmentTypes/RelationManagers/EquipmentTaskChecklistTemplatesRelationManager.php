@@ -1,11 +1,9 @@
 <?php
 
-namespace App\Filament\Resources\Equipment\RelationManagers;
+namespace App\Filament\Resources\EquipmentTypes\RelationManagers;
 
 use App\Models\EquipmentTaskChecklistTemplate;
 use App\Models\Task;
-use App\Models\TaskUsageType;
-use App\Models\WorkOrder;
 use Filament\Actions\Action;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
@@ -34,12 +32,12 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
 {
     protected static string $relationship = 'equipmentTaskChecklistTemplates';
 
-    protected static ?string $title = 'Inspection Template';
+    protected static ?string $title = 'Checklist Template';
 
-    // EquipmentTaskChecklistTemplatesRelationManager
     public static function getBadge(Model $ownerRecord, string $pageClass): ?string
     {
         $query = $ownerRecord->equipmentTaskChecklistTemplates();
+
         if (! Auth::user()->hasRole('super_admin')) {
             $query->where('etct_dep_id', Auth::user()->user_dep_id);
         }
@@ -49,7 +47,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['etct_eqm_id'] = $this->getOwnerRecord()->getKey();
+        $data['etct_eqmt_id'] = $this->getOwnerRecord()->getKey();
         $data['etct_dep_id'] = Auth::user()->user_dep_id;
         $data['etct_created_by'] = Auth::id();
         $data['etct_created_at'] = now();
@@ -68,11 +66,12 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                         titleAttribute: 'task_name',
                         modifyQueryUsing: fn($query) => $query
                             ->where('task_tut_id', 1)
-                            ->where('task_dep_id', auth()->user()->user_dep_id)
+                            ->where('task_dep_id', Auth::user()->user_dep_id)
                             ->whereNotIn(
                                 'task_id',
-                                EquipmentTaskChecklistTemplate::where('etct_eqm_id', $this->getOwnerRecord()->getKey())
-                                    ->where('etct_dep_id', auth()->user()->user_dep_id)
+                                EquipmentTaskChecklistTemplate::query()
+                                    ->where('etct_eqmt_id', $this->getOwnerRecord()->getKey())
+                                    ->where('etct_dep_id', Auth::user()->user_dep_id)
                                     ->pluck('etct_task_id')
                             )
                     )
@@ -95,20 +94,8 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                             )->validationMessages([
                                 'unique' => 'The task name has already been taken.',
                             ]),
-                        // Select::make('task_tut_id')
-                        //     ->label('Usage Type')
-                        //     ->placeholder('Select a usage type')
-                        //     ->relationship('taskUsageType', 'tut_name')
-                        //     ->searchable()
-                        //     ->preload()
-                        //     ->required()
-                        //     ->native(false)
-                        //     ->exists(
-                        //         table: TaskUsageType::class,
-                        //         column: 'tut_id',
-                        //     ),
                     ])
-                    ->createOptionModalHeading('New Inspection Task')
+                    ->createOptionModalHeading('New Checklist Task')
                     ->createOptionAction(
                         fn(Action $action) => $action
                             ->modalWidth(Width::Large)
@@ -185,10 +172,11 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
             ])
             ->headerActions([
                 CreateAction::make()
-                    ->label('Add Inspection Task')
-                    ->modalHeading('Add Equipment Inspection Task')
+                    ->authorize(fn() => Auth::user()->can('create', EquipmentTaskChecklistTemplate::class))
+                    ->label('Add Checklist Task')
+                    ->modalHeading('Add Equipment Checklist Task')
                     ->modalWidth('lg')
-                    ->authorize(fn() => Auth::user()->can('create', WorkOrder::class))
+                    // ->authorize(true)
                     ->closeModalByClickingAway(false)
                     ->closeModalByEscaping(false),
                 AssociateAction::make(),
@@ -208,8 +196,5 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                         ->authorize(true),
                 ]),
             ]);
-        // ->extraAttributes([
-        //     'style' => 'margin-top: 30px;'
-        // ]);
     }
 }

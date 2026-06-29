@@ -6,6 +6,7 @@ use App\Filament\Resources\EquipmentTypes\Pages\CreateEquipmentType;
 use App\Filament\Resources\EquipmentTypes\Pages\EditEquipmentType;
 use App\Filament\Resources\EquipmentTypes\Pages\ListEquipmentTypes;
 use App\Filament\Resources\EquipmentTypes\Pages\ViewEquipmentType;
+use App\Filament\Resources\EquipmentTypes\RelationManagers\EquipmentTaskChecklistTemplatesRelationManager as EquipmentTypeChecklistTemplatesRelationManager;
 use App\Filament\Resources\EquipmentTypes\RelationManagers\ModelsRelationManager;
 use App\Filament\Resources\EquipmentTypes\Schemas\EquipmentTypeForm;
 use App\Filament\Resources\EquipmentTypes\Schemas\EquipmentTypeInfolist;
@@ -47,6 +48,7 @@ class EquipmentTypeResource extends Resource
     {
         return [
             ModelsRelationManager::class,
+            EquipmentTypeChecklistTemplatesRelationManager::class,
         ];
     }
 

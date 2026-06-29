@@ -77,7 +77,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                             ->relationship(
                                 name: 'task',
                                 titleAttribute: 'task_name',
-                                modifyQueryUsing: fn ($query, Select $component) => $query
+                                modifyQueryUsing: fn($query, Select $component) => $query
                                     ->where('task_tut_id', 2)
                                     ->where('task_dep_id', auth()->user()->user_dep_id)
                                     ->whereDoesntHave('equipmentUnitsForSchedule', function ($query) use ($component) {
@@ -116,7 +116,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                                     ->unique(
                                         table: Task::class,
                                         column: 'task_name',
-                                        modifyRuleUsing: fn (Unique $rule) => $rule->where('task_dep_id', auth()->user()->user_dep_id),
+                                        modifyRuleUsing: fn(Unique $rule) => $rule->where('task_dep_id', auth()->user()->user_dep_id),
                                         ignoreRecord: true,
                                     )->validationMessages([
                                         'unique' => 'The task name has already been taken.',
@@ -136,7 +136,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                             ])
                             ->createOptionModalHeading('New Preventive Task')
                             ->createOptionAction(
-                                fn (Action $action) => $action
+                                fn(Action $action) => $action
                                     ->modalWidth(Width::Large)
                                     ->mutateFormDataUsing(function (array $data) {
                                         $data['task_tut_id'] = 2;
@@ -212,7 +212,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                         //     ->label('Sort Order'),
                         TextEntry::make('department.dep_name')
                             ->label('Department')
-                            ->visible(fn () => auth()->user()->hasRole('super_admin')),
+                            ->visible(fn() => auth()->user()->hasRole('super_admin')),
                     ]),
 
                 Section::make('Interval')
@@ -282,7 +282,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                 TextColumn::make('department.dep_name')
                     ->label('Department')
                     ->sortable()
-                    ->visible(fn () => auth()->user()->hasRole('super_admin')),
+                    ->visible(fn() => auth()->user()->hasRole('super_admin')),
                 TextColumn::make('ets_due_effectivity_dt')
                     ->label('Effectivity Date')
                     ->dateTime('M d, Y')

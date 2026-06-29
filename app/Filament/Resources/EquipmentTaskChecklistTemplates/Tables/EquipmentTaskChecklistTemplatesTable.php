@@ -17,7 +17,7 @@ class EquipmentTaskChecklistTemplatesTable
                 TextColumn::make('etct_dep_id')
                     ->numeric()
                     ->sortable(),
-                TextColumn::make('etct_eqm_id')
+                TextColumn::make('etct_eqmt_id')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('etct_task_id')

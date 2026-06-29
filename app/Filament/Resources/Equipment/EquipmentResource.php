@@ -6,7 +6,6 @@ use App\Filament\Resources\Equipment\Pages\CreateEquipment;
 use App\Filament\Resources\Equipment\Pages\EditEquipment;
 use App\Filament\Resources\Equipment\Pages\ListEquipment;
 use App\Filament\Resources\Equipment\Pages\ViewEquipment;
-use App\Filament\Resources\Equipment\RelationManagers\EquipmentTaskChecklistTemplatesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\EquipmentTasksSchedulesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\InspectionsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\MaintenanceTasksRelationManager;
@@ -15,6 +14,7 @@ use App\Filament\Resources\Equipment\RelationManagers\WorkOrdersRelationManager;
 use App\Filament\Resources\Equipment\Schemas\EquipmentForm;
 use App\Filament\Resources\Equipment\Schemas\EquipmentInfolist;
 use App\Filament\Resources\Equipment\Tables\EquipmentTable;
+use App\Models\AppUser;
 use App\Models\Equipment;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -22,6 +22,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class EquipmentResource extends Resource
 {
@@ -74,21 +75,21 @@ class EquipmentResource extends Resource
     {
         $relations = [];
 
-        $user = auth()->user();
+        /** @var AppUser|null $user */
+        $user = Auth::user();
 
         // Standard maintenance tabs for maintenance roles
         if ($user?->hasAnyRole(['super_admin', 'manager', 'technician'])) {
             $relations = [
                 WorkOrdersRelationManager::class,
                 EquipmentTasksSchedulesRelationManager::class,
-                EquipmentTaskChecklistTemplatesRelationManager::class,
                 InspectionsRelationManager::class,
                 MaintenanceTasksRelationManager::class,
             ];
         }
 
         // Requestor specific tab
-        if ($user?->hasRole('requestor')) {
+        if ($user instanceof AppUser && $user->hasRole('requestor')) {
             $relations[] = RequestorWorkOrdersRelationManager::class;
         }
 
