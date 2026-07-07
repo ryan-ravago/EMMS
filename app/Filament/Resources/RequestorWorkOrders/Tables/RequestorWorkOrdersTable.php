@@ -43,29 +43,31 @@ class RequestorWorkOrdersTable
                 TextColumn::make('status.status_title')
                     ->label('Status')
                     ->badge()
-                    ->state(function (WorkOrder $record): string {
-                        $hasApprovedLog = $record->logs()->where('wol_status_id', 'inprog')->exists();
+                    // ->state(function (WorkOrder $record): string {
+                    //     $hasApprovedLog = $record->logs()->where('wol_status_id', 'inprog')->exists();
 
-                        if ($hasApprovedLog) {
-                            return Status::find('appr')->status_title ?? 'Approved';
-                        }
+                    //     if ($hasApprovedLog) {
+                    //         return Status::find('appr')->status_title ?? 'Approved';
+                    //     }
 
-                        return $record->status->status_title;
-                    })
-                    ->color(function (WorkOrder $record) {
-                        $hasApprovedLog = $record->logs()->where('wol_status_id', 'inprog')->exists();
+                    //     return $record->status->status_title;
+                    // })
+                    // ->color(function (WorkOrder $record) {
+                    //     $hasApprovedLog = $record->logs()->where('wol_status_id', 'inprog')->exists();
 
-                        return $hasApprovedLog
-                            ? (Status::find('appr')->status_color ?? 'success')
-                            : $record->status->status_color;
-                    })
-                    ->icon(function (WorkOrder $record) {
-                        $hasApprovedLog = $record->logs()->where('wol_status_id', 'inprog')->exists();
+                    //     return $hasApprovedLog
+                    //         ? (Status::find('appr')->status_color ?? 'success')
+                    //         : $record->status->status_color;
+                    // })
+                    // ->icon(function (WorkOrder $record) {
+                    //     $hasApprovedLog = $record->logs()->where('wol_status_id', 'inprog')->exists();
 
-                        return $hasApprovedLog
-                            ? (Status::find('appr')->status_icon ?? 'heroicon-o-check-badge')
-                            : $record->status->status_icon;
-                    })
+                    //     return $hasApprovedLog
+                    //         ? (Status::find('appr')->status_icon ?? 'heroicon-o-check-badge')
+                    //         : $record->status->status_icon;
+                    // })
+                    ->color(fn (WorkOrder $record) => $record->status->status_color)
+                    ->icon(fn (WorkOrder $record) => $record->status->status_icon)
                     ->sortable(),
                 TextColumn::make('wo_created_dt')
                     ->label('Created At')
@@ -91,8 +93,8 @@ class RequestorWorkOrdersTable
                     ])
                     ->query(function (Builder $query, array $data) {
                         return $query
-                            ->when($data['from'], fn($q) => $q->whereDate('wo_created_dt', '>=', $data['from']))
-                            ->when($data['until'], fn($q) => $q->whereDate('wo_created_dt', '<=', $data['until']));
+                            ->when($data['from'], fn ($q) => $q->whereDate('wo_created_dt', '>=', $data['from']))
+                            ->when($data['until'], fn ($q) => $q->whereDate('wo_created_dt', '<=', $data['until']));
                     }),
             ])
             ->recordActions([

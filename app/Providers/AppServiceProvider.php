@@ -27,29 +27,29 @@ class AppServiceProvider extends ServiceProvider
     {
         // URL::forceScheme('https');
 
-        RateLimiter::for('filament', function (Request $request) {
-            if ($request->routeIs('filament.admin.auth.login') || $request->is('login*')) {
-                return $this->loginLimit($request);
-            }
+        // RateLimiter::for('filament', function (Request $request) {
+        //     if ($request->routeIs('filament.admin.auth.login') || $request->is('login*')) {
+        //         return $this->loginLimit($request);
+        //     }
 
-            if ($this->isUploadRequest($request)) {
-                return $this->uploadLimit($request);
-            }
+        //     if ($this->isUploadRequest($request)) {
+        //         return $this->uploadLimit($request);
+        //     }
 
-            if ($this->isExportRequest($request)) {
-                return $this->exportLimit($request);
-            }
+        //     if ($this->isExportRequest($request)) {
+        //         return $this->exportLimit($request);
+        //     }
 
-            if ($this->isEmailTriggeringRequest($request)) {
-                return $this->emailLimit($request);
-            }
+        //     if ($this->isEmailTriggeringRequest($request)) {
+        //         return $this->emailLimit($request);
+        //     }
 
-            if ($this->isMutationRequest($request)) {
-                return $this->mutationLimit($request);
-            }
+        //     if ($this->isMutationRequest($request)) {
+        //         return $this->mutationLimit($request);
+        //     }
 
-            return $this->generalFilamentLimit($request);
-        });
+        //     return $this->generalFilamentLimit($request);
+        // });
 
         RateLimiter::for('auth', function (Request $request) {
             return $this->loginLimit($request);
@@ -59,21 +59,21 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->ip());
         });
 
-        RateLimiter::for('uploads', function (Request $request) {
-            return $this->uploadLimit($request);
-        });
+        // RateLimiter::for('uploads', function (Request $request) {
+        //     return $this->uploadLimit($request);
+        // });
 
-        RateLimiter::for('exports', function (Request $request) {
-            return $this->exportLimit($request);
-        });
+        // RateLimiter::for('exports', function (Request $request) {
+        //     return $this->exportLimit($request);
+        // });
 
-        RateLimiter::for('emails', function (Request $request) {
-            return $this->emailLimit($request);
-        });
+        // RateLimiter::for('emails', function (Request $request) {
+        //     return $this->emailLimit($request);
+        // });
 
-        RateLimiter::for('mutations', function (Request $request) {
-            return $this->mutationLimit($request);
-        });
+        // RateLimiter::for('mutations', function (Request $request) {
+        //     return $this->mutationLimit($request);
+        // });
 
         Gate::define('viewPulse', function (AppUser $user) {
             return $user->hasRole('super_admin');
@@ -82,32 +82,32 @@ class AppServiceProvider extends ServiceProvider
 
     private function generalFilamentLimit(Request $request): Limit
     {
-        return Limit::perMinute(60)->by('filament:' . $this->rateLimitKey($request));
+        return Limit::perMinute(60)->by('filament:'.$this->rateLimitKey($request));
     }
 
     private function loginLimit(Request $request): Limit
     {
-        return Limit::perMinute(10)->by('login:' . $request->ip());
+        return Limit::perMinute(10)->by('login:'.$request->ip());
     }
 
     private function uploadLimit(Request $request): Limit
     {
-        return Limit::perMinute(10)->by('uploads:' . $this->rateLimitKey($request));
+        return Limit::perMinute(10)->by('uploads:'.$this->rateLimitKey($request));
     }
 
     private function exportLimit(Request $request): Limit
     {
-        return Limit::perMinute(5)->by('exports:' . $this->rateLimitKey($request));
+        return Limit::perMinute(5)->by('exports:'.$this->rateLimitKey($request));
     }
 
     private function emailLimit(Request $request): Limit
     {
-        return Limit::perMinute(5)->by('emails:' . $this->rateLimitKey($request));
+        return Limit::perMinute(5)->by('emails:'.$this->rateLimitKey($request));
     }
 
     private function mutationLimit(Request $request): Limit
     {
-        return Limit::perMinute(30)->by('mutations:' . $this->rateLimitKey($request));
+        return Limit::perMinute(30)->by('mutations:'.$this->rateLimitKey($request));
     }
 
     private function rateLimitKey(Request $request): string

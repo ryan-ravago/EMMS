@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Equipment\RelationManagers;
 use App\Models\EquipmentTaskChecklistTemplate;
 use App\Models\Task;
 use App\Models\TaskUsageType;
+use App\Models\WorkOrder;
 use Filament\Actions\Action;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
@@ -48,7 +49,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['etct_eqm_id'] = $this->getOwnerRecord()->getKey();
+        $data['etct_eqmt_id'] = $this->getOwnerRecord()->model->eqmm_eqmt_id;
         $data['etct_dep_id'] = Auth::user()->user_dep_id;
         $data['etct_created_by'] = Auth::id();
         $data['etct_created_at'] = now();
@@ -70,8 +71,9 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                             ->where('task_dep_id', auth()->user()->user_dep_id)
                             ->whereNotIn(
                                 'task_id',
-                                EquipmentTaskChecklistTemplate::where('etct_eqm_id', $this->getOwnerRecord()->getKey())
-                                    ->where('etct_dep_id', auth()->user()->user_dep_id)
+                                EquipmentTaskChecklistTemplate::query()
+                                    ->where('etct_eqmt_id', $this->getOwnerRecord()->model?->eqmm_eqmt_id)
+                                    ->where('etct_dep_id', Auth::user()->user_dep_id)
                                     ->pluck('etct_task_id')
                             )
                     )
@@ -187,7 +189,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                     ->label('Add Inspection Task')
                     ->modalHeading('Add Equipment Inspection Task')
                     ->modalWidth('lg')
-                    ->authorize(true)
+                    ->authorize(fn () => Auth::user()->can('create', WorkOrder::class))
                     ->closeModalByClickingAway(false)
                     ->closeModalByEscaping(false),
                 AssociateAction::make(),

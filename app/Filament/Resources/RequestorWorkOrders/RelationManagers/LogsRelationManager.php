@@ -16,7 +16,7 @@ class LogsRelationManager extends RelationManager
 {
     protected static string $relationship = 'logs';
 
-    protected static ?string $title = 'History Logs';
+    protected static ?string $title = 'History Log';
 
     public function isReadOnly(): bool
     {
@@ -39,28 +39,30 @@ class LogsRelationManager extends RelationManager
                 TextColumn::make('wol_status_log')
                     ->label('Status')
                     ->badge()
-                    ->color(function (WorkOrderLog $record): string {
-                        // Map "In-Progress" to "Approved" for requestor view
-                        if ($record->wol_status_id === 'inprog') {
-                            return Status::find('appr')->status_color ?? 'success';
-                        }
+                    // ->color(function (WorkOrderLog $record): string {
+                    //     // Map "In-Progress" to "Approved" for requestor view
+                    //     if ($record->wol_status_id === 'inprog') {
+                    //         return Status::find('appr')->status_color ?? 'success';
+                    //     }
 
-                        return $record->status->status_color;
-                    })
-                    ->icon(function (WorkOrderLog $record): string {
-                        if ($record->wol_status_id === 'inprog') {
-                            return Status::find('appr')->status_icon ?? 'heroicon-o-check-badge';
-                        }
+                    //     return $record->status->status_color;
+                    // })
+                    // ->icon(function (WorkOrderLog $record): string {
+                    //     if ($record->wol_status_id === 'inprog') {
+                    //         return Status::find('appr')->status_icon ?? 'heroicon-o-check-badge';
+                    //     }
 
-                        return $record->status->status_icon;
-                    })
-                    ->state(function (WorkOrderLog $record): string {
-                        if ($record->wol_status_id === 'inprog') {
-                            return Status::find('appr')->status_title ?? 'Approved';
-                        }
+                    //     return $record->status->status_icon;
+                    // })
+                    // ->state(function (WorkOrderLog $record): string {
+                    //     if ($record->wol_status_id === 'inprog') {
+                    //         return Status::find('appr')->status_title ?? 'Approved';
+                    //     }
 
-                        return $record->status->status_title;
-                    }),
+                    //     return $record->status->status_title;
+                    // })
+                    ->color(fn (WorkOrderLog $record) => $record->status->status_color)
+                    ->icon(fn (WorkOrderLog $record) => $record->status->status_icon),
                 TextColumn::make('by.user_fname')
                     ->label('By')
                     ->formatStateUsing(fn ($record) => trim("{$record->by?->user_fname} {$record->by?->user_lname}")),

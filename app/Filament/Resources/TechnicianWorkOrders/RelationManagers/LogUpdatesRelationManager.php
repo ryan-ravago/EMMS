@@ -2,16 +2,7 @@
 
 namespace App\Filament\Resources\TechnicianWorkOrders\RelationManagers;
 
-use Filament\Actions\AssociateAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\CreateAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -20,7 +11,6 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Storage;
 
@@ -28,7 +18,7 @@ class LogUpdatesRelationManager extends RelationManager
 {
     protected static string $relationship = 'logUpdates';
 
-    protected static ?string $title = 'Updates';
+    protected static ?string $title = 'Update';
 
     protected function getListeners(): array
     {
@@ -50,7 +40,7 @@ class LogUpdatesRelationManager extends RelationManager
                             ->columnSpanFull(),
                         TextEntry::make('by.user_fname')
                             ->label('By')
-                            ->formatStateUsing(fn($record) => "{$record->by->user_fname} {$record->by->user_lname}"),
+                            ->formatStateUsing(fn ($record) => "{$record->by->user_fname} {$record->by->user_lname}"),
                         TextEntry::make('wolu_dt')
                             ->label('Date/Time')
                             ->dateTime('M d, Y | h:i A'),
@@ -60,12 +50,15 @@ class LogUpdatesRelationManager extends RelationManager
                             ->columnSpanFull()
                             ->html()
                             ->state(function ($record) {
-                                if (empty($record->wolu_attachments)) return null;
+                                if (empty($record->wolu_attachments)) {
+                                    return null;
+                                }
 
                                 return collect($record->wolu_attachments)
                                     ->map(function ($file) {
                                         $url = Storage::disk('local')->temporaryUrl($file, now()->addMinutes(30));
                                         $name = basename($file);
+
                                         return "
                                             <div class='flex items-center justify-between gap-3 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 mb-2'>
                                                 <span class='text-xs text-gray-700 dark:text-gray-300 truncate'>{$name}</span>
@@ -102,7 +95,7 @@ class LogUpdatesRelationManager extends RelationManager
                     ->imageGallery(), // Enables the gallery viewer,
                 TextColumn::make('by.user_fname')
                     ->label('By')
-                    ->formatStateUsing(fn($record) => "{$record->by->user_fname} {$record->by->user_lname}")
+                    ->formatStateUsing(fn ($record) => "{$record->by->user_fname} {$record->by->user_lname}")
                     ->placeholder('-'),
                 TextColumn::make('wolu_dt')
                     ->label('Timestamp')
@@ -132,10 +125,10 @@ class LogUpdatesRelationManager extends RelationManager
                     ->imageGallery(),
                 TextEntry::make('wolu_by')
                     ->label('Added by')
-                    ->formatStateUsing(fn($record) => "{$record->by->user_fname} {$record->by->user_lname}"),
+                    ->formatStateUsing(fn ($record) => "{$record->by->user_fname} {$record->by->user_lname}"),
                 TextEntry::make('wolu_dt')
                     ->label('Timestamp')
-                    ->dateTime('M d, Y | h:i A')
+                    ->dateTime('M d, Y | h:i A'),
             ]);
     }
 }

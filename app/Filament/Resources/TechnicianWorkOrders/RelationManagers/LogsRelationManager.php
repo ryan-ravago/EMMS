@@ -16,7 +16,7 @@ class LogsRelationManager extends RelationManager
 {
     protected static string $relationship = 'logs';
 
-    protected static ?string $title = 'History Logs';
+    protected static ?string $title = 'History Log';
 
     protected function getListeners(): array
     {

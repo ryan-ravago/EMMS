@@ -28,6 +28,9 @@ class MaintenanceScheduleWidget extends BaseWidget
         if (! $user) {
             return false;
         }
+        if ($user->hasRole('asset_admin')) {
+            return false;
+        }
         if ($user->hasRole('super_admin')) {
             return true;
         }

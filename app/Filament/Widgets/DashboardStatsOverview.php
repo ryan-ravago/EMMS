@@ -3,15 +3,21 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\AppUsers\AppUserResource;
+use App\Filament\Resources\Categories\CategoryResource;
 use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Filament\Resources\EquipmentTypes\EquipmentTypeResource;
 use App\Filament\Resources\Inspections\InspectionResource;
 use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
+use App\Filament\Resources\Models\ModelResource;
 use App\Filament\Resources\RequestorWorkOrders\RequestorWorkOrderResource;
 use App\Filament\Resources\TechnicianWorkOrders\TechnicianWorkOrderResource;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use App\Models\AppUser;
 use App\Models\Department;
 use App\Models\Equipment;
+use App\Models\EquipmentCategory;
+use App\Models\EquipmentModel;
+use App\Models\EquipmentType;
 use App\Models\Inspection;
 use App\Models\MaintenanceTask;
 use App\Models\WorkOrder;
@@ -36,6 +42,32 @@ class DashboardStatsOverview extends StatsOverviewWidget
 
         $user = Auth::user();
         $preventiveDepId = Department::where('dep_code', 'PREV')->value('dep_id');
+
+        if ($user->hasRole('asset_admin')) {
+            return [
+                Stat::make('Total Equipment', Equipment::count())
+                    ->icon(Heroicon::CubeTransparent)
+                    ->description('All registered assets')
+                    ->descriptionIcon(Heroicon::InformationCircle)
+                    ->color('primary')
+                    ->url(EquipmentResource::getUrl()),
+                Stat::make('Models', EquipmentModel::count())
+                    ->icon(Heroicon::Squares2x2)
+                    ->description('Configured equipment models')
+                    ->color('info')
+                    ->url(ModelResource::getUrl()),
+                Stat::make('Equipment Types', EquipmentType::count())
+                    ->icon(Heroicon::RectangleGroup)
+                    ->description('Available equipment type records')
+                    ->color('success')
+                    ->url(EquipmentTypeResource::getUrl()),
+                Stat::make('Categories', EquipmentCategory::count())
+                    ->icon(Heroicon::Square3Stack3d)
+                    ->description('Equipment category taxonomy')
+                    ->color('warning')
+                    ->url(CategoryResource::getUrl()),
+            ];
+        }
 
         if ($user->hasRole('super_admin')) {
             $overdueCount = MaintenanceTask::where('mt_dep_id', $preventiveDepId)->where('mt_due_dt', '<', now())->where('mt_status_id', '!=', 'cmp')->count();
@@ -91,12 +123,12 @@ class DashboardStatsOverview extends StatsOverviewWidget
                 ->color($awaiting > 0 ? 'warning' : 'gray')
                 ->url(WorkOrderResource::getUrl('index', ['tableFilters[wo_status_id][value]' => 'pca', 'tab' => 'pca']));
 
-            $pendingApproval = WorkOrder::where('wo_dep_id', $user->user_dep_id)->where('wo_status_id', 'pnd')->count();
+            $pendingApproval = WorkOrder::where('wo_dep_id', $user->user_dep_id)->where('wo_status_id', 'pndwor')->count();
             $stats[] = Stat::make('Pending Approval', $pendingApproval)
                 ->icon(Heroicon::DocumentPlus)
                 ->description('Requested by requestor')
                 ->color($pendingApproval > 0 ? 'info' : 'gray')
-                ->url(WorkOrderResource::getUrl('index', ['tableFilters[wo_status_id][value]' => 'pnd', 'tab' => 'pnd']));
+                ->url(WorkOrderResource::getUrl('index', ['tableFilters[wo_status_id][value]' => 'pndwor', 'tab' => 'pndwor']));
 
             $stats[] = Stat::make('Technicians', AppUser::role('technician')->where('user_dep_id', $user->user_dep_id)->count())
                 ->icon(Heroicon::Users)
@@ -152,7 +184,7 @@ class DashboardStatsOverview extends StatsOverviewWidget
 
         if ($user->hasRole('requestor')) {
             $totalCreated = WorkOrder::where('wo_created_by', $user->user_id)->count();
-            $pendingCount = WorkOrder::where('wo_created_by', $user->user_id)->where('wo_status_id', 'pnd')->count();
+            $pendingCount = WorkOrder::where('wo_created_by', $user->user_id)->where('wo_status_id', 'pndwor')->count();
             // "inprog" is "Approved" from requestor's perspective
             $approvedCount = WorkOrder::where('wo_created_by', $user->user_id)->where('wo_status_id', 'inprog')->count();
             $rejectedCount = WorkOrder::where('wo_created_by', $user->user_id)->where('wo_status_id', 'rej')->count();
@@ -167,7 +199,7 @@ class DashboardStatsOverview extends StatsOverviewWidget
                     ->icon(Heroicon::Clock)
                     ->description('Awaiting manager review')
                     ->color($pendingCount > 0 ? 'warning' : 'gray')
-                    ->url(RequestorWorkOrderResource::getUrl('index', ['tableFilters[wo_status_id][value]' => 'pnd', 'tab' => 'pnd'])),
+                    ->url(RequestorWorkOrderResource::getUrl('index', ['tableFilters[wo_status_id][value]' => 'pndwor', 'tab' => 'pndwor'])),
                 Stat::make('Approved', $approvedCount)
                     ->icon(Heroicon::CheckBadge)
                     ->description('Work orders approved')

@@ -15,7 +15,7 @@ class EquipmentTaskChecklistTemplateForm
                 TextInput::make('etct_dep_id')
                     ->required()
                     ->numeric(),
-                TextInput::make('etct_eqm_id')
+                TextInput::make('etct_eqmt_id')
                     ->required()
                     ->numeric(),
                 TextInput::make('etct_task_id')

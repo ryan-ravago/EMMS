@@ -5,7 +5,6 @@ namespace App\Mail;
 use App\Models\AppUser;
 use App\Models\WorkOrder;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
@@ -33,9 +32,9 @@ class WorkOrderApprovedMail extends Mailable
     public function envelope(): Envelope
     {
         $subject = match ($this->recipientType) {
-            'manager'   => "Approval Confirmed – {$this->workOrder->wo_no}",
-            'requestor' => "Work Order Approved – {$this->workOrder->wo_no}",
-            default     => "Work Order Update – {$this->workOrder->wo_no}",
+            'manager' => "Assignment Confirmed – {$this->workOrder->wo_no}",
+            'requestor' => "Work Order Assigned – {$this->workOrder->wo_no}",
+            default => "Work Order Update – {$this->workOrder->wo_no}",
         };
 
         return new Envelope(subject: $subject);

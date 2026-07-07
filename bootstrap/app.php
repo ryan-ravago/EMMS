@@ -12,9 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->throttleApi();
-        $middleware->web(prepend: [
-            'throttle:filament',
-        ]);
+        // $middleware->web(prepend: [
+        //     'throttle:filament',
+        // ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

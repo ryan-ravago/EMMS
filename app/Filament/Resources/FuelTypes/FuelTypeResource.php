@@ -15,7 +15,6 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use UnitEnum;
 
 class FuelTypeResource extends Resource
 {
@@ -24,9 +23,12 @@ class FuelTypeResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBeaker;
 
     protected static ?string $recordTitleAttribute = 'fuel_name';
-    protected static ?string $navigationLabel = 'Fuel Types';
+
+    protected static ?string $navigationLabel = 'Fuel Type';
+
     protected static ?string $modelLabel = 'Fuel Type';
-    protected static ?string $pluralModelLabel = 'Fuel Types';
+
+    protected static ?string $pluralModelLabel = 'Fuel Type';
 
     public static function getNavigationGroup(): ?string
     {

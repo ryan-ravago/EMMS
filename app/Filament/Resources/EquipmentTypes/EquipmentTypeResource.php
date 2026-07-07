@@ -6,6 +6,7 @@ use App\Filament\Resources\EquipmentTypes\Pages\CreateEquipmentType;
 use App\Filament\Resources\EquipmentTypes\Pages\EditEquipmentType;
 use App\Filament\Resources\EquipmentTypes\Pages\ListEquipmentTypes;
 use App\Filament\Resources\EquipmentTypes\Pages\ViewEquipmentType;
+use App\Filament\Resources\EquipmentTypes\RelationManagers\EquipmentTaskChecklistTemplatesRelationManager as EquipmentTypeChecklistTemplatesRelationManager;
 use App\Filament\Resources\EquipmentTypes\RelationManagers\ModelsRelationManager;
 use App\Filament\Resources\EquipmentTypes\Schemas\EquipmentTypeForm;
 use App\Filament\Resources\EquipmentTypes\Schemas\EquipmentTypeInfolist;
@@ -16,12 +17,15 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class EquipmentTypeResource extends Resource
 {
     protected static ?string $model = EquipmentType::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;
+
+    protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
 
     public static function form(Schema $schema): Schema
     {
@@ -47,6 +51,7 @@ class EquipmentTypeResource extends Resource
     {
         return [
             ModelsRelationManager::class,
+            EquipmentTypeChecklistTemplatesRelationManager::class,
         ];
     }
 

@@ -2,13 +2,11 @@
 
 namespace App\Filament\Resources\AppUsers\Schemas;
 
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Support\Enums\IconPosition;
-use Filament\Support\Icons\Heroicon;
-
-use function Laravel\Prompts\grid;
+use Illuminate\Support\Facades\Auth;
 
 class AppUserInfolist
 {
@@ -41,20 +39,26 @@ class AppUserInfolist
                         TextEntry::make('user_fb_profile_link')
                             ->label('Facebook Profile Link')
                             ->placeholder('-')
-                            ->url(fn($record) => $record->user_fb_profile_link)
+                            ->url(fn ($record) => $record->user_fb_profile_link)
                             ->openUrlInNewTab()
                             ->color('info')
-                            ->columnSpanFull()
+                            ->columnSpanFull(),
                     ]),
 
                 Section::make('Application Access')
                     ->columns(2)
                     ->schema([
+                        ImageEntry::make('user_avatar')
+                            ->label('Avatar')
+                            ->circular()
+                            // ->defaultImageUrl(fn() => 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->user_fname . ' ' . Auth::user()->user_lname) . '&color=FFFFFF&background=03449d')
+                            ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name='.urlencode($record->user_fname.' '.$record->user_lname).'&color=FFFFFF&background=03449d')
+                            ->imageSize(120)
+                            ->columnSpan(1),
                         TextEntry::make('department.dep_name')
                             ->label('Department'),
-                        TextEntry::make('roles.name')
+                        TextEntry::make('roles.display_name')
                             ->label('Roles')
-                            ->formatStateUsing(fn($state) => str($state)->replace('_', ' ')->title())
                             ->badge()
                             ->separator(','),
                     ]),

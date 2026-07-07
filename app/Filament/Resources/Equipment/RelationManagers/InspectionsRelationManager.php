@@ -127,14 +127,14 @@ class InspectionsRelationManager extends RelationManager
                     ->schema([
                         TextEntry::make('department.dep_name')
                             ->label('Department')
-                            ->visible(fn () => auth()->user()->hasRole('super_admin')),
+                            ->visible(fn() => Auth::user()->hasRole('super_admin')),
 
                         TextEntry::make('equipment.eqm_name')
                             ->label('Equipment'),
 
                         TextEntry::make('conductedBy.user_fname')
                             ->label('Inspected By')
-                            ->formatStateUsing(fn ($record) => "{$record->conductedBy->user_fname} {$record->conductedBy->user_lname}"),
+                            ->formatStateUsing(fn($record) => "{$record->conductedBy->user_fname} {$record->conductedBy->user_lname}"),
 
                         TextEntry::make('ins_dt')
                             ->label('Inspection Date & Time')
@@ -142,7 +142,7 @@ class InspectionsRelationManager extends RelationManager
 
                         TextEntry::make('submittedBy.user_fname')
                             ->label('Submitted By')
-                            ->formatStateUsing(fn ($record) => $record->submittedBy
+                            ->formatStateUsing(fn($record) => $record->submittedBy
                                 ? "{$record->submittedBy->user_fname} {$record->submittedBy->user_lname}"
                                 : '—'),
 
@@ -168,13 +168,13 @@ class InspectionsRelationManager extends RelationManager
                                 TextEntry::make('insi_result')
                                     ->label('Result')
                                     ->badge()
-                                    ->color(fn ($state) => match ($state) {
+                                    ->color(fn($state) => match ($state) {
                                         'P' => 'success',
                                         'F' => 'danger',
                                         'N' => 'gray',
                                         default => 'gray',
                                     })
-                                    ->formatStateUsing(fn ($state) => match ($state) {
+                                    ->formatStateUsing(fn($state) => match ($state) {
                                         'P' => 'Passed',
                                         'F' => 'Failed',
                                         'N' => 'N/A',
@@ -186,8 +186,8 @@ class InspectionsRelationManager extends RelationManager
                                     ->label('Status')
                                     ->badge()
                                     ->columnSpan(1)
-                                    ->color(fn (InspectionItem $record) => $record->status->status_color)
-                                    ->icon(fn (InspectionItem $record) => $record->status->status_icon),
+                                    ->color(fn(InspectionItem $record) => $record->status->status_color)
+                                    ->icon(fn(InspectionItem $record) => $record->status->status_icon),
 
                                 TextEntry::make('insi_remarks')
                                     ->label('Remarks')
@@ -197,7 +197,7 @@ class InspectionsRelationManager extends RelationManager
                                 TextEntry::make('view_link')
                                     ->hiddenLabel()
                                     ->default('View details →')
-                                    ->url(fn ($record) => url("/inspection-items/{$record->insi_id}"))
+                                    ->url(fn($record) => url("/inspection-items/{$record->insi_id}"))
                                     ->columnSpan(2)
                                     // ->openUrlInNewTab()
                                     ->extraAttributes([
@@ -220,17 +220,17 @@ class InspectionsRelationManager extends RelationManager
                     ->label('Department')
                     ->searchable()
                     ->sortable()
-                    ->visible(fn () => auth()->user()->hasRole('super_admin')),
+                    ->visible(fn() => Auth::user()->hasRole('super_admin')),
                 TextColumn::make('conductedBy.user_fname')
                     ->label('Inspected by')
-                    ->formatStateUsing(fn ($record) => "{$record->conductedBy->user_fname} {$record->conductedBy->user_lname}"),
+                    ->formatStateUsing(fn($record) => "{$record->conductedBy->user_fname} {$record->conductedBy->user_lname}"),
                 TextColumn::make('ins_dt')
                     ->label('Inspection Date')
                     ->dateTime('M d, Y | h:i A')
                     ->sortable(),
                 TextColumn::make('submittedBy.user_fname')
                     ->label('Submitted by')
-                    ->formatStateUsing(fn ($record) => $record->submittedBy
+                    ->formatStateUsing(fn($record) => $record->submittedBy
                         ? "{$record->submittedBy->user_fname} {$record->submittedBy->user_lname}"
                         : '—'),
                 TextColumn::make('ins_submitted_dt')
@@ -264,8 +264,8 @@ class InspectionsRelationManager extends RelationManager
             ])
             ->headerActions([
                 CreateAction::make()
-                    ->visible(fn (): bool => (bool) $this->getOwnerRecord()->eqm_is_active)
-                    ->authorize(fn () => Auth::user()->can('create', Inspection::class))
+                    ->visible(fn(): bool => (bool) $this->getOwnerRecord()->eqm_is_active)
+                    ->authorize(fn() => Auth::user()->can('create', Inspection::class))
                     ->modalHeading('New Inspection')
                     ->schema([
                         Section::make('Inspection Details')
@@ -276,13 +276,13 @@ class InspectionsRelationManager extends RelationManager
                                 Select::make('ins_dep_id')
                                     ->label('Department')
                                     ->options(Department::pluck('dep_name', 'dep_id'))
-                                    ->required(fn () => auth()->user()->hasRole('super_admin'))
-                                    ->disabled(fn () => ! auth()->user()->hasRole('super_admin'))
-                                    ->dehydrated(fn () => ! auth()->user()->hasRole('super_admin'))
+                                    ->required(fn() => Auth::user()->hasRole('super_admin'))
+                                    ->disabled(fn() => ! Auth::user()->hasRole('super_admin'))
+                                    ->dehydrated(fn() => ! Auth::user()->hasRole('super_admin'))
                                     ->native(false)
                                     ->searchable()
-                                    // ->visible(fn() => auth()->user()->hasRole('super_admin'))
-                                    ->default(fn () => auth()->user()->hasRole('super_admin') ? null : auth()->user()->user_dep_id)
+                                    // ->visible(fn() => Auth::user()->hasRole('super_admin'))
+                                    ->default(fn() => Auth::user()->hasRole('super_admin') ? null : Auth::user()->user_dep_id)
                                     ->live(),
 
                                 Select::make('ins_eqm_id')
@@ -293,7 +293,7 @@ class InspectionsRelationManager extends RelationManager
                                     ->preload()
                                     ->native(false)
                                     ->searchable()
-                                    ->default(fn () => $this->getOwnerRecord()->getKey())
+                                    ->default(fn() => $this->getOwnerRecord()->getKey())
                                     ->disabled()
                                     ->dehydrated()
                                     ->relationship(
@@ -302,9 +302,9 @@ class InspectionsRelationManager extends RelationManager
                                     )
                                     ->live()
                                     ->afterStateUpdated(function (Set $set, Get $get, $state) {
-                                        $depId = auth()->user()->hasRole('super_admin')
+                                        $depId = Auth::user()->hasRole('super_admin')
                                             ? $get('ins_dep_id')
-                                            : auth()->user()->user_dep_id;
+                                            : Auth::user()->user_dep_id;
 
                                         if (! $state || ! $depId) {
                                             $set('inspection_items', []);
@@ -312,11 +312,8 @@ class InspectionsRelationManager extends RelationManager
                                             return;
                                         }
 
-                                        $items = EquipmentTaskChecklistTemplate::with('task')
-                                            ->where('etct_eqm_id', $state)
-                                            ->where('etct_dep_id', $depId)
-                                            ->get()
-                                            ->map(fn ($template) => [
+                                        $items = EquipmentTaskChecklistTemplate::forEquipmentId($state, $depId)
+                                            ->map(fn($template) => [
                                                 'insi_cli_name_for_record' => $template->task->task_name,
                                                 'insi_task_id' => $template->etct_task_id,
                                                 'insi_result' => null,
@@ -337,16 +334,16 @@ class InspectionsRelationManager extends RelationManager
                                         name: 'conductedBy',
                                         titleAttribute: 'user_fname',
                                         modifyQueryUsing: function ($query, Get $get) {
-                                            $depId = auth()->user()->hasRole('super_admin')
+                                            $depId = Auth::user()->hasRole('super_admin')
                                                 ? $get('ins_dep_id')
-                                                : auth()->user()->user_dep_id;
+                                                : Auth::user()->user_dep_id;
 
                                             return $query
-                                                ->whereHas('roles', fn ($q) => $q->where('name', 'technician'))
+                                                ->whereHas('roles', fn($q) => $q->where('name', 'technician'))
                                                 ->where('user_dep_id', $depId);
                                         }
                                     )
-                                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->user_fname} {$record->user_lname}"),
+                                    ->getOptionLabelFromRecordUsing(fn($record) => "{$record->user_fname} {$record->user_lname}"),
 
                                 DateTimePicker::make('ins_dt')
                                     ->label('Inspection Date & Time')
@@ -359,7 +356,7 @@ class InspectionsRelationManager extends RelationManager
 
                         Section::make('Inspection Tasks')
                             ->icon('heroicon-o-list-bullet')
-                            ->visible(fn (Get $get) => filled($get('ins_eqm_id')))
+                            ->visible(fn(Get $get) => filled($get('ins_eqm_id')))
                             ->columnSpanFull()
                             ->schema([
                                 Repeater::make('inspection_items')
@@ -371,19 +368,16 @@ class InspectionsRelationManager extends RelationManager
                                     ->grid(3)
                                     ->default(function (Get $get) {
                                         $eqmId = $this->getOwnerRecord()->getKey();
-                                        $depId = auth()->user()->hasRole('super_admin')
+                                        $depId = Auth::user()->hasRole('super_admin')
                                             ? $get('ins_dep_id')
-                                            : auth()->user()->user_dep_id;
+                                            : Auth::user()->user_dep_id;
 
                                         if (! $eqmId || ! $depId) {
                                             return [];
                                         }
 
-                                        return EquipmentTaskChecklistTemplate::with('task')
-                                            ->where('etct_eqm_id', $eqmId)
-                                            ->where('etct_dep_id', $depId)
-                                            ->get()
-                                            ->map(fn ($template) => [
+                                        return EquipmentTaskChecklistTemplate::forEquipmentId($eqmId, $depId)
+                                            ->map(fn($template) => [
                                                 'insi_cli_name_for_record' => $template->task->task_name,
                                                 'insi_task_id' => $template->etct_task_id,
                                                 'insi_result' => null,
@@ -459,9 +453,9 @@ class InspectionsRelationManager extends RelationManager
 
                                 $ownerRecord = $table->getRelationship()->getParent();
 
-                                $depId = auth()->user()->hasRole('super_admin')
+                                $depId = Auth::user()->hasRole('super_admin')
                                     ? $data['ins_dep_id']
-                                    : auth()->user()->user_dep_id;
+                                    : Auth::user()->user_dep_id;
 
                                 $depCode = DB::table('departments')
                                     ->where('dep_id', $depId)
@@ -472,17 +466,18 @@ class InspectionsRelationManager extends RelationManager
                                     ->whereDate('ins_submitted_dt', $this->now()->toDateString())
                                     ->count() + 1;
 
-                                $data['ins_no'] = 'INS-'.$depCode.'-'.$this->now()->format('ymd').str_pad($insCount, 3, '0', STR_PAD_LEFT);
+                                $data['ins_no'] = 'INS-' . $depCode . '-' . $this->now()->format('ymd') . str_pad($insCount, 3, '0', STR_PAD_LEFT);
 
                                 $inspection = $table->getRelationship()->create([
                                     ...$data,
                                     'ins_eqm_id' => $ownerRecord->getKey(),
                                     'ins_dep_id' => $depId,
-                                    'ins_submitted_by' => auth()->id(),
+                                    'ins_submitted_by' => Auth::id(),
                                     'ins_submitted_dt' => $this->now(),
                                 ]);
 
-                                $action = Action::find('create');
+                                // $action = Action::find('create');
+                                $actionRecord = Action::find('create');
                                 $statusPnd = Status::find('pnd');
                                 $statusCmp = Status::find('cmp');
 
@@ -493,12 +488,12 @@ class InspectionsRelationManager extends RelationManager
                                     ->count();
 
                                 DB::table('inspection_items')->insert(
-                                    collect($items)->map(function ($item) use (&$itemsCount, $depCode) {
+                                    collect($items)->map(function ($item) use (&$itemsCount, $depCode, $inspection) {
                                         $itemsCount++;
 
                                         return [
-                                            'insi_no' => 'INI-'.$depCode.'-'.$this->now()->format('ymd').str_pad($itemsCount, 4, '0', STR_PAD_LEFT),
-                                            'insi_ins_id' => $item['insi_ins_id'] ?? null,
+                                            'insi_no' => 'INI-' . $depCode . '-' . $this->now()->format('ymd') . str_pad($itemsCount, 4, '0', STR_PAD_LEFT),
+                                            'insi_ins_id' => $inspection->ins_id,
                                             'insi_task_id' => $item['insi_task_id'],
                                             'insi_status_id' => in_array($item['insi_result'], ['P', 'N']) ? 'cmp' : 'pnd',
                                             'insi_cli_name_for_record' => $item['insi_cli_name_for_record'],
@@ -511,14 +506,14 @@ class InspectionsRelationManager extends RelationManager
 
                                 $createdItems = InspectionItem::where('insi_ins_id', $inspection->ins_id)->get();
 
-                                $logs = $createdItems->map(fn ($item) => [
+                                $logs = $createdItems->map(fn($item) => [
                                     'inil_insi_id' => $item->insi_id,
-                                    'inil_a_id' => $action->a_id,
+                                    'inil_a_id' => $actionRecord->a_id,
                                     'inil_status_id' => $item->insi_status_id === 'cmp' ? $statusCmp->status_id : $statusPnd->status_id,
-                                    'inil_action_made' => $action->a_past_tense,
+                                    'inil_action_made' => $actionRecord->a_past_tense,
                                     'inil_status_log' => $item->insi_status_id === 'cmp' ? $statusCmp->status_title : $statusPnd->status_title,
                                     'inil_remarks' => null,
-                                    'inil_by' => auth()->id(),
+                                    'inil_by' => Auth::id(),
                                     'inil_dt' => $this->now(),
                                 ])->toArray();
 

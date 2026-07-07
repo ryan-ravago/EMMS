@@ -10,12 +10,12 @@ use App\Filament\Resources\Brands\Schemas\BrandForm;
 use App\Filament\Resources\Brands\Schemas\BrandInfolist;
 use App\Filament\Resources\Brands\Tables\BrandsTable;
 use App\Models\EquipmentBrand;
-use App\Models\OPRC;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class BrandResource extends Resource
 {
@@ -24,36 +24,41 @@ class BrandResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
     protected static ?string $recordTitleAttribute = 'eqmb_name';
-    protected static ?string $navigationLabel = 'Brands';
+
+    protected static ?string $navigationLabel = 'Brand';
+
     protected static ?string $modelLabel = 'Brand';
-    protected static ?string $pluralModelLabel = 'Brands';
 
-    public static function getNavigationGroup(): ?string
-    {
-        $user = auth()->user();
+    protected static ?string $pluralModelLabel = 'Brand';
 
-        // 1. If Super Admin, always keep it at the top level (no group)
-        if ($user->hasRole('super_admin')) {
-            return null;
-        }
+    protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
 
-        // 2. Count roles. If they only have 1 role (or 0), don't show a group folder.
-        // Assuming you are using Spatie Permissions or a 'roles' relationship
-        if ($user->roles()->count() < 2) {
-            return null;
-        }
+    // public static function getNavigationGroup(): ?string
+    // {
+    //     $user = auth()->user();
 
-        // 3. If they have 2+ roles, assign the group based on priority:
-        if ($user->hasRole('manager')) {
-            return 'Manager';
-        }
+    //     // 1. If Super Admin, always keep it at the top level (no group)
+    //     if ($user->hasRole('super_admin')) {
+    //         return null;
+    //     }
 
-        if ($user->hasRole('custodian')) {
-            return 'Custodian';
-        }
+    //     // 2. Count roles. If they only have 1 role (or 0), don't show a group folder.
+    //     // Assuming you are using Spatie Permissions or a 'roles' relationship
+    //     if ($user->roles()->count() < 2) {
+    //         return null;
+    //     }
 
-        return null;
-    }
+    //     // 3. If they have 2+ roles, assign the group based on priority:
+    //     if ($user->hasRole('manager')) {
+    //         return 'Manager';
+    //     }
+
+    //     if ($user->hasRole('custodian')) {
+    //         return 'Custodian';
+    //     }
+
+    //     return null;
+    // }
 
     public static function form(Schema $schema): Schema
     {
@@ -68,6 +73,11 @@ class BrandResource extends Resource
     public static function table(Table $table): Table
     {
         return BrandsTable::configure($table);
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
     }
 
     public static function getRelations(): array

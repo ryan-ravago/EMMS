@@ -1,6 +1,7 @@
 <?php
 
 use App\Console\Commands\SendOverdueMaintenanceTaskNotifications;
+use App\Console\Commands\SyncGoogleSheetInspections;
 use App\Console\Commands\SyncGoogleWorkOrderReplies;
 use App\Jobs\ProcessDueDateChecks;
 use App\Jobs\SyncEquipmentFromSap;
@@ -25,17 +26,21 @@ if (! app()->runningUnitTests() && Schema::hasTable((new AppSetting)->getTable()
     }
 }
 
-Schedule::job(new ProcessDueDateChecks)
-    ->everyMinute()         // runs every minute, job itself filters by clt_schedule_time
-    ->withoutOverlapping()
-    ->onFailure(function () {
-        Log::error('[DueDateChecks] Job failed');
-    });
+// Schedule::job(new ProcessDueDateChecks)
+//     ->everyMinute()         // runs every minute, job itself filters by clt_schedule_time
+//     ->withoutOverlapping()
+//     ->onFailure(function () {
+//         Log::error('[DueDateChecks] Job failed');
+//     });
 
-Schedule::command(SendOverdueMaintenanceTaskNotifications::class)
-    ->daily()
-    ->withoutOverlapping();
+// Schedule::command(SendOverdueMaintenanceTaskNotifications::class)
+//     ->daily()
+//     ->withoutOverlapping();
 
 Schedule::command(SyncGoogleWorkOrderReplies::class)
+    ->everyMinute()
+    ->withoutOverlapping();
+
+Schedule::command(SyncGoogleSheetInspections::class)
     ->everyMinute()
     ->withoutOverlapping();

@@ -26,7 +26,6 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Unique;
 use Override;
 
@@ -101,10 +100,9 @@ class RoleResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('display_name')
                     ->weight(FontWeight::Medium)
-                    ->label(__('filament-shield::filament-shield.column.name'))
-                    ->formatStateUsing(fn (string $state): string => Str::headline($state))
+                    ->label('Display Name')
                     ->searchable(),
                 TextColumn::make('guard_name')
                     ->badge()

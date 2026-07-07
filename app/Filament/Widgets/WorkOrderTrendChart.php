@@ -15,6 +15,13 @@ class WorkOrderTrendChart extends ChartWidget
 {
     protected static ?int $sort = 2;
 
+    public static function canView(): bool
+    {
+        $user = Auth::user();
+
+        return $user !== null && ! $user->hasRole('asset_admin');
+    }
+
     public function getHeading(): string|HtmlString|null
     {
         $user = auth()->user();

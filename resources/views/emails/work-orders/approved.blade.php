@@ -18,10 +18,10 @@
                     <tr>
                         <td style="background-color:#16a34a;padding:30px 40px;">
                             <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;">
-                                {{ $recipientType === 'manager' ? '✅ Approval Confirmed' : '🎉 Work Order Approved' }}
+                                {{ $recipientType === 'manager' ? '✅ Assignment Confirmed' : '🎉 Work Order Assigned' }}
                             </h1>
                             <p style="margin:6px 0 0;color:#bbf7d0;font-size:13px;">
-                                {{ $recipientType === 'manager' ? 'You have successfully approved this work order.' : 'Your work order request has been approved.' }}
+                                {{ $recipientType === 'manager' ? 'You have successfully assigned this work order.' : 'Your work order request has been assigned.' }}
                             </p>
                         </td>
                     </tr>
@@ -34,9 +34,9 @@
                             </p>
                             <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
                                 @if ($recipientType === 'manager')
-                                    The following work order has been approved and assigned to the selected technicians.
+                                    The following work order has been assigned to the selected technicians.
                                 @else
-                                    Good news! Your work order request has been approved and is now being processed.
+                                    Good news! Your work order request has been assigned and is now being processed.
                                 @endif
                             </p>
 
@@ -59,23 +59,62 @@
                                 <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
                                     <td
                                         style="padding:12px 16px;font-size:13px;color:#6b7280;border-right:1px solid #e5e7eb;">
-                                        Title</td>
+                                        Equipment</td>
+                                    <td style="padding:12px 16px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->equipment?->eqm_name ?? 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td
+                                        style="padding:12px 16px;font-size:13px;color:#6b7280;border-right:1px solid #e5e7eb;">
+                                        Subject</td>
                                     <td style="padding:12px 16px;font-size:13px;color:#111827;">
                                         {{ $workOrder->wo_title }}</td>
                                 </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td
+                                        style="padding:12px 16px;font-size:13px;color:#6b7280;border-right:1px solid #e5e7eb;">
+                                        Requestor Description</td>
+                                    <td style="padding:12px 16px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_req_desc ?: 'N/A' }}</td>
+                                </tr>
                                 <tr style="border-top:1px solid #e5e7eb;">
+                                    <td
+                                        style="padding:12px 16px;font-size:13px;color:#6b7280;border-right:1px solid #e5e7eb;">
+                                        Manager Description</td>
+                                    <td style="padding:12px 16px;font-size:13px;color:#16a34a;font-weight:600;">
+                                        {{ $workOrder->wo_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
                                     <td
                                         style="padding:12px 16px;font-size:13px;color:#6b7280;border-right:1px solid #e5e7eb;">
                                         Priority</td>
                                     <td style="padding:12px 16px;font-size:13px;color:#111827;">
                                         {{ $workOrder->priority?->prio_name }}</td>
                                 </tr>
+
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td
+                                        style="padding:12px 16px;font-size:13px;color:#6b7280;border-right:1px solid #e5e7eb;">
+                                        Created By</td>
+                                    <td style="padding:12px 16px;font-size:13px;color:#111827;">
+                                        {{ trim(($workOrder->createdBy?->user_fname ?? '') . ' ' . ($workOrder->createdBy?->user_lname ?? '')) ?: 'N/A' }}
+                                    </td>
+                                </tr>
                                 <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
                                     <td
                                         style="padding:12px 16px;font-size:13px;color:#6b7280;border-right:1px solid #e5e7eb;">
-                                        Status</td>
-                                    <td style="padding:12px 16px;font-size:13px;color:#16a34a;font-weight:600;">
-                                        Approved (In Progress)</td>
+                                        Date & Time Created</td>
+                                    <td style="padding:12px 16px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_created_at ?? $workOrder->created_at ? \Illuminate\Support\Carbon::parse($workOrder->wo_created_at ?? $workOrder->created_at)->format('M d, Y h:i A') : 'N/A' }}
+                                    </td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td
+                                        style="padding:12px 16px;font-size:13px;color:#6b7280;border-right:1px solid #e5e7eb;">
+                                        Technicians</td>
+                                    <td style="padding:12px 16px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->workers?->map(fn($worker) => trim(($worker->user_fname ?? '') . ' ' . ($worker->user_lname ?? '')))->filter()->implode(', ') ?: 'N/A' }}
+                                    </td>
                                 </tr>
                             </table>
 

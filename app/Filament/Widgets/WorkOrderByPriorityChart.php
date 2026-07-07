@@ -7,12 +7,20 @@ use App\Filament\Resources\TechnicianWorkOrders\TechnicianWorkOrderResource;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use App\Models\WorkOrder;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 
 class WorkOrderByPriorityChart extends ChartWidget
 {
     protected static ?int $sort = 5;
+
+    public static function canView(): bool
+    {
+        $user = Auth::user();
+
+        return $user !== null && ! $user->hasRole('asset_admin');
+    }
 
     public function getHeading(): string|HtmlString|null
     {

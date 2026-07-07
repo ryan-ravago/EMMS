@@ -34,7 +34,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
 {
     protected static string $relationship = 'equipmentTasksSchedules';
 
-    protected static ?string $title = 'Preventive Template';
+    protected static ?string $title = 'Scheduled PM';
 
     // EquipmentTasksSchedulesRelationManager
     public static function getBadge(Model $ownerRecord, string $pageClass): ?string
@@ -276,7 +276,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
             ->recordTitleAttribute('ets_id')
             ->columns([
                 TextColumn::make('task.task_name')
-                    ->label('Task')
+                    ->label('Item')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('department.dep_name')

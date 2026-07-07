@@ -23,11 +23,11 @@ class AppUserResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
-    protected static ?string $navigationLabel = 'Users';
+    protected static ?string $navigationLabel = 'User';
 
     protected static ?string $modelLabel = 'User'; // Singular
 
-    protected static ?string $pluralModelLabel = 'Users'; // Plural
+    protected static ?string $pluralModelLabel = 'User'; // Singular
 
     protected static ?string $recordTitleAttribute = 'user_fname';
 

@@ -2,9 +2,7 @@
 
 namespace App\Filament\Resources\Inspections\Schemas;
 
-use App\Models\AppUser;
 use App\Models\Department;
-use App\Models\Equipment;
 use App\Models\EquipmentTaskChecklistTemplate;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Repeater;
@@ -16,6 +14,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class InspectionForm
 {
@@ -34,8 +33,8 @@ class InspectionForm
                             ->required()
                             ->native(false)
                             ->searchable()
-                            ->visible(fn() => auth()->user()->hasRole('super_admin'))
-                            ->default(fn() => auth()->user()->hasRole('super_admin') ? null : auth()->user()->user_dep_id)
+                            ->visible(fn() => Auth::user()->hasRole('super_admin'))
+                            ->default(fn() => Auth::user()->hasRole('super_admin') ? null : Auth::user()->user_dep_id)
                             ->live(),
 
                         Select::make('ins_eqm_id')
@@ -50,9 +49,9 @@ class InspectionForm
                                 name: 'equipment',
                                 titleAttribute: 'eqm_name',
                                 modifyQueryUsing: function ($query, Get $get) {
-                                    $depId = auth()->user()->hasRole('super_admin')
+                                    $depId = Auth::user()->hasRole('super_admin')
                                         ? $get('ins_dep_id')
-                                        : auth()->user()->user_dep_id;
+                                        : Auth::user()->user_dep_id;
 
                                     return $query
                                         ->where('eqm_is_active', true)
@@ -61,24 +60,22 @@ class InspectionForm
                             )
                             ->live()
                             ->afterStateUpdated(function (Set $set, Get $get, $state) {
-                                $depId = auth()->user()->hasRole('super_admin')
+                                $depId = Auth::user()->hasRole('super_admin')
                                     ? $get('ins_dep_id')
-                                    : auth()->user()->user_dep_id;
+                                    : Auth::user()->user_dep_id;
 
-                                if (!$state || !$depId) {
+                                if (! $state || ! $depId) {
                                     $set('inspection_items', []);
+
                                     return;
                                 }
 
-                                $items = EquipmentTaskChecklistTemplate::with('task')
-                                    ->where('etct_eqm_id', $state)
-                                    ->where('etct_dep_id', $depId)
-                                    ->get()
+                                $items = EquipmentTaskChecklistTemplate::forEquipmentId($state, $depId)
                                     ->map(fn($template) => [
                                         'insi_cli_name_for_record' => $template->task->task_name,
-                                        'insi_task_id'             => $template->etct_task_id,
-                                        'insi_result'              => null,
-                                        'insi_remarks'             => null,
+                                        'insi_task_id' => $template->etct_task_id,
+                                        'insi_result' => null,
+                                        'insi_remarks' => null,
                                     ])
                                     ->toArray();
 
@@ -95,9 +92,9 @@ class InspectionForm
                                 name: 'conductedBy',
                                 titleAttribute: 'user_fname',
                                 modifyQueryUsing: function ($query, Get $get) {
-                                    $depId = auth()->user()->hasRole('super_admin')
+                                    $depId = Auth::user()->hasRole('super_admin')
                                         ? $get('ins_dep_id')
-                                        : auth()->user()->user_dep_id;
+                                        : Auth::user()->user_dep_id;
 
                                     return $query
                                         ->whereHas('roles', fn($q) => $q->where('name', 'technician'))
@@ -129,21 +126,20 @@ class InspectionForm
                             ->grid(3)
                             ->default(function (Get $get) {
                                 $eqmId = $get('ins_eqm_id');
-                                $depId = auth()->user()->hasRole('super_admin')
+                                $depId = Auth::user()->hasRole('super_admin')
                                     ? $get('ins_dep_id')
-                                    : auth()->user()->user_dep_id;
+                                    : Auth::user()->user_dep_id;
 
-                                if (!$eqmId || !$depId) return [];
+                                if (! $eqmId || ! $depId) {
+                                    return [];
+                                }
 
-                                return EquipmentTaskChecklistTemplate::with('task')
-                                    ->where('etct_eqm_id', $eqmId)
-                                    ->where('etct_dep_id', $depId)
-                                    ->get()
+                                return EquipmentTaskChecklistTemplate::forEquipmentId($eqmId, $depId)
                                     ->map(fn($template) => [
                                         'insi_cli_name_for_record' => $template->task->task_name,
-                                        'insi_task_id'             => $template->etct_task_id,
-                                        'insi_result'              => null,
-                                        'insi_remarks'             => null,
+                                        'insi_task_id' => $template->etct_task_id,
+                                        'insi_result' => null,
+                                        'insi_remarks' => null,
                                     ])
                                     ->toArray();
                             })

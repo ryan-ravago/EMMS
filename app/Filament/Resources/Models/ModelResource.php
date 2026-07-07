@@ -17,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class ModelResource extends Resource
 {
@@ -26,10 +27,12 @@ class ModelResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'eqmm_name';
 
-    protected static ?string $navigationLabel = 'Models';
+    protected static ?string $navigationLabel = 'Model';
 
     protected static ?string $modelLabel = 'Model';
     // protected static ?string $pluralModelLabel = 'Models';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
 
     public static function form(Schema $schema): Schema
     {

@@ -29,7 +29,7 @@ class TechnicianWorkOrderResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return Auth::user()?->hasRole('technician') ? 'Work Orders' : 'Technician Work Orders';
+        return Auth::user()?->hasRole('technician') ? 'Work Order' : 'Technician Work Order';
     }
 
     public static function getLabel(): ?string
@@ -39,7 +39,7 @@ class TechnicianWorkOrderResource extends Resource
 
     public static function getPluralLabel(): ?string
     {
-        return Auth::user()?->hasRole('technician') ? 'Work Orders' : 'Technician Work Orders';
+        return Auth::user()?->hasRole('technician') ? 'Work Order' : 'Technician Work Order';
     }
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;

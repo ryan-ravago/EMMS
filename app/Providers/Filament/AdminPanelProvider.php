@@ -11,6 +11,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -63,6 +64,7 @@ class AdminPanelProvider extends PanelProvider
                 }
             )
             ->sidebarCollapsibleOnDesktop()
+            // ->collapsibleNavigationGroups(false)
             ->login(CustomLogin::class)
             ->colors(function () {
                 try {
@@ -127,6 +129,11 @@ class AdminPanelProvider extends PanelProvider
             // ->font(SiteSetting::instance()->site_font_family ?? 'Inter', provider: GoogleFontProvider::class)
             ->maxContentWidth(Width::Full)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
+            // ->navigationGroups([
+            //     NavigationGroup::make()
+            //         ->label('Equipment Details')
+            //         ->collapsed(false),
+            // ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 Dashboard::class,
@@ -147,7 +154,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                'throttle:filament',
+                // 'throttle:filament',
             ])
             ->renderHook(
                 'panels::auth.login.form.after',

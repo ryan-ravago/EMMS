@@ -6,12 +6,14 @@ use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Models\AppSetting;
 use App\Models\Equipment;
 use App\Models\OPRC;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -24,7 +26,7 @@ class ListEquipment extends ListRecords
         return [
             CreateAction::make(),
             Action::make('sync')
-                ->visible(fn() => Auth::user()->can('Sync:EquipmentResource'))
+                ->visible(fn () => Auth::user()->can('Sync:EquipmentResource'))
                 ->label('Sync from SAP')
                 ->icon('heroicon-o-arrow-path')
                 ->color('success')
@@ -49,20 +51,21 @@ class ListEquipment extends ListRecords
                                     ->body('SAP returned no records to sync.')
                                     ->warning()
                                     ->send();
+
                                 return;
                             }
 
                             $data = $sapRecords
-                                ->filter(fn($sap) => !empty($sap->PrcCode))
-                                ->map(fn($sap) => [
-                                    'eqm_prc_code'  => $sap->PrcCode,
-                                    'eqm_name'      => $sap->PrcName,
+                                ->filter(fn ($sap) => ! empty($sap->PrcCode))
+                                ->map(fn ($sap) => [
+                                    'eqm_prc_code' => $sap->PrcCode,
+                                    'eqm_name' => $sap->PrcName,
                                     'eqm_is_active' => $sap->Active === 'Y' ? 1 : 0,
                                 ])->toArray();
 
                             // 👇 get all PrcCodes from SAP
                             $sapPrcCodes = $sapRecords
-                                ->filter(fn($sap) => !empty($sap->PrcCode))
+                                ->filter(fn ($sap) => ! empty($sap->PrcCode))
                                 ->pluck('PrcCode')
                                 ->toArray();
 
@@ -85,11 +88,11 @@ class ListEquipment extends ListRecords
 
                             Notification::make()
                                 ->title('SAP Sync Complete')
-                                ->body("Synced: " . count($data) . " records. Deactivated: {$deactivated} records.")
+                                ->body('Synced: '.count($data)." records. Deactivated: {$deactivated} records.")
                                 ->success()
                                 ->send();
                         });
-                    } catch (\Illuminate\Database\QueryException $e) {
+                    } catch (QueryException $e) {
                         $previous = $e->getPrevious();
 
                         if ($previous instanceof \PDOException) {
@@ -101,18 +104,18 @@ class ListEquipment extends ListRecords
                         } else {
                             Notification::make()
                                 ->title('Database Error')
-                                ->body('Query failed: ' . $e->getMessage())
+                                ->body('Query failed: '.$e->getMessage())
                                 ->danger()
                                 ->send();
                         }
                     } catch (\Exception $e) {
                         Notification::make()
                             ->title('Sync Failed')
-                            ->body('Unexpected error: ' . $e->getMessage())
+                            ->body('Unexpected error: '.$e->getMessage())
                             ->danger()
                             ->send();
                     }
-                })
+                }),
             // ->successNotificationTitle('Sync completed successfully'),
         ];
     }
@@ -120,30 +123,35 @@ class ListEquipment extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make('All')
-                ->badge(fn() => Equipment::count()),
+            'all' => Tab::make('Equipment')
+                ->badge(fn () => Equipment::count()),
 
-            'active' => Tab::make('Active')
-                ->badge(fn() => Equipment::where('eqm_is_active', 1)->count())
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('eqm_is_active', 1)),
+            'active' => Tab::make('Active Equipment')
+                ->badge(fn () => Equipment::where('eqm_is_active', 1)->count())
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('eqm_is_active', 1)),
 
-            'inactive' => Tab::make('Inactive')
-                ->badge(fn() => Equipment::where('eqm_is_active', 0)->count())
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('eqm_is_active', 0)),
+            'inactive' => Tab::make('Inactive Equipment')
+                ->badge(fn () => Equipment::where('eqm_is_active', 0)->count())
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('eqm_is_active', 0)),
         ];
+    }
+
+    public function getDefaultActiveTab(): string|int|null
+    {
+        return 'active';
     }
 
     public function getSubheading(): ?string
     {
-        $setting = \App\Models\AppSetting::first();
+        $setting = AppSetting::first();
 
         if (! $setting?->last_equipment_sync) {
-            return "No sync data found";
+            return 'No sync data found';
         }
 
         // Converts the timestamp into something like "6:05 AM"
-        $timeOnly = \Carbon\Carbon::parse($setting->last_equipment_sync)->format('g:i A');
+        $timeOnly = Carbon::parse($setting->last_equipment_sync)->format('g:i A');
 
-        return "Last equipment sync: " . $timeOnly;
+        return 'Last equipment sync: '.$timeOnly;
     }
 }

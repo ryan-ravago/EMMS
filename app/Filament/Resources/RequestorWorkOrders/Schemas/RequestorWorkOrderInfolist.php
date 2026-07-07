@@ -21,38 +21,86 @@ class RequestorWorkOrderInfolist
         return $schema
             ->components([
                 Section::make('Work Order Details')
-                    ->columnSpan(1)
-                    ->columns(2)
+                    ->columnSpan(2)
+                    ->inlineLabel()
                     ->schema([
                         TextEntry::make('wo_no')
                             ->label('WO Number')
                             ->weight('bold'),
+                        TextEntry::make('equipment.eqm_name')
+                            ->label('Equipment')
+                            ->inlineLabel()
+                            ->url(fn ($record) => EquipmentResource::getUrl('view', ['record' => $record->wo_eqm_id]))
+                            ->openUrlInNewTab()
+                            ->icon('heroicon-o-arrow-top-right-on-square')
+                            ->iconPosition(IconPosition::After),
                         TextEntry::make('status.status_title')
+                            ->label('Status')
                             ->badge()
-                            ->state(function (WorkOrder $record): string {
-                                if ($record->wo_status_id === 'inprog') {
-                                    return Status::find('appr')->status_title ?? 'Approved';
-                                }
+                            // ->state(function (WorkOrder $record): string {
+                            //     if ($record->wo_status_id === 'inprog') {
+                            //         return Status::find('appr')->status_title ?? 'Approved';
+                            //     }
 
-                                return $record->status->status_title ?? '-';
-                            })
-                            ->color(fn (WorkOrder $record): string => $record->wo_status_id === 'inprog'
-                                ? (Status::find('appr')->status_color ?? 'success')
-                                : ($record->status?->status_color ?? 'gray'))
-                            ->label('Status'),
-                        TextEntry::make('wo_title')
-                            ->label('Title')
-                            ->columnSpanFull(),
-                        TextEntry::make('wo_req_desc')
-                            ->label('Requestor Description')
-                            ->columnSpanFull(),
-                        TextEntry::make('wo_desc')
-                            ->label('Manager Description')
-                            ->placeholder('-')
-                            ->columnSpanFull(),
+                            //     return $record->status->status_title ?? '-';
+                            // })
+                            // ->color(fn(WorkOrder $record): string => $record->wo_status_id === 'inprog'
+                            //     ? (Status::find('appr')->status_color ?? 'success')
+                            //     : ($record->status?->status_color ?? 'gray'))
+                            ->color(fn (WorkOrder $record) => $record->status->status_color)
+                            ->icon(fn (WorkOrder $record) => $record->status->status_icon),
                         TextEntry::make('priority.prio_name')
                             ->label('Priority')
                             ->badge(),
+                        TextEntry::make('wo_title')
+                            ->label('Title')
+                            ->inlineLabel(),
+                        TextEntry::make('wo_req_desc')
+                            ->label('Requestor Description'),
+                        TextEntry::make('wo_desc')
+                            ->label('Manager Description')
+                            ->placeholder('-'),
+                        TextEntry::make('department.dep_name')
+                            ->label('Department')
+                            ->url(fn ($record) => DepartmentResource::getUrl('view', ['record' => $record->wo_dep_id]))
+                            ->icon('heroicon-o-arrow-top-right-on-square')
+                            ->iconPosition(IconPosition::After),
+                        TextEntry::make('wo_mt_id')
+                            ->label('Maintenance Task')
+                            ->inlineLabel()
+                            ->url(
+                                fn ($record) => $record->wo_mt_id
+                                    ? MaintenanceTaskResource::getUrl('view', ['record' => $record->wo_mt_id])
+                                    : null
+                            )
+                            ->placeholder('-')
+                            ->icon('heroicon-o-arrow-top-right-on-square')
+                            ->iconPosition(IconPosition::After),
+                        TextEntry::make('inspectionItem.insi_no')
+                            ->label('Inspection Item')
+                            ->url(fn ($record) => $record->wo_insi_id
+                                ? InspectionItemResource::getUrl('view', ['record' => $record->wo_insi_id])
+                                : null)
+                            ->placeholder('-')
+                            ->icon('heroicon-o-arrow-top-right-on-square')
+                            ->iconPosition(IconPosition::After),
+                        TextEntry::make('workers')
+                            ->label('Technicians')
+                            ->listWithLineBreaks()
+                            ->badge()
+                            ->placeholder('-')
+                            ->icon('heroicon-o-user-circle')
+                            ->state(fn ($record) => $record->workers->map(fn ($w) => "{$w->user_fname} {$w->user_lname}")->toArray()),
+                        TextEntry::make('createdBy.full_name')
+                            ->label('Created By')
+                            ->numeric(),
+                        TextEntry::make('wo_created_dt')
+                            ->label('Created At')
+                            ->dateTime('M d, Y | h:i A'),
+                        TextEntry::make('wo_closed_dt')
+                            ->label('Closed At')
+                            ->dateTime('M d, Y | h:i A')
+                            ->placeholder('-'),
                     ]),
 
                 Section::make('Attachments')
@@ -92,63 +140,7 @@ class RequestorWorkOrderInfolist
                             }),
                     ]),
 
-                Section::make('References')
-                    ->columnSpan(1)
-                    ->columns(2)
-                    ->schema([
-                        TextEntry::make('equipment.eqm_name')
-                            ->label('Equipment')
-                            ->url(fn ($record) => EquipmentResource::getUrl('view', ['record' => $record->wo_eqm_id]))
-                            ->openUrlInNewTab()
-                            ->icon('heroicon-o-arrow-top-right-on-square')
-                            ->iconPosition(IconPosition::After),
-                        TextEntry::make('department.dep_name')
-                            ->label('Department')
-                            ->url(fn ($record) => DepartmentResource::getUrl('view', ['record' => $record->wo_dep_id]))
-                            ->icon('heroicon-o-arrow-top-right-on-square')
-                            ->iconPosition(IconPosition::After),
-                        TextEntry::make('wo_mt_id')
-                            ->label('Maintenance Task')
-                            ->url(
-                                fn ($record) => $record->wo_mt_id
-                                    ? MaintenanceTaskResource::getUrl('view', ['record' => $record->wo_mt_id])
-                                    : null
-                            )
-                            ->placeholder('-')
-                            ->icon('heroicon-o-arrow-top-right-on-square')
-                            ->iconPosition(IconPosition::After),
-                        TextEntry::make('inspectionItem.insi_no')
-                            ->label('Inspection Item')
-                            ->url(fn ($record) => $record->wo_insi_id
-                                ? InspectionItemResource::getUrl('view', ['record' => $record->wo_insi_id])
-                                : null)
-                            ->placeholder('-')
-                            ->icon('heroicon-o-arrow-top-right-on-square')
-                            ->iconPosition(IconPosition::After),
-                        TextEntry::make('workers')
-                            ->label('Technicians')
-                            ->badge()
-                            ->placeholder('-')
-                            ->icon('heroicon-o-user-circle')
-                            ->state(fn ($record) => $record->workers->map(fn ($w) => "{$w->user_fname} {$w->user_lname}")->toArray()),
-                    ]),
-
-                Section::make('Audit')
-                    ->columnSpan(1)
-                    ->columns(2)
-                    ->schema([
-                        TextEntry::make('createdBy.full_name')
-                            ->label('Created By')
-                            ->numeric(),
-                        TextEntry::make('wo_created_dt')
-                            ->label('Created At')
-                            ->dateTime('M d, Y | h:i A'),
-                        TextEntry::make('wo_closed_dt')
-                            ->label('Closed At')
-                            ->dateTime('M d, Y | h:i A')
-                            ->placeholder('-'),
-                    ]),
             ])
-            ->columns(2);
+            ->columns(3);
     }
 }

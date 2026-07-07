@@ -198,12 +198,14 @@ return [
             ],
             WorkOrderResource::class => [
                 'approveWorkOrder',
+                'assignWorkOrder',
                 'rejectWorkOrder',
                 'addUpdate',
                 'addReport',
                 'rejectCompletion',
                 'approveCompletion',
                 'cancelWorkOrder',
+                'completeWorkOrder',
             ],
             TechnicianWorkOrderResource::class => [
                 'addUpdate',

@@ -35,36 +35,36 @@ class ListWorkOrders extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make('All')
-                ->badge(fn() => $this->getBaseQuery()->count()),
+            'all' => Tab::make('Work Order')
+                ->badge(fn () => $this->getBaseQuery()->count()),
 
-            'pnd' => Tab::make('Pending')
-                ->badge(fn() => $this->getBaseQuery()->where('wo_status_id', 'pnd')->count())
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_status_id', 'pnd')),
+            'pndwor' => Tab::make('Pending Work Order')
+                ->badge(fn () => $this->getBaseQuery()->where('wo_status_id', 'pndwor')->count())
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('wo_status_id', 'pndwor')),
 
-            'inprog' => Tab::make('In Progress')
-                ->badge(fn() => $this->getBaseQuery()->where('wo_status_id', 'inprog')->count())
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_status_id', 'inprog')),
+            'inprog' => Tab::make('Work Order In Progress')
+                ->badge(fn () => $this->getBaseQuery()->where('wo_status_id', 'inprog')->count())
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('wo_status_id', 'inprog')),
 
-            'pca' => Tab::make('Pending Completion Approval')
-                ->badge(fn() => $this->getBaseQuery()->where('wo_status_id', 'pca')->count())
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_status_id', 'pca')),
+            // 'pca' => Tab::make('Pending Completion Approval')
+            //     ->badge(fn() => $this->getBaseQuery()->where('wo_status_id', 'pca')->count())
+            //     ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_status_id', 'pca')),
 
-            'rca' => Tab::make('Rejected Completion Approval')
-                ->badge(fn() => $this->getBaseQuery()->where('wo_status_id', 'rca')->count())
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_status_id', 'rca')),
+            // 'rca' => Tab::make('Rejected Completion Approval')
+            //     ->badge(fn() => $this->getBaseQuery()->where('wo_status_id', 'rca')->count())
+            //     ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_status_id', 'rca')),
 
-            'rej' => Tab::make('Rejected')
-                ->badge(fn() => $this->getBaseQuery()->where('wo_status_id', 'rej')->count())
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_status_id', 'rej')),
+            'rej' => Tab::make('Rejected Work Order')
+                ->badge(fn () => $this->getBaseQuery()->where('wo_status_id', 'rej')->count())
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('wo_status_id', 'rej')),
 
-            'cnc' => Tab::make('Cancelled')
-                ->badge(fn() => $this->getBaseQuery()->where('wo_status_id', 'cnc')->count())
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_status_id', 'cnc')),
+            'cnc' => Tab::make('Cancelled Work Order')
+                ->badge(fn () => $this->getBaseQuery()->where('wo_status_id', 'cnc')->count())
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('wo_status_id', 'cnc')),
 
-            'cmp' => Tab::make('Completed')
-                ->badge(fn() => $this->getBaseQuery()->where('wo_status_id', 'cmp')->count())
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_status_id', 'cmp')),
+            'cmp' => Tab::make('Completed Work Order')
+                ->badge(fn () => $this->getBaseQuery()->where('wo_status_id', 'cmp')->count())
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('wo_status_id', 'cmp')),
         ];
     }
 }
