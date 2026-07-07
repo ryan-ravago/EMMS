@@ -6,6 +6,7 @@ use App\Filament\Resources\Equipment\Pages\CreateEquipment;
 use App\Filament\Resources\Equipment\Pages\EditEquipment;
 use App\Filament\Resources\Equipment\Pages\ListEquipment;
 use App\Filament\Resources\Equipment\Pages\ViewEquipment;
+use App\Filament\Resources\Equipment\RelationManagers\EquipmentTaskChecklistTemplatesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\EquipmentTasksSchedulesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\InspectionsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\MaintenanceTasksRelationManager;
@@ -32,13 +33,13 @@ class EquipmentResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'eqm_name';
 
-    protected static ?string $navigationLabel = 'Equipments';
+    protected static ?string $navigationLabel = 'Equipment';
 
     protected static ?string $modelLabel = 'Equipment';
 
-    protected static ?string $pluralModelLabel = 'Equipments';
+    protected static ?string $pluralModelLabel = 'Equipment';
 
-    protected static ?string $slug = 'equipments';
+    protected static ?string $slug = 'equipment';
 
     // public static function getNavigationBadge(): ?string
     // {
@@ -82,6 +83,7 @@ class EquipmentResource extends Resource
         if ($user?->hasAnyRole(['super_admin', 'manager', 'technician'])) {
             $relations = [
                 WorkOrdersRelationManager::class,
+                EquipmentTaskChecklistTemplatesRelationManager::class,
                 EquipmentTasksSchedulesRelationManager::class,
                 InspectionsRelationManager::class,
                 MaintenanceTasksRelationManager::class,

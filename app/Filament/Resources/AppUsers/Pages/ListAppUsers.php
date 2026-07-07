@@ -31,12 +31,12 @@ class ListAppUsers extends ListRecords
 
         foreach ($departments as $department) {
             $tabs[$department->dep_code] = Tab::make()
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('user_dep_id', $department->dep_id))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('user_dep_id', $department->dep_id))
                 ->badge(
                     // This queries the count specifically for this tab
                     AppUser::where('user_dep_id', $department->dep_id)->count()
-                )
-                ->badgeColor('warning');;
+                );
+            // ->badgeColor('warning');
         }
 
         return $tabs;

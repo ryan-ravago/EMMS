@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Equipment\Schemas;
 
 use CodeWithDennis\FilamentSelectTree\SelectTree;
 use Filament\Actions\Action;
-use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -23,7 +22,7 @@ class EquipmentForm
                     ->columns(2)
                     ->schema([
                         TextInput::make('eqm_prc_code')
-                            ->label('PRC Code')
+                            ->label('Equipment Code')
                             ->disabled()
                             ->dehydrated(),
                         TextInput::make('eqm_name')

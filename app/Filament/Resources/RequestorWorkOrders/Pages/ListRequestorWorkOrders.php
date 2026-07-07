@@ -26,15 +26,31 @@ class ListRequestorWorkOrders extends ListRecords
             'all' => Tab::make()
                 ->label('All')
                 ->modifyQueryUsing(fn (Builder $query) => $query),
-            'pnd' => Tab::make()
-                ->label('Pending')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('wo_status_id', 'pnd')),
-            'approved' => Tab::make()
-                ->label('Approved')
+            'pndwor' => Tab::make()
+                ->label('Pending WO Review')
+                ->badge(fn () => RequestorWorkOrderResource::getEloquentQuery()->where('wo_status_id', 'pndwor')->count())
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('wo_status_id', 'pndwor')),
+            // 'approved' => Tab::make()
+            //     ->label('Approved')
+            //     ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_status_id', 'inprog')),
+            // 'rej' => Tab::make()
+            //     ->label('Rejected')
+            //     ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_status_id', 'rej')),
+            'inprog' => Tab::make('In Progress')
+                ->badge(fn () => RequestorWorkOrderResource::getEloquentQuery()->where('wo_status_id', 'inprog')->count())
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('wo_status_id', 'inprog')),
-            'rej' => Tab::make()
-                ->label('Rejected')
+
+            'rej' => Tab::make('Rejected')
+                ->badge(fn () => RequestorWorkOrderResource::getEloquentQuery()->where('wo_status_id', 'rej')->count())
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('wo_status_id', 'rej')),
+
+            'cnc' => Tab::make('Cancelled')
+                ->badge(fn () => RequestorWorkOrderResource::getEloquentQuery()->where('wo_status_id', 'cnc')->count())
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('wo_status_id', 'cnc')),
+
+            'cmp' => Tab::make('Completed')
+                ->badge(fn () => RequestorWorkOrderResource::getEloquentQuery()->where('wo_status_id', 'cmp')->count())
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('wo_status_id', 'cmp')),
         ];
     }
 }

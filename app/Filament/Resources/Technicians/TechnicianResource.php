@@ -24,11 +24,11 @@ class TechnicianResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
-    protected static ?string $navigationLabel = 'Members';
+    protected static ?string $navigationLabel = 'Member';
 
     protected static ?string $modelLabel = 'Member';
 
-    protected static ?string $pluralModelLabel = 'Members';
+    protected static ?string $pluralModelLabel = 'Member';
 
     protected static ?string $slug = 'members';
 

@@ -4,10 +4,9 @@ namespace App\Filament\Resources\Departments\RelationManagers;
 
 use App\Filament\Resources\AppUsers\AppUserResource;
 use Filament\Actions\CreateAction;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\CheckboxList;
-use Filament\Schemas\Schema;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -43,14 +42,13 @@ class UsersRelationManager extends RelationManager
                     ->searchable(),
                 TextColumn::make('department.dep_name')
                     ->sortable(),
-                TextColumn::make('roles.name')
+                TextColumn::make('roles.display_name')
                     ->label('Roles')
                     ->badge()
                     ->color('warning')
                     ->separator(',')
                     ->searchable()
-                    ->wrap()
-                    ->formatStateUsing(fn(string $state): string => str($state)->replace('_', ' ')->title()),
+                    ->wrap(),
             ])
             ->headerActions([
                 CreateAction::make()
@@ -87,7 +85,7 @@ class UsersRelationManager extends RelationManager
                                 Select::make('user_dep_id')
                                     ->label('Department')
                                     ->relationship('department', 'dep_name')
-                                    ->default(fn() => $this->getOwnerRecord()->getKey())
+                                    ->default(fn () => $this->getOwnerRecord()->getKey())
                                     ->disabled()
                                     ->dehydrated()
                                     ->required()
@@ -102,7 +100,7 @@ class UsersRelationManager extends RelationManager
                                     ->label('Assigned Roles')
                                     ->relationship('roles', 'name')
                                     ->getOptionLabelFromRecordUsing(
-                                        fn($record) => str($record->name)->replace('_', ' ')->title()
+                                        fn ($record) => $record->display_name ?? str($record->name)->replace('_', ' ')->title()
                                     )
                                     ->columns(2) // Makes the checkboxes appear in 2 columns
                                     ->searchable()
@@ -112,7 +110,7 @@ class UsersRelationManager extends RelationManager
                     ]),
             ])
             ->extraAttributes([
-                'style' => 'margin-top: 30px;'
+                'style' => 'margin-top: 30px;',
             ]);
     }
 }

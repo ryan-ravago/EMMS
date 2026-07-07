@@ -78,6 +78,12 @@ class MyProfile extends Page implements HasInfolists
                                     ->color('primary')
                                     ->placeholder('Not set')
                                     ->columnSpanFull(),
+                                TextEntry::make('roles.display_name')
+                                    ->label('Roles')
+                                    ->badge()
+                                    // ->color('warning')
+                                    ->separator(',')
+                                    ->wrap(),
                             ]),
                     ]),
             ]);

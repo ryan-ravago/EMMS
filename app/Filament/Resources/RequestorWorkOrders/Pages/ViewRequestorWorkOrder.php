@@ -6,6 +6,7 @@ use App\Filament\Resources\RequestorWorkOrders\RelationManagers\LogsRelationMana
 use App\Filament\Resources\RequestorWorkOrders\RequestorWorkOrderResource;
 use App\Mail\WorkOrderCancellationMail;
 use App\Models\Action as ModelsAction;
+use App\Models\AppUser;
 use App\Models\InspectionItem;
 use App\Models\InspectionItemLog;
 use App\Models\MaintenanceTask;
@@ -25,10 +26,10 @@ class ViewRequestorWorkOrder extends ViewRecord
 {
     protected static string $resource = RequestorWorkOrderResource::class;
 
-    public function hasCombinedRelationManagerTabsWithContent(): bool
-    {
-        return true;
-    }
+    // public function hasCombinedRelationManagerTabsWithContent(): bool
+    // {
+    //     return true;
+    // }
 
     public function getContentTabLabel(): string
     {
@@ -68,7 +69,7 @@ class ViewRequestorWorkOrder extends ViewRecord
                                 ->lockForUpdate()
                                 ->first();
 
-                            if ($workOrder->wo_status_id !== 'pnd') {
+                            if ($workOrder->wo_status_id !== 'pndwor') {
                                 throw new \Exception('Work order cannot be cancelled at its current status.');
                             }
 
@@ -168,7 +169,7 @@ class ViewRequestorWorkOrder extends ViewRecord
                             ));
 
                         // 2. Notify manager — Update
-                        $managers = \App\Models\AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
+                        $managers = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
                             ->where('user_dep_id', $record->wo_dep_id)
                             ->get();
 

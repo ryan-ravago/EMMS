@@ -37,21 +37,20 @@ class TechniciansTable
                     ->searchable(),
                 TextColumn::make('department.dep_name')
                     ->sortable(),
-                TextColumn::make('roles.name')
+                TextColumn::make('roles.display_name')
                     ->label('Roles')
                     ->badge()
                     ->color('warning')
                     ->separator(',')
                     ->searchable()
-                    ->wrap()
-                    ->formatStateUsing(fn (string $state): string => str($state)->replace('_', ' ')->title()),
+                    ->wrap(),
             ])
             ->recordUrl(
                 fn (Model $record): string => TechnicianResource::getUrl('view', ['record' => $record]),
             )
             ->filters([
                 SelectFilter::make('role')
-                    ->relationship('roles', 'name')
+                    ->relationship('roles', 'display_name')
                     ->searchable()
                     ->preload(),
             ])

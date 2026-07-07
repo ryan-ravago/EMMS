@@ -7,6 +7,7 @@ use App\Models\WorkOrder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -20,7 +21,7 @@ class WorkOrderAssignedMail extends Mailable
      */
     public function __construct(
         public WorkOrder $workOrder,
-        public AppUser $worker,
+        public ?AppUser $worker = null,
     ) {
         //
     }
@@ -46,6 +47,22 @@ class WorkOrderAssignedMail extends Mailable
         return new Content(
             view: 'emails.work-orders.assigned',
         );
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, Attachment>
+     */
+    public function attachments(): array
+    {
+        $disk = config('filament.default_filesystem_disk', config('filesystems.default'));
+
+        return collect($this->workOrder->wo_attachments ?? [])
+            ->filter(fn ($path): bool => is_string($path) && trim($path) !== '')
+            ->map(fn (string $path): Attachment => Attachment::fromStorageDisk($disk, $path))
+            ->values()
+            ->all();
     }
 
     private function buildReplyToAddress(): ?string

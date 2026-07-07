@@ -37,7 +37,7 @@ class RequestorWorkOrderPolicy
 
     public function update(AuthUser $authUser, RequestorWorkOrder $requestorWorkOrder): bool
     {
-        if ($authUser->user_id === $requestorWorkOrder->wo_created_by && $requestorWorkOrder->wo_status_id === 'pnd') {
+        if ($authUser->user_id === $requestorWorkOrder->wo_created_by && $requestorWorkOrder->wo_status_id === 'pndwor') {
             return $authUser->can('Update:RequestorWorkOrderResource');
         }
 
@@ -46,7 +46,7 @@ class RequestorWorkOrderPolicy
 
     public function delete(AuthUser $authUser, RequestorWorkOrder $requestorWorkOrder): bool
     {
-        if ($authUser->user_id === $requestorWorkOrder->wo_created_by && $requestorWorkOrder->wo_status_id === 'pnd') {
+        if ($authUser->user_id === $requestorWorkOrder->wo_created_by && $requestorWorkOrder->wo_status_id === 'pndwor') {
             return $authUser->can('Delete:RequestorWorkOrderResource');
         }
 
@@ -90,6 +90,6 @@ class RequestorWorkOrderPolicy
 
     public function cancelWorkOrder(AuthUser $authUser, RequestorWorkOrder $requestorWorkOrder): bool
     {
-        return $requestorWorkOrder->wo_status_id === 'pnd' && $authUser->can('ViewAny:RequestorWorkOrderResource');
+        return $requestorWorkOrder->wo_status_id === 'pndwor' && $authUser->can('ViewAny:RequestorWorkOrderResource');
     }
 }

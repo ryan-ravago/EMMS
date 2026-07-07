@@ -48,9 +48,8 @@ class TechnicianInfolist
                     ->schema([
                         TextEntry::make('department.dep_name')
                             ->label('Department'),
-                        TextEntry::make('roles.name')
+                        TextEntry::make('roles.display_name')
                             ->label('Roles')
-                            ->formatStateUsing(fn ($state) => str($state)->replace('_', ' ')->title())
                             ->badge()
                             ->separator(','),
                     ]),

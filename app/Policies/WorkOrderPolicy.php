@@ -153,7 +153,7 @@ class WorkOrderPolicy
     public function approveWorkOrder(AuthUser $authUser, WorkOrder $workOrder): bool
     {
         if (
-            $workOrder->wo_status_id === 'pnd' &&
+            $workOrder->wo_status_id === 'pndwor' &&
             $authUser->user_dep_id === $workOrder->wo_dep_id
         ) {
             return $authUser->can('ApproveWorkOrder:WorkOrderResource');
@@ -162,13 +162,37 @@ class WorkOrderPolicy
         return false;
     }
 
+    public function assignWorkOrder(AuthUser $authUser, WorkOrder $workOrder): bool
+    {
+        if (
+            $workOrder->wo_status_id === 'pndwor' &&
+            $authUser->user_dep_id === $workOrder->wo_dep_id
+        ) {
+            return $authUser->can('AssignWorkOrder:WorkOrderResource');
+        }
+
+        return false;
+    }
+
     public function rejectWorkOrder(AuthUser $authUser, WorkOrder $workOrder): bool
     {
         if (
-            $workOrder->wo_status_id === 'pnd' &&
+            $workOrder->wo_status_id === 'pndwor' &&
             $authUser->user_dep_id === $workOrder->wo_dep_id
         ) {
             return $authUser->can('RejectWorkOrder:WorkOrderResource');
+        }
+
+        return false;
+    }
+
+    public function completeWorkOrder(AuthUser $authUser, WorkOrder $workOrder): bool
+    {
+        if (
+            $workOrder->wo_status_id === 'inprog' &&
+            $authUser->user_dep_id === $workOrder->wo_dep_id
+        ) {
+            return $authUser->can('CompleteWorkOrder:WorkOrderResource');
         }
 
         return false;

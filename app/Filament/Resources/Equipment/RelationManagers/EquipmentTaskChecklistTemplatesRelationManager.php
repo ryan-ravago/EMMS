@@ -49,7 +49,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['etct_eqm_id'] = $this->getOwnerRecord()->getKey();
+        $data['etct_eqmt_id'] = $this->getOwnerRecord()->model->eqmm_eqmt_id;
         $data['etct_dep_id'] = Auth::user()->user_dep_id;
         $data['etct_created_by'] = Auth::id();
         $data['etct_created_at'] = now();
@@ -66,13 +66,14 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                     ->relationship(
                         name: 'task',
                         titleAttribute: 'task_name',
-                        modifyQueryUsing: fn($query) => $query
+                        modifyQueryUsing: fn ($query) => $query
                             ->where('task_tut_id', 1)
                             ->where('task_dep_id', auth()->user()->user_dep_id)
                             ->whereNotIn(
                                 'task_id',
-                                EquipmentTaskChecklistTemplate::where('etct_eqm_id', $this->getOwnerRecord()->getKey())
-                                    ->where('etct_dep_id', auth()->user()->user_dep_id)
+                                EquipmentTaskChecklistTemplate::query()
+                                    ->where('etct_eqmt_id', $this->getOwnerRecord()->model?->eqmm_eqmt_id)
+                                    ->where('etct_dep_id', Auth::user()->user_dep_id)
                                     ->pluck('etct_task_id')
                             )
                     )
@@ -90,7 +91,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                             ->unique(
                                 table: Task::class,
                                 column: 'task_name',
-                                modifyRuleUsing: fn(Unique $rule) => $rule->where('task_dep_id', Auth::user()->user_dep_id),
+                                modifyRuleUsing: fn (Unique $rule) => $rule->where('task_dep_id', Auth::user()->user_dep_id),
                                 ignoreRecord: true,
                             )->validationMessages([
                                 'unique' => 'The task name has already been taken.',
@@ -110,7 +111,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                     ])
                     ->createOptionModalHeading('New Inspection Task')
                     ->createOptionAction(
-                        fn(Action $action) => $action
+                        fn (Action $action) => $action
                             ->modalWidth(Width::Large)
                             ->mutateFormDataUsing(function (array $data) {
                                 $data['task_tut_id'] = 1;
@@ -144,7 +145,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                     ->schema([
                         TextEntry::make('creator.user_fname')
                             ->label('Added By')
-                            ->formatStateUsing(fn($record) => $record->creator
+                            ->formatStateUsing(fn ($record) => $record->creator
                                 ? "{$record->creator->user_fname} {$record->creator->user_lname}"
                                 : '—'),
                         TextEntry::make('etct_created_at')
@@ -166,7 +167,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                 TextColumn::make('creator.user_fname')
                     ->label('Added By')
                     ->formatStateUsing(
-                        fn($record) => $record->creator
+                        fn ($record) => $record->creator
                             ? "{$record->creator->user_fname} {$record->creator->user_lname}"
                             : '—'
                     ),
@@ -188,7 +189,7 @@ class EquipmentTaskChecklistTemplatesRelationManager extends RelationManager
                     ->label('Add Inspection Task')
                     ->modalHeading('Add Equipment Inspection Task')
                     ->modalWidth('lg')
-                    ->authorize(fn() => Auth::user()->can('create', WorkOrder::class))
+                    ->authorize(fn () => Auth::user()->can('create', WorkOrder::class))
                     ->closeModalByClickingAway(false)
                     ->closeModalByEscaping(false),
                 AssociateAction::make(),

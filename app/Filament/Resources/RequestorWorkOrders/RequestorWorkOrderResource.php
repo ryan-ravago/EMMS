@@ -27,7 +27,7 @@ class RequestorWorkOrderResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return auth()->user()->hasRole('super_admin') ? 'Requestor Work Orders' : 'Work Orders';
+        return auth()->user()->hasRole('super_admin') ? 'Requestor Work Order' : 'Work Order';
     }
 
     public static function getModelLabel(): string
@@ -37,7 +37,7 @@ class RequestorWorkOrderResource extends Resource
 
     public static function getPluralModelLabel(): string
     {
-        return auth()->user()->hasRole('super_admin') ? 'Requestor Work Orders' : 'Work Orders';
+        return auth()->user()->hasRole('super_admin') ? 'Requestor Work Order' : 'Work Order';
     }
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentArrowUp;

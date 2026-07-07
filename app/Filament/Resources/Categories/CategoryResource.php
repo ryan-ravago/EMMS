@@ -17,6 +17,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class CategoryResource extends Resource
 {
@@ -26,38 +27,40 @@ class CategoryResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'eqmc_name';
 
-    protected static ?string $navigationLabel = 'Categories';
+    protected static ?string $navigationLabel = 'Category';
 
     protected static ?string $modelLabel = 'Category';
 
-    protected static ?string $pluralModelLabel = 'Categories';
+    protected static ?string $pluralModelLabel = 'Category';
 
-    public static function getNavigationGroup(): ?string
-    {
-        $user = auth()->user();
+    protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
 
-        // 1. If Super Admin, always keep it at the top level (no group)
-        if ($user->hasRole('super_admin')) {
-            return null;
-        }
+    // public static function getNavigationGroup(): ?string
+    // {
+    //     $user = auth()->user();
 
-        // 2. Count roles. If they only have 1 role (or 0), don't show a group folder.
-        // Assuming you are using Spatie Permissions or a 'roles' relationship
-        if ($user->roles()->count() < 2) {
-            return null;
-        }
+    //     // 1. If Super Admin, always keep it at the top level (no group)
+    //     if ($user->hasRole('super_admin')) {
+    //         return null;
+    //     }
 
-        // 3. If they have 2+ roles, assign the group based on priority:
-        if ($user->hasRole('manager')) {
-            return 'Manager';
-        }
+    //     // 2. Count roles. If they only have 1 role (or 0), don't show a group folder.
+    //     // Assuming you are using Spatie Permissions or a 'roles' relationship
+    //     if ($user->roles()->count() < 2) {
+    //         return null;
+    //     }
 
-        if ($user->hasRole('custodian')) {
-            return 'Custodian';
-        }
+    //     // 3. If they have 2+ roles, assign the group based on priority:
+    //     if ($user->hasRole('manager')) {
+    //         return 'Manager';
+    //     }
 
-        return null;
-    }
+    //     if ($user->hasRole('custodian')) {
+    //         return 'Custodian';
+    //     }
+
+    //     return null;
+    // }
 
     public static function form(Schema $schema): Schema
     {

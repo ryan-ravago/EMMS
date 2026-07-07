@@ -7,17 +7,16 @@ use App\Mail\WorkOrderActionRequiredMail;
 use App\Mail\WorkOrderConfirmationMail;
 use App\Models\AppUser;
 use App\Models\Department;
-use App\Models\Equipment;
 use App\Models\Priority;
 use App\Models\RequestorWorkOrder;
 use App\Models\WorkOrderLog;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Wizard;
@@ -32,13 +31,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Filament\Forms\Components\DatePicker;
 
 class RequestorWorkOrdersRelationManager extends RelationManager
 {
     protected static string $relationship = 'workOrders';
 
-    protected static ?string $title = 'My Work Orders';
+    protected static ?string $title = 'My Work Order';
 
     protected static ?string $relatedResource = RequestorWorkOrderResource::class;
 
@@ -59,17 +57,15 @@ class RequestorWorkOrdersRelationManager extends RelationManager
         return $table
             ->headerActions([
                 CreateAction::make()
-                    ->visible(fn(): bool => (bool) $this->getOwnerRecord()->eqm_is_active)
-                    ->authorize(fn() => Auth::user()->can('create', RequestorWorkOrder::class))
-                    ->label('Request Work Order')
+                    ->visible(fn (): bool => (bool) $this->getOwnerRecord()->eqm_is_active)
+                    ->authorize(fn () => Auth::user()->can('create', RequestorWorkOrder::class))
                     ->color('primary')
                     ->closeModalByClickingAway(false)
-                    ->modalHeading('Request Work Order')
                     ->modalCloseButton(false)
                     ->modalWidth(Width::SevenExtraLarge)
                     ->schema([
                         Wizard::make([
-                            Step::make('Work Order Details')
+                            Step::make('Work Order Form')
                                 ->icon('heroicon-o-wrench-screwdriver')
                                 ->schema([
                                     Section::make('Equipment')
@@ -80,7 +76,7 @@ class RequestorWorkOrdersRelationManager extends RelationManager
                                             Select::make('wo_eqm_id')
                                                 ->label('Equipment')
                                                 ->options([
-                                                    $this->getOwnerRecord()->getKey() => $this->getOwnerRecord()->eqm_name
+                                                    $this->getOwnerRecord()->getKey() => $this->getOwnerRecord()->eqm_name,
                                                 ])
                                                 ->default($this->getOwnerRecord()->getKey())
                                                 ->disabled()
@@ -149,8 +145,8 @@ class RequestorWorkOrdersRelationManager extends RelationManager
                             ->whereDate('wo_created_dt', $now->toDateString())
                             ->count() + 1;
 
-                        $data['wo_no'] = 'WO-' . $depCode . '-' . $now->format('ymd') . str_pad($count, 3, '0', STR_PAD_LEFT);
-                        $data['wo_status_id'] = 'pnd';
+                        $data['wo_no'] = 'WO-'.$depCode.'-'.$now->format('ymd').str_pad($count, 3, '0', STR_PAD_LEFT);
+                        $data['wo_status_id'] = 'pndwor';
                         $data['wo_created_by'] = Auth::id();
                         $data['wo_created_dt'] = $now;
 
@@ -160,9 +156,9 @@ class RequestorWorkOrdersRelationManager extends RelationManager
                         WorkOrderLog::create([
                             'wol_wo_id' => $record->wo_id,
                             'wol_a_id' => 'create',
-                            'wol_status_id' => 'pnd',
+                            'wol_status_id' => 'pndwor',
                             'wol_a_log' => DB::table('actions')->where('a_id', 'create')->value('a_past_tense'),
-                            'wol_status_log' => DB::table('statuses')->where('status_id', 'pnd')->value('status_title'),
+                            'wol_status_log' => DB::table('statuses')->where('status_id', 'pndwor')->value('status_title'),
                             'wol_by' => Auth::id(),
                             'wol_dt' => now(),
                         ]);
@@ -174,7 +170,7 @@ class RequestorWorkOrdersRelationManager extends RelationManager
                         }
 
                         // 2. Notify managers of the assigned department
-                        $managers = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
+                        $managers = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
                             ->where('user_dep_id', $record->wo_dep_id)
                             ->get();
 
@@ -202,15 +198,15 @@ class RequestorWorkOrdersRelationManager extends RelationManager
                 TextColumn::make('status.status_title')
                     ->label('Status')
                     ->badge()
-                    ->color(fn($record) => $record->status->status_color)
-                    ->icon(fn($record) => $record->status->status_icon)
+                    ->color(fn ($record) => $record->status->status_color)
+                    ->icon(fn ($record) => $record->status->status_icon)
                     ->sortable(),
                 TextColumn::make('wo_created_dt')
                     ->label('Created At')
                     ->dateTime('M d, Y h:i A')
                     ->sortable(),
             ])
-            ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_created_by', Auth::id()))
+            ->modifyQueryUsing(fn (Builder $query) => $query->where('wo_created_by', Auth::id()))
             ->filters([
                 SelectFilter::make('wo_status_id')
                     ->label('Status')
@@ -225,13 +221,13 @@ class RequestorWorkOrdersRelationManager extends RelationManager
                     ])
                     ->query(function (Builder $query, array $data) {
                         return $query
-                            ->when($data['from'], fn($q) => $q->whereDate('wo_created_dt', '>=', $data['from']))
-                            ->when($data['until'], fn($q) => $q->whereDate('wo_created_dt', '<=', $data['until']));
+                            ->when($data['from'], fn ($q) => $q->whereDate('wo_created_dt', '>=', $data['from']))
+                            ->when($data['until'], fn ($q) => $q->whereDate('wo_created_dt', '<=', $data['until']));
                     }),
             ])
             ->recordActions([
                 ViewAction::make()
-                    ->url(fn(Model $record): string => RequestorWorkOrderResource::getUrl('view', ['record' => $record])),
+                    ->url(fn (Model $record): string => RequestorWorkOrderResource::getUrl('view', ['record' => $record])),
                 EditAction::make(),
             ]);
     }
