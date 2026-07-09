@@ -31,7 +31,9 @@ class BrandResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Brand';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
+    protected static string|UnitEnum|null $navigationGroup = 'Equipment';
+
+    protected static ?int $navigationSort = 4;
 
     // public static function getNavigationGroup(): ?string
     // {

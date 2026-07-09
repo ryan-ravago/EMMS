@@ -81,7 +81,7 @@ class Equipment extends Model
         return $this->hasMany(EquipmentTasksSchedule::class, 'ets_eqm_id', 'eqm_id')
             ->when(
                 Auth::check() && ! Auth::user()->hasRole('super_admin'),
-                fn ($query) => $query->where('ets_dep_id', Auth::user()->user_dep_id)
+                fn($query) => $query->where('ets_dep_id', Auth::user()->user_dep_id)
             );
     }
 
@@ -100,6 +100,11 @@ class Equipment extends Model
     public function inspections(): HasMany
     {
         return $this->hasMany(Inspection::class, 'ins_eqm_id', 'eqm_id');
+    }
+
+    public function insps(): HasMany
+    {
+        return $this->hasMany(Insp::class, 'insp_eqm_id', 'eqm_id');
     }
 
     public function workOrders(): HasMany

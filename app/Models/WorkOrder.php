@@ -96,6 +96,11 @@ class WorkOrder extends Model
         return $this->hasMany(ReportSubmission::class, 'rs_wo_id', 'wo_id');
     }
 
+    public function getRouteKeyName()
+    {
+        return 'wo_no';
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

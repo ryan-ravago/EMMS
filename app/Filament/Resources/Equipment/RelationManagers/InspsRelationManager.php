@@ -2,23 +2,23 @@
 
 namespace App\Filament\Resources\Equipment\RelationManagers;
 
-use App\Filament\Resources\Equipment\Resources\WorkOrders\WorkOrderResource;
-use App\Models\WorkOrder;
+use App\Filament\Resources\Equipment\Resources\Insps\InspsResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
 
-class WorkOrdersRelationManager extends RelationManager
+class InspsRelationManager extends RelationManager
 {
-    protected static string $relationship = 'workOrders';
+    protected static string $relationship = 'insps';
 
-    protected static ?string $relatedResource = WorkOrderResource::class;
+    protected static ?string $relatedResource = InspsResource::class;
+
+    protected static ?string $title = 'Inspections';
 
     public static function getBadge(Model $ownerRecord, string $pageClass): ?string
     {
-        $query = $ownerRecord->workOrders();
+        $query = $ownerRecord->insps();
         $user = auth()->user();
 
         if ($user === null) {
@@ -28,7 +28,7 @@ class WorkOrdersRelationManager extends RelationManager
         if ($user->hasRole('super_admin')) {
             return (string) $query->count();
         } else if ($user->hasRole('manager')) {
-            $query->where('wo_dep_id', $user->user_dep_id);
+            $query->where('insp_dep_id', $user->user_dep_id);
         }
 
         return (string) $query->count();
@@ -38,8 +38,7 @@ class WorkOrdersRelationManager extends RelationManager
     {
         return $table
             ->headerActions([
-                CreateAction::make()
-                    ->authorize(fn() => Auth::user()?->can('create', WorkOrder::class) ?? false),
+                CreateAction::make(),
             ]);
     }
 }

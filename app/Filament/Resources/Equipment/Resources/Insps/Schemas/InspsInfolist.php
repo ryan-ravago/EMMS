@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Filament\Resources\Insps\Schemas;
+namespace App\Filament\Resources\Equipment\Resources\Insps\Schemas;
 
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
-class InspInfolist
+class InspsInfolist
 {
     public static function configure(Schema $schema): Schema
     {
@@ -21,7 +21,7 @@ class InspInfolist
                             ->placeholder('—'),
                         TextEntry::make('insp_dep_id')
                             ->label('Department')
-                            ->visible(fn () => auth()->user()->hasRole(['super_admin']))
+                            ->visible(fn() => auth()->user()->hasRole(['super_admin']))
                             ->placeholder('—'),
                         TextEntry::make('equipment.eqm_name')
                             ->label('Equipment Unit')

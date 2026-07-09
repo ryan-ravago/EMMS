@@ -32,7 +32,9 @@ class ModelResource extends Resource
     protected static ?string $modelLabel = 'Model';
     // protected static ?string $pluralModelLabel = 'Models';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
+    protected static string|UnitEnum|null $navigationGroup = 'Equipment';
+
+    protected static ?int $navigationSort = 5;
 
     public static function form(Schema $schema): Schema
     {

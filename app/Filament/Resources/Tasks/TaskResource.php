@@ -24,6 +24,10 @@ class TaskResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedListBullet;
 
+    protected static ?string $navigationLabel = 'Task';
+
+    protected static ?string $pluralLabel = 'Task';
+
     protected static ?string $recordTitleAttribute = 'task_name';
 
     public static function getEloquentQuery(): Builder

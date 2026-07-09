@@ -9,6 +9,7 @@ use App\Filament\Resources\Equipment\Pages\ViewEquipment;
 use App\Filament\Resources\Equipment\RelationManagers\EquipmentTaskChecklistTemplatesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\EquipmentTasksSchedulesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\InspectionsRelationManager;
+use App\Filament\Resources\Equipment\RelationManagers\InspsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\MaintenanceTasksRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\RequestorWorkOrdersRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\WorkOrdersRelationManager;
@@ -24,6 +25,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 class EquipmentResource extends Resource
 {
@@ -40,6 +42,10 @@ class EquipmentResource extends Resource
     protected static ?string $pluralModelLabel = 'Equipment';
 
     protected static ?string $slug = 'equipment';
+
+    protected static ?int $navigationSort = 1;
+
+    protected static string|UnitEnum|null $navigationGroup = 'Equipment';
 
     // public static function getNavigationBadge(): ?string
     // {
@@ -87,6 +93,7 @@ class EquipmentResource extends Resource
                 EquipmentTasksSchedulesRelationManager::class,
                 InspectionsRelationManager::class,
                 MaintenanceTasksRelationManager::class,
+                InspsRelationManager::class
             ];
         }
 

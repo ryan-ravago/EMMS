@@ -196,6 +196,10 @@ class AdminPanelProvider extends PanelProvider
                     ]),
                 SimpleLightBoxPlugin::make(),
             ])
+            ->navigationGroups([
+                'Equipment',
+                'Super Admin',
+            ])
             ->authMiddleware([
                 Authenticate::class,
             ]);

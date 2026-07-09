@@ -16,7 +16,6 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
 
 class TechnicianResource extends Resource
 {
@@ -34,21 +33,18 @@ class TechnicianResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'user_fname';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
     public static function getEloquentQuery(): Builder
     {
-        $user = Auth::user();
+        $user = auth()->user();
 
         $query = parent::getEloquentQuery()
             ->with(['department', 'roles']);
 
         if ($user) {
-            $query->where('user_dep_id', $user->user_dep_id);
-
-            if ($user->hasRole('technician')) {
-                $query->where('user_id', '!=', $user->user_id);
-            }
+            $query->where('user_dep_id', $user->user_dep_id)
+                ->where('user_id', '!=', $user->user_id);
         } else {
             $query->whereRaw('1 = 0');
         }

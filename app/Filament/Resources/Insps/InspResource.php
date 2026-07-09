@@ -17,8 +17,6 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
-use UnitEnum;
 
 class InspResource extends Resource
 {
@@ -26,15 +24,20 @@ class InspResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Inspections';
+    protected static ?string $navigationLabel = 'Inspection';
+
+    protected static ?string $modelLabel = 'Inspection';
 
     protected static ?string $recordTitleAttribute = 'insp_no';
 
+    protected static ?int $navigationSort = 2;
+
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()
+            ->with(['equipment']);
 
-        $authUser = Auth::user();
+        $authUser = auth()->user();
 
         if ($authUser === null) {
             return $query->whereRaw('1 = 0');

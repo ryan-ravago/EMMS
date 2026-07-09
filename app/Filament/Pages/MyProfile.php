@@ -20,7 +20,7 @@ class MyProfile extends Page implements HasInfolists
 
     protected static ?string $navigationLabel = 'My Profile';
 
-    protected static ?int $navigationSort = -100;
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $title = 'My Profile';
 

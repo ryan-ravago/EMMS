@@ -25,9 +25,15 @@ class WorkOrderResource extends Resource
 {
     protected static ?string $model = WorkOrder::class;
 
+    protected static ?string $navigationLabel = 'Work Order';
+
+    protected static ?string $pluralLabel = 'Work Order';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentCheck;
 
     protected static ?string $recordTitleAttribute = 'wo_no';
+
+    protected static ?int $navigationSort = 1;
 
     public static function getEloquentQuery(): Builder
     {

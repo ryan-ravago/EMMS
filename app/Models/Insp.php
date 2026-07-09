@@ -33,8 +33,6 @@ class Insp extends Model
     ];
 
     protected $casts = [
-        'insp_dep_id' => 'integer',
-        'insp_eqm_id' => 'integer',
         'insp_submitted_at' => 'datetime',
     ];
 

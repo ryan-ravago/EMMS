@@ -125,7 +125,7 @@ class SyncGoogleSheetInspections extends Command
     {
         $submittedRows = array_values(array_filter(
             $rows,
-            fn (array $row): bool => $this->isNotBlank($row['is_submitted'] ?? null)
+            fn (array $row): bool => $this->isSubmittedStatus($row['is_submitted'] ?? null)
         ));
 
         if ($submittedRows === []) {
@@ -164,7 +164,7 @@ class SyncGoogleSheetInspections extends Command
                 'insp_no' => $this->normalizeNullableString($row['insp_no'] ?? null),
                 'insp_dep_id' => $this->resolveDepartmentId($row['insp_dep_id'] ?? null),
                 'insp_eqm_id' => $this->resolveEquipmentId($row['insp_eqm_id'] ?? null),
-                'is_submitted' => $this->normalizeNullableString($row['is_submitted'] ?? null),
+                'is_submitted' => 'Submitted',
                 'checklist_template_name' => $this->normalizeNullableString($row['checklist_template_name'] ?? null),
                 'checklist_temp_items' => $this->normalizeNullableString($row['checklist_temp_items'] ?? null),
                 'insp_remarks' => $this->normalizeNullableString($row['insp_remarks'] ?? null),
@@ -427,9 +427,9 @@ class SyncGoogleSheetInspections extends Command
         }
     }
 
-    private function isNotBlank(mixed $value): bool
+    private function isSubmittedStatus(mixed $value): bool
     {
-        return $this->normalizeNullableString($value) !== null;
+        return strtolower((string) $this->normalizeNullableString($value)) === 'submitted';
     }
 
     private function normalizeInspectionResult(mixed $value): ?string

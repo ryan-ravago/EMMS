@@ -25,7 +25,13 @@ class EquipmentTypeResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
+    protected static string|UnitEnum|null $navigationGroup = 'Equipment';
+
+    protected static ?string $navigationLabel = 'Type';
+
+    protected static ?string $modelLabel = 'Type';
+
+    protected static ?int $navigationSort = 3;
 
     public static function form(Schema $schema): Schema
     {

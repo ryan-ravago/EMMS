@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Resources\AppUsers\AppUserResource;
 use App\Filament\Resources\Categories\CategoryResource;
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Filament\Resources\EquipmentTypes\EquipmentTypeResource;
@@ -10,6 +9,7 @@ use App\Filament\Resources\Inspections\InspectionResource;
 use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
 use App\Filament\Resources\Models\ModelResource;
 use App\Filament\Resources\RequestorWorkOrders\RequestorWorkOrderResource;
+use App\Filament\Resources\Technicians\TechnicianResource;
 use App\Filament\Resources\TechnicianWorkOrders\TechnicianWorkOrderResource;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use App\Models\AppUser;
@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardStatsOverview extends StatsOverviewWidget
 {
-    protected static ?int $sort = 1;
+    protected static ?int $navigationSort = 1;
 
     protected ?string $heading = 'Dashboard Summary';
 
@@ -116,12 +116,12 @@ class DashboardStatsOverview extends StatsOverviewWidget
                     ->url(MaintenanceTaskResource::getUrl());
             }
 
-            $awaiting = WorkOrder::where('wo_dep_id', $user->user_dep_id)->where('wo_status_id', 'pca')->count();
-            $stats[] = Stat::make('Awaiting Completion', $awaiting)
-                ->icon(Heroicon::Clock)
-                ->description('Pending approval')
-                ->color($awaiting > 0 ? 'warning' : 'gray')
-                ->url(WorkOrderResource::getUrl('index', ['tableFilters[wo_status_id][value]' => 'pca', 'tab' => 'pca']));
+            // $awaiting = WorkOrder::where('wo_dep_id', $user->user_dep_id)->where('wo_status_id', 'pca')->count();
+            // $stats[] = Stat::make('Awaiting Completion', $awaiting)
+            //     ->icon(Heroicon::Clock)
+            //     ->description('Pending approval')
+            //     ->color($awaiting > 0 ? 'warning' : 'gray')
+            //     ->url(WorkOrderResource::getUrl('index', ['tableFilters[wo_status_id][value]' => 'pca', 'tab' => 'pca']));
 
             $pendingApproval = WorkOrder::where('wo_dep_id', $user->user_dep_id)->where('wo_status_id', 'pndwor')->count();
             $stats[] = Stat::make('Pending Approval', $pendingApproval)
@@ -134,7 +134,7 @@ class DashboardStatsOverview extends StatsOverviewWidget
                 ->icon(Heroicon::Users)
                 ->description('In your department')
                 ->color('info')
-                ->url(AppUserResource::getUrl());
+                ->url(TechnicianResource::getUrl());
 
             return $stats;
         }
