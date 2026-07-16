@@ -44,11 +44,11 @@ class LogsRelationManager extends RelationManager
                 TextColumn::make('wol_status_log')
                     ->label('Status')
                     ->badge()
-                    ->color(fn (WorkOrderLog $record): string => $record->status->status_color)
-                    ->icon(fn (WorkOrderLog $record): string => $record->status->status_icon),
+                    ->color(fn(WorkOrderLog $record): string => $record->status->status_color)
+                    ->icon(fn(WorkOrderLog $record): string => $record->status->status_icon),
                 TextColumn::make('by.user_fname')
                     ->label('By')
-                    ->formatStateUsing(fn ($record) => trim("{$record->by?->user_fname} {$record->by?->user_lname}")),
+                    ->formatStateUsing(fn($record) => trim("{$record->by?->user_fname} {$record->by?->user_lname}")),
                 TextColumn::make('wol_dt')
                     ->label('Date & Time')
                     ->dateTime('M d, Y | h:i A'),
@@ -57,7 +57,8 @@ class LogsRelationManager extends RelationManager
             ->headerActions([])
             ->recordActions([
                 ViewAction::make()
-                    ->modalHeading('View History Log'),
+                    ->modalHeading('View History Log')
+                    ->modalWidth('lg')
             ])
             ->toolbarActions([]);
     }
@@ -68,7 +69,7 @@ class LogsRelationManager extends RelationManager
             ->components([
                 Section::make()
                     ->columnSpanFull()
-                    ->columns(2)
+                    ->inlineLabel()
                     ->schema([
                         TextEntry::make('wol_a_log')
                             ->label('Last Action')
@@ -76,15 +77,15 @@ class LogsRelationManager extends RelationManager
                         TextEntry::make('wol_status_log')
                             ->label('Status')
                             ->badge()
-                            ->color(fn (WorkOrderLog $record): string => $record->status->status_color)
-                            ->icon(fn (WorkOrderLog $record): string => $record->status->status_icon),
+                            ->color(fn(WorkOrderLog $record): string => $record->status->status_color)
+                            ->icon(fn(WorkOrderLog $record): string => $record->status->status_icon),
                         TextEntry::make('wol_note')
                             ->label('Note')
                             ->placeholder('-')
                             ->columnSpanFull(),
                         TextEntry::make('by.user_fname')
                             ->label('By')
-                            ->formatStateUsing(fn ($record) => trim("{$record->by?->user_fname} {$record->by?->user_lname}")),
+                            ->formatStateUsing(fn($record) => trim("{$record->by?->user_fname} {$record->by?->user_lname}")),
                         TextEntry::make('wol_dt')
                             ->label('Date & Time')
                             ->dateTime('M d, Y | h:i A'),

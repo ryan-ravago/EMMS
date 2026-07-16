@@ -20,7 +20,7 @@ class MyProfile extends Page implements HasInfolists
 
     protected static ?string $navigationLabel = 'My Profile';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 6;
 
     protected static ?string $title = 'My Profile';
 
@@ -40,7 +40,7 @@ class MyProfile extends Page implements HasInfolists
                             ->label('Avatar')
                             ->circular()
                             ->size(120)
-                            ->defaultImageUrl(fn () => 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->user_fname.' '.Auth::user()->user_lname).'&color=FFFFFF&background=03449d')
+                            ->defaultImageUrl(fn() => 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->user_fname . ' ' . Auth::user()->user_lname) . '&color=FFFFFF&background=03449d')
                             ->columnSpan(1),
 
                         Section::make()
@@ -73,7 +73,7 @@ class MyProfile extends Page implements HasInfolists
                                     ->label('Facebook Profile')
                                     ->icon('heroicon-m-globe-alt')
                                     ->iconColor('info')
-                                    ->url(fn ($state) => $state)
+                                    ->url(fn($state) => $state)
                                     ->openUrlInNewTab()
                                     ->color('primary')
                                     ->placeholder('Not set')

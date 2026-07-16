@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ListEquipment extends ListRecords
 {
@@ -26,7 +27,7 @@ class ListEquipment extends ListRecords
         return [
             CreateAction::make(),
             Action::make('sync')
-                ->visible(fn () => Auth::user()->can('Sync:EquipmentResource'))
+                ->visible(fn() => Auth::user()->can('Sync:EquipmentResource'))
                 ->label('Sync from SAP')
                 ->icon('heroicon-o-arrow-path')
                 ->color('success')
@@ -56,8 +57,8 @@ class ListEquipment extends ListRecords
                             }
 
                             $data = $sapRecords
-                                ->filter(fn ($sap) => ! empty($sap->PrcCode))
-                                ->map(fn ($sap) => [
+                                ->filter(fn($sap) => ! empty($sap->PrcCode))
+                                ->map(fn($sap) => [
                                     'eqm_prc_code' => $sap->PrcCode,
                                     'eqm_name' => $sap->PrcName,
                                     'eqm_is_active' => $sap->Active === 'Y' ? 1 : 0,
@@ -65,7 +66,7 @@ class ListEquipment extends ListRecords
 
                             // 👇 get all PrcCodes from SAP
                             $sapPrcCodes = $sapRecords
-                                ->filter(fn ($sap) => ! empty($sap->PrcCode))
+                                ->filter(fn($sap) => ! empty($sap->PrcCode))
                                 ->pluck('PrcCode')
                                 ->toArray();
 
@@ -88,12 +89,13 @@ class ListEquipment extends ListRecords
 
                             Notification::make()
                                 ->title('SAP Sync Complete')
-                                ->body('Synced: '.count($data)." records. Deactivated: {$deactivated} records.")
+                                ->body('Synced: ' . count($data) . " records. Deactivated: {$deactivated} records.")
                                 ->success()
                                 ->send();
                         });
                     } catch (QueryException $e) {
                         $previous = $e->getPrevious();
+                        Log::error($e->getMessage());
 
                         if ($previous instanceof \PDOException) {
                             Notification::make()
@@ -104,14 +106,14 @@ class ListEquipment extends ListRecords
                         } else {
                             Notification::make()
                                 ->title('Database Error')
-                                ->body('Query failed: '.$e->getMessage())
+                                ->body('Query failed: ' . $e->getMessage())
                                 ->danger()
                                 ->send();
                         }
                     } catch (\Exception $e) {
                         Notification::make()
                             ->title('Sync Failed')
-                            ->body('Unexpected error: '.$e->getMessage())
+                            ->body('Unexpected error: ' . $e->getMessage())
                             ->danger()
                             ->send();
                     }
@@ -123,16 +125,16 @@ class ListEquipment extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make('Equipment')
-                ->badge(fn () => Equipment::count()),
+            'all' => Tab::make('All')
+                ->badge(fn() => Equipment::count()),
 
-            'active' => Tab::make('Active Equipment')
-                ->badge(fn () => Equipment::where('eqm_is_active', 1)->count())
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('eqm_is_active', 1)),
+            'active' => Tab::make('Active')
+                ->badge(fn() => Equipment::where('eqm_is_active', 1)->count())
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('eqm_is_active', 1)),
 
-            'inactive' => Tab::make('Inactive Equipment')
-                ->badge(fn () => Equipment::where('eqm_is_active', 0)->count())
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('eqm_is_active', 0)),
+            'inactive' => Tab::make('Inactive')
+                ->badge(fn() => Equipment::where('eqm_is_active', 0)->count())
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('eqm_is_active', 0)),
         ];
     }
 
@@ -152,6 +154,6 @@ class ListEquipment extends ListRecords
         // Converts the timestamp into something like "6:05 AM"
         $timeOnly = Carbon::parse($setting->last_equipment_sync)->format('g:i A');
 
-        return 'Last equipment sync: '.$timeOnly;
+        return 'Last equipment sync: ' . $timeOnly;
     }
 }

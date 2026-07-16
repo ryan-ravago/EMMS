@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Filament\Resources\Equipment\Tables;
+namespace App\Filament\Resources\Models\Resources\Equipment\Tables;
 
-use App\Filament\Resources\Equipment\EquipmentResource;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -42,11 +42,11 @@ class EquipmentTable
                     ->toggleable()
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('eqm_vin')
-                    ->label('VIN')
-                    ->toggleable()
-                    ->sortable()
-                    ->searchable(),
+                // TextColumn::make('eqm_vin')
+                //     ->label('VIN')
+                //     ->toggleable()
+                //     ->sortable()
+                //     ->searchable(),
                 TextColumn::make('eqm_plate_num')
                     ->label('Plate #')
                     ->toggleable()
@@ -61,18 +61,18 @@ class EquipmentTable
                         1 => 'Active',
                         0 => 'Inactive',
                     ]),
-                // SelectFilter::make('eqm_eqmm_id')
-                //     ->label('Model')
-                //     ->relationship('equipmentModel', 'eqmm_name')
-                //     ->searchable()
-                //     ->preload()
-                //     ->multiple(),
+                SelectFilter::make('eqm_eqmm_id')
+                    ->label('Model')
+                    ->relationship('equipmentModel', 'eqmm_name')
+                    ->searchable()
+                    ->preload()
+                    ->multiple(),
             ])
-            ->recordUrl(
-                fn(Model $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
-            )
+            // ->recordUrl(
+            //     fn(Model $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
+            // )
             ->recordActions([
-                // ViewAction::make(),
+                ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

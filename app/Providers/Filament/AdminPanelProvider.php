@@ -44,7 +44,7 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::HEAD_END,
                 function () {
                     $font = rescue(
-                        fn () => SiteSetting::instance()->site_font_family ?? 'Inter',
+                        fn() => SiteSetting::instance()->site_font_family ?? 'Inter',
                         'Inter',
                         report: false
                     );
@@ -54,7 +54,7 @@ class AdminPanelProvider extends PanelProvider
                     $vite = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
 
                     return new HtmlString(
-                        $vite.
+                        $vite .
                             "<link href=\"https://fonts.googleapis.com/css2?family={$encoded}:wght@300;400;500;600;700&display=swap\" rel=\"stylesheet\">
                             <style>
                                 body, html { font-family: '{$font}', sans-serif !important; }
@@ -116,7 +116,7 @@ class AdminPanelProvider extends PanelProvider
                     ? Storage::disk('public')->url($logo)
                     : null;
             })
-            ->brandLogoHeight(request()->is('login') ? '5rem' : '2.5rem')
+            ->brandLogoHeight(request()->is('login') ? '8rem' : '3rem')
             ->favicon(function () {
                 try {
                     $favicon = SiteSetting::instance()->site_favicon;
@@ -158,7 +158,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 'panels::auth.login.form.after',
-                fn () => view('auth.socialite.google')
+                fn() => view('auth.socialite.google')
             )
             ->plugins([
                 FilamentShieldPlugin::make()

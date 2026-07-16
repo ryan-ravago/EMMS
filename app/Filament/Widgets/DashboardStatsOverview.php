@@ -6,6 +6,7 @@ use App\Filament\Resources\Categories\CategoryResource;
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Filament\Resources\EquipmentTypes\EquipmentTypeResource;
 use App\Filament\Resources\Inspections\InspectionResource;
+use App\Filament\Resources\Insps\InspResource;
 use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
 use App\Filament\Resources\Models\ModelResource;
 use App\Filament\Resources\RequestorWorkOrders\RequestorWorkOrderResource;
@@ -18,6 +19,7 @@ use App\Models\Equipment;
 use App\Models\EquipmentCategory;
 use App\Models\EquipmentModel;
 use App\Models\EquipmentType;
+use App\Models\Insp;
 use App\Models\Inspection;
 use App\Models\MaintenanceTask;
 use App\Models\WorkOrder;
@@ -100,20 +102,20 @@ class DashboardStatsOverview extends StatsOverviewWidget
 
         if ($user->hasRole('manager')) {
             $stats = [
-                Stat::make('Department Inspections', Inspection::where('ins_dep_id', $user->user_dep_id)->count())
+                Stat::make('Department Inspections', Insp::where('insp_dep_id', $user->user_dep_id)->count())
                     ->icon(Heroicon::ClipboardDocumentList)
                     ->color('success')
-                    ->url(InspectionResource::getUrl()),
+                    ->url(InspResource::getUrl()),
             ];
 
             if ($user->user_dep_id == $preventiveDepId) {
-                $overdueTasks = MaintenanceTask::where('mt_dep_id', $user->user_dep_id)->where('mt_due_dt', '<', now())->where('mt_status_id', '!=', 'cmp')->count();
-                $stats[] = Stat::make('Overdue Tasks', $overdueTasks)
-                    ->icon(Heroicon::ExclamationTriangle)
-                    ->description($overdueTasks > 0 ? 'Action required immediately' : 'Department is clear')
-                    ->descriptionIcon($overdueTasks > 0 ? Heroicon::ShieldExclamation : Heroicon::CheckCircle)
-                    ->color($overdueTasks > 0 ? 'danger' : 'success')
-                    ->url(MaintenanceTaskResource::getUrl());
+                // $overdueTasks = MaintenanceTask::where('mt_dep_id', $user->user_dep_id)->where('mt_due_dt', '<', now())->where('mt_status_id', '!=', 'cmp')->count();
+                // $stats[] = Stat::make('Overdue Tasks', $overdueTasks)
+                //     ->icon(Heroicon::ExclamationTriangle)
+                //     ->description($overdueTasks > 0 ? 'Action required immediately' : 'Department is clear')
+                //     ->descriptionIcon($overdueTasks > 0 ? Heroicon::ShieldExclamation : Heroicon::CheckCircle)
+                //     ->color($overdueTasks > 0 ? 'danger' : 'success')
+                //     ->url(MaintenanceTaskResource::getUrl());
             }
 
             // $awaiting = WorkOrder::where('wo_dep_id', $user->user_dep_id)->where('wo_status_id', 'pca')->count();

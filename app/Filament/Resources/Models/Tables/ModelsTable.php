@@ -21,11 +21,7 @@ class ModelsTable
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('type.eqmt_name')
-                    ->label('Equipment Type')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('category.eqmc_name')
-                    ->label('Category')
+                    ->label('Type')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('brand.eqmb_name')
@@ -35,14 +31,17 @@ class ModelsTable
                 TextColumn::make('fuel_type.fuel_name')
                     ->label('Fuel Type')
                     ->searchable()
+                    ->toggleable()
                     ->sortable(),
                 TextColumn::make('eqmm_max_capacity_tons')
                     ->label('Max Capacity (tons)')
                     ->numeric()
+                    ->toggleable()
                     ->sortable(),
                 TextColumn::make('eqmm_max_reach_meters')
                     ->label('Max Reach (meters)')
                     ->numeric()
+                    ->toggleable()
                     ->sortable(),
             ])
             ->filters([

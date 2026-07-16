@@ -33,7 +33,7 @@ class TechnicianResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'user_fname';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 5;
 
     public static function getEloquentQuery(): Builder
     {

@@ -43,9 +43,9 @@ class EquipmentResource extends Resource
 
     protected static ?string $slug = 'equipment';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Equipment';
+    // protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
 
     // public static function getNavigationBadge(): ?string
     // {
@@ -70,7 +70,7 @@ class EquipmentResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['model']);
+            ->with(['equipmentModel', 'type', 'brand']);
     }
 
     public static function table(Table $table): Table
@@ -89,11 +89,11 @@ class EquipmentResource extends Resource
         if ($user?->hasAnyRole(['super_admin', 'manager', 'technician'])) {
             $relations = [
                 WorkOrdersRelationManager::class,
-                EquipmentTaskChecklistTemplatesRelationManager::class,
-                EquipmentTasksSchedulesRelationManager::class,
-                InspectionsRelationManager::class,
+                // EquipmentTaskChecklistTemplatesRelationManager::class,
+                // EquipmentTasksSchedulesRelationManager::class,
+                // InspectionsRelationManager::class,
                 MaintenanceTasksRelationManager::class,
-                InspsRelationManager::class
+                InspsRelationManager::class,
             ];
         }
 

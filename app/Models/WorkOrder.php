@@ -96,10 +96,10 @@ class WorkOrder extends Model
         return $this->hasMany(ReportSubmission::class, 'rs_wo_id', 'wo_id');
     }
 
-    public function getRouteKeyName()
-    {
-        return 'wo_no';
-    }
+    // public function getRouteKeyName()
+    // {
+    //     return 'wo_no';
+    // }
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -107,7 +107,7 @@ class WorkOrder extends Model
             ->logAll()
             ->logOnlyDirty()
             ->useLogName('WorkOrder')
-            ->setDescriptionForEvent(fn (string $eventName) => "Work Order has been {$eventName}")
+            ->setDescriptionForEvent(fn(string $eventName) => "Work Order has been {$eventName}")
             ->dontSubmitEmptyLogs();
     }
 }

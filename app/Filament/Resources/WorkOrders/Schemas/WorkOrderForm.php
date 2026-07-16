@@ -23,7 +23,6 @@ class WorkOrderForm
                     Step::make('Work Order Form')
                         ->icon('heroicon-o-wrench-screwdriver')
                         ->schema([
-
                             Select::make('wo_eqm_id')
                                 ->label('Equipment')
                                 ->relationship('equipment', 'eqm_name')

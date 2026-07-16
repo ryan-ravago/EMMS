@@ -32,7 +32,7 @@ class ModelResource extends Resource
     protected static ?string $modelLabel = 'Model';
     // protected static ?string $pluralModelLabel = 'Models';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Equipment';
+    protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
 
     protected static ?int $navigationSort = 5;
 
@@ -49,7 +49,7 @@ class ModelResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['type', 'category', 'brand', 'fuel_type']);
+            ->with(['type', 'brand', 'fuel_type']);
     }
 
     public static function table(Table $table): Table

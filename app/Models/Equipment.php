@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -22,7 +24,16 @@ class Equipment extends Model
     protected $fillable = [
         'eqmc_name',
         'eqm_eqmm_id',
+        'eqm_brand_id',
+        'eqm_eqmt_id',
+        'eqm_chassis_no',
+        'eqm_date_purchased',
         'eqm_name',
+        'eqm_pm_itrv_type',
+        'eqm_pm_itrv_value',
+        'eqm_pm_itrv_start_date',
+        'eqm_next_pm_due_at',
+        'eqm_last_pm_notified_at',
         'eqm_vin',
         'eqm_plate_num',
         'eqm_prc_code',
@@ -34,19 +45,36 @@ class Equipment extends Model
 
     public $timestamps = false;
 
-    public function type(): HasOneThrough
+    // ✅ With casts - Clean and safe
+    protected $casts = [
+        'eqm_pm_itrv_start_date' => 'date',
+        'eqm_next_pm_due_at' => 'date',
+        'eqm_last_pm_notified_at' => 'date',
+    ];
+
+    // public function type(): HasOneThrough
+    // {
+    //     return $this->hasOneThrough(
+    //         EquipmentType::class,
+    //         EquipmentModel::class,
+    //         'eqmm_id',
+    //         'eqmt_id',
+    //         'eqm_eqmm_id',
+    //         'eqmm_eqmt_id'
+    //     );
+    // }
+
+    public function type(): BelongsTo
     {
-        return $this->hasOneThrough(
-            EquipmentType::class,
-            EquipmentModel::class,
-            'eqmm_id',
-            'eqmt_id',
-            'eqm_eqmm_id',
-            'eqmm_eqmt_id'
-        );
+        return $this->belongsTo(EquipmentType::class, 'eqm_eqmt_id', 'eqmt_id');
     }
 
-    public function model()
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(EquipmentBrand::class, 'eqm_brand_id', 'eqmb_id');
+    }
+
+    public function equipmentModel()
     {
         return $this->belongsTo(EquipmentModel::class, 'eqm_eqmm_id', 'eqmm_id');
     }
@@ -115,6 +143,24 @@ class Equipment extends Model
     public function maintenanceTasks(): HasMany
     {
         return $this->hasMany(MaintenanceTask::class, 'mt_eqm_id', 'eqm_id');
+    }
+
+    public function calculateNextDueDate(): ?Carbon
+    {
+        if (!$this->eqm_pm_itrv_start_date || !$this->eqm_pm_itrv_type || !$this->eqm_pm_itrv_value) {
+            return null;
+        }
+
+        // Use last notified date if available, otherwise use start date
+        $baseDate = $this->eqm_last_pm_notified_at
+            ? Carbon::parse($this->eqm_last_pm_notified_at)
+            : Carbon::parse($this->eqm_pm_itrv_start_date);
+
+        if ($this->eqm_pm_itrv_type === 'monthly') {
+            return $baseDate->addMonths($this->eqm_pm_itrv_value);
+        }
+
+        return $baseDate->addWeeks($this->eqm_pm_itrv_value);
     }
 
     public function getActivitylogOptions(): LogOptions

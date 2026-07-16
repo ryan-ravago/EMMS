@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\CheckDueMaintenanceCommand;
 use App\Console\Commands\SendOverdueMaintenanceTaskNotifications;
 use App\Console\Commands\SyncGoogleSheetInspections;
 use App\Console\Commands\SyncGoogleWorkOrderReplies;
@@ -44,3 +45,7 @@ Schedule::command(SyncGoogleWorkOrderReplies::class)
 Schedule::command(SyncGoogleSheetInspections::class)
     ->everyMinute()
     ->withoutOverlapping();
+
+Schedule::command(CheckDueMaintenanceCommand::class)
+    ->daily()
+    ->at('08:00');

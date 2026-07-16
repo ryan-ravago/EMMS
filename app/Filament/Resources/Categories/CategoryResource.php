@@ -35,7 +35,7 @@ class CategoryResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Equipment';
+    protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
 
     // public static function getNavigationGroup(): ?string
     // {
@@ -87,7 +87,6 @@ class CategoryResource extends Resource
     public static function getRelations(): array
     {
         return [
-            ModelsRelationManager::class,
             ChildrenRelationManager::class,
         ];
     }

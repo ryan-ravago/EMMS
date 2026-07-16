@@ -7,16 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 class EquipmentCategory extends Model
 {
     protected $table = 'equipment_categories';
+
     protected $primaryKey = 'eqmc_id';
 
     protected $fillable = ['eqmc_name', 'eqmc_parent_id'];
 
     public $timestamps = false;
-
-    public function models()
-    {
-        return $this->hasMany(EquipmentModel::class, 'eqmm_eqmc_id', 'eqmc_id');
-    }
 
     // Parent category
     public function parent()

@@ -25,7 +25,7 @@ class EquipmentTypeResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Equipment';
+    protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
 
     protected static ?string $navigationLabel = 'Type';
 
@@ -56,8 +56,8 @@ class EquipmentTypeResource extends Resource
     public static function getRelations(): array
     {
         return [
-            ModelsRelationManager::class,
-            EquipmentTypeChecklistTemplatesRelationManager::class,
+            // ModelsRelationManager::class,
+            // EquipmentTypeChecklistTemplatesRelationManager::class,
         ];
     }
 

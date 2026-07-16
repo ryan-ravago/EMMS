@@ -28,9 +28,11 @@ class InspResource extends Resource
 
     protected static ?string $modelLabel = 'Inspection';
 
+    protected static ?string $pluralLabel = 'Inspection';
+
     protected static ?string $recordTitleAttribute = 'insp_no';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 4;
 
     public static function getEloquentQuery(): Builder
     {

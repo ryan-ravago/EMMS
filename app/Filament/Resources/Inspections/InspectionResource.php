@@ -21,9 +21,16 @@ class InspectionResource extends Resource
 {
     protected static ?string $model = Inspection::class;
 
+    protected static ?string $navigationLabel = 'Inspection';
+
+    protected static ?string $pluralLabel = 'Inspection';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
 
     protected static ?string $recordTitleAttribute = 'ins_id';
+
+
+    protected static ?int $navigationSort = 4;
 
     public static function getEloquentQuery(): Builder
     {

@@ -13,7 +13,6 @@ class EquipmentModel extends Model
 
     protected $fillable = [
         'eqmm_name',
-        'eqmm_eqmc_id',
         'eqmm_brand_id',
         'eqmm_fuel_type',
         'eqmm_fuel_type',
@@ -23,11 +22,6 @@ class EquipmentModel extends Model
     ];
 
     public $timestamps = false;
-
-    public function category()
-    {
-        return $this->belongsTo(EquipmentCategory::class, 'eqmm_eqmc_id', 'eqmc_id');
-    }
 
     public function brand()
     {

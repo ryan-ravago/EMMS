@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Filament\Resources\Equipment\Schemas;
+namespace App\Filament\Resources\Models\Resources\Equipment\Schemas;
 
-use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
@@ -11,44 +10,12 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
 class EquipmentForm
 {
     public static function configure(Schema $schema): Schema
     {
-        // Closures for PM calculations
-        $clearAllPM = function (Set $set) {
-            $set('eqm_pm_itrv_value', 0);
-            $set('eqm_pm_itrv_start_date', null);
-            $set('eqm_next_pm_due_at', null);
-        };
-
-        $clearDueDate = function (Set $set) {
-            $set('eqm_next_pm_due_at', null);
-        };
-
-        $calculateNextPMDue = function (Set $set, Get $get) {
-            $type = $get('eqm_pm_itrv_type');
-            $value = $get('eqm_pm_itrv_value');
-            $startDate = $get('eqm_pm_itrv_start_date');
-
-            // If all 3 exist, calculate next due
-            if ($type && $value && $startDate) {
-                $base = Carbon::parse($startDate);
-                $nextDue = $type === 'monthly'
-                    ? $base->addMonths($value)
-                    : $base->addWeeks($value);
-
-                $set('eqm_next_pm_due_at', $nextDue->format('Y-m-d'));
-            } else {
-                // Any missing, clear due date
-                $set('eqm_next_pm_due_at', null);
-            }
-        };
-
         return $schema
             ->components([
                 Grid::make(3)
@@ -70,82 +37,6 @@ class EquipmentForm
                                     ->disabled()
                                     ->dehydrated()
                                     ->columnSpan(1),
-                            ]),
-
-                        Section::make('Preventive Maintenance Schedule')
-                            ->description('Set up automatic maintenance reminders')
-                            ->icon('heroicon-o-bell-alert')
-                            ->columnSpan(1)
-                            ->columns(2)
-                            ->schema([
-                                Select::make('eqm_pm_itrv_type')
-                                    ->label('Interval Type')
-                                    ->options([
-                                        'monthly' => 'Monthly',
-                                        'weekly' => 'Weekly',
-                                    ])
-                                    ->required(fn(Get $get) => $get('eqm_pm_itrv_value') || $get('eqm_pm_itrv_start_date'))
-                                    ->live()
-                                    ->afterStateUpdated(function ($state, Set $set, Get $get) use ($clearAllPM, $calculateNextPMDue) {
-                                        if (!$state) {
-                                            $clearAllPM($set);
-                                        } else {
-                                            $calculateNextPMDue($set, $get);
-                                        }
-                                    })
-                                    ->native(false),
-
-                                TextInput::make('eqm_pm_itrv_value')
-                                    ->label('Every')
-                                    ->numeric()
-                                    ->minValue(function ($state, Set $set, Get $get) {
-                                        if ($get('eqm_pm_itrv_type') || $get('eqm_pm_itrv_start_date')) {
-                                            return 1;
-                                        } else {
-                                            return 0;
-                                        }
-                                    })
-                                    ->suffix(
-                                        fn(Get $get) => $get('eqm_pm_itrv_type')
-                                            ? ($get('eqm_pm_itrv_type') === 'monthly' ? 'month(s)' : 'week(s)')
-                                            : ''
-                                    )
-                                    ->live()
-                                    ->required()
-                                    ->afterStateUpdated(function ($state, Set $set, Get $get) use ($clearDueDate, $calculateNextPMDue) {
-                                        if (!$state || $state < 1) {
-                                            $clearDueDate($set);
-                                        } else {
-                                            $calculateNextPMDue($set, $get);
-                                        }
-                                    }),
-
-                                DatePicker::make('eqm_pm_itrv_start_date')
-                                    ->label('PM Start Date')
-                                    ->native(false)
-                                    ->live()
-                                    ->columnStart(1)
-                                    ->required(fn(Get $get) => $get('eqm_pm_itrv_type') || $get('eqm_pm_itrv_value'))
-                                    ->afterStateUpdated(function ($state, Set $set, Get $get) use ($clearDueDate, $calculateNextPMDue) {
-                                        if (!$state) {
-                                            $clearDueDate($set);
-                                        } else {
-                                            $calculateNextPMDue($set, $get);
-                                        }
-                                    }),
-
-                                DatePicker::make('eqm_next_pm_due_at')
-                                    ->label('Next PM Due')
-                                    ->disabled()
-                                    ->dehydrated()
-                                    ->columnStart(1)
-                                    ->native(false),
-
-                                DatePicker::make('eqm_last_pm_notified_at')
-                                    ->label('Last Notified')
-                                    ->disabled()
-                                    ->dehydrated()
-                                    ->native(false),
                             ]),
                     ]),
 

@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use App\Models\Equipment;
+use App\Observers\EquipmentObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Equipment::observe(EquipmentObserver::class);
         // URL::forceScheme('https');
 
         // RateLimiter::for('filament', function (Request $request) {
@@ -82,32 +85,32 @@ class AppServiceProvider extends ServiceProvider
 
     private function generalFilamentLimit(Request $request): Limit
     {
-        return Limit::perMinute(60)->by('filament:'.$this->rateLimitKey($request));
+        return Limit::perMinute(60)->by('filament:' . $this->rateLimitKey($request));
     }
 
     private function loginLimit(Request $request): Limit
     {
-        return Limit::perMinute(10)->by('login:'.$request->ip());
+        return Limit::perMinute(10)->by('login:' . $request->ip());
     }
 
     private function uploadLimit(Request $request): Limit
     {
-        return Limit::perMinute(10)->by('uploads:'.$this->rateLimitKey($request));
+        return Limit::perMinute(10)->by('uploads:' . $this->rateLimitKey($request));
     }
 
     private function exportLimit(Request $request): Limit
     {
-        return Limit::perMinute(5)->by('exports:'.$this->rateLimitKey($request));
+        return Limit::perMinute(5)->by('exports:' . $this->rateLimitKey($request));
     }
 
     private function emailLimit(Request $request): Limit
     {
-        return Limit::perMinute(5)->by('emails:'.$this->rateLimitKey($request));
+        return Limit::perMinute(5)->by('emails:' . $this->rateLimitKey($request));
     }
 
     private function mutationLimit(Request $request): Limit
     {
-        return Limit::perMinute(30)->by('mutations:'.$this->rateLimitKey($request));
+        return Limit::perMinute(30)->by('mutations:' . $this->rateLimitKey($request));
     }
 
     private function rateLimitKey(Request $request): string

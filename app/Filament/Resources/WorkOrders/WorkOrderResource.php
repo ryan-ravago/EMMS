@@ -33,7 +33,7 @@ class WorkOrderResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'wo_no';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 3;
 
     public static function getEloquentQuery(): Builder
     {
@@ -72,7 +72,7 @@ class WorkOrderResource extends Resource
         return [
             LogsRelationManager::class,
             LogUpdatesRelationManager::class,
-            ReportSubmissionsRelationManager::class,
+            // ReportSubmissionsRelationManager::class,
         ];
     }
 
