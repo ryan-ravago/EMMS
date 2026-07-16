@@ -53,7 +53,7 @@ class AppUserForm
                 TextInput::make('user_fb_profile_link')
                     ->label('Facebook Profile Link'),
                 CheckboxList::make('roles')
-                    ->required()
+                    // ->required()
                     ->relationship('roles', 'name')
                     ->getOptionLabelFromRecordUsing(
                         fn ($record) => $record->display_name ?? str($record->name)->replace('_', ' ')->title()

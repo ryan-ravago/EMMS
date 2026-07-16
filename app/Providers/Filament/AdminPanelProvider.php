@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Helper\CustomLogin;
 use App\Filament\Widgets\DashboardStatsOverview;
+use App\Http\Middleware\EnsureUserStillHasRole;
 use App\Models\SiteSetting;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\FontProviders\GoogleFontProvider;
@@ -154,6 +155,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                EnsureUserStillHasRole::class
                 // 'throttle:filament',
             ])
             ->renderHook(
