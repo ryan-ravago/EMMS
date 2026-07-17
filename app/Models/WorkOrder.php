@@ -100,7 +100,7 @@ class WorkOrder extends Model
 
     public function notes()
     {
-        return $this->hasMany(WorkOrderNote::class, 'won_wo_id');
+        return $this->hasMany(WorkOrderNote::class, 'won_wo_id', 'wo_id');
     }
 
     // public function getRouteKeyName()

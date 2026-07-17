@@ -99,7 +99,8 @@ class NotesRelationManager extends RelationManager
                 TextColumn::make('won_note')
                     ->label('Note')
                     ->wrap()
-                    ->limit(220)
+                    ->limit(120)
+                    ->searchable()
                     ->tooltip(fn($record) => $record->won_note)
                     ->sortable()
                     ->listWithLineBreaks(),

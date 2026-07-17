@@ -85,7 +85,8 @@ class LogUpdatesRelationManager extends RelationManager
                     ->searchable()
                     ->placeholder('-'),
                 TextColumn::make('wolu_update_note')
-                    ->label('Update Note')
+                    ->label('Note')
+                    ->limit(120)
                     ->wrap()
                     ->searchable(),
                 ImageColumn::make('wolu_attachments')

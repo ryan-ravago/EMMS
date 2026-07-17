@@ -44,8 +44,14 @@ class LogsRelationManager extends RelationManager
                 TextColumn::make('wol_status_log')
                     ->label('Status')
                     ->badge()
+                    ->searchable()
                     ->color(fn(WorkOrderLog $record): string => $record->status->status_color)
                     ->icon(fn(WorkOrderLog $record): string => $record->status->status_icon),
+                TextColumn::make('wol_note')
+                    ->label('Note')
+                    ->searchable()
+                    ->limit(120)
+                    ->wrap(),
                 TextColumn::make('by.user_fname')
                     ->label('By')
                     ->formatStateUsing(fn($record) => trim("{$record->by?->user_fname} {$record->by?->user_lname}")),

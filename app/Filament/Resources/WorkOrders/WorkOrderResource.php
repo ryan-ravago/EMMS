@@ -48,6 +48,17 @@ class WorkOrderResource extends Resource
         return $query->where('wo_dep_id', Auth::user()?->user_dep_id);
     }
 
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['wo_no', 'wo_req_desc', 'wo_desc', 'wo_root_cause', 'wo_desc', 'notes.won_note', 'logs.wol_note', 'logUpdates.wolu_update_note']; // Your main WorkOrder attributes
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()
+            ->with('notes', 'logs', 'logUpdates');
+    }
+
     public static function getNavigationBadge(): ?string
     {
         return static::getEloquentQuery()->count();

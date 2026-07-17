@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Override;
 
 class WorkOrderNoteResource extends Resource
 {
@@ -31,6 +32,11 @@ class WorkOrderNoteResource extends Resource
     {
         return false;  // Block all direct access
     }
+
+    // public static function getGloballySearchableAttributes(): array
+    // {
+    //     return ['won_note'];
+    // }
 
     public static function table(Table $table): Table
     {
