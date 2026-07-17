@@ -14,8 +14,10 @@ class EquipmentInfolist
         return $schema
             ->components([
                 Grid::make([
-                    'default' => 2,
-                    // 'lg' => 2,
+                    'default' => 1,
+                    'md' => 2,
+                    'lg' => 1,
+                    'xl' => 2,
                 ])
                     ->inlineLabel()
                     ->schema([
