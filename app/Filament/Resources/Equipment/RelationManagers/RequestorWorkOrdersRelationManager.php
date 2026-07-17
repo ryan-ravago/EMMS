@@ -57,8 +57,8 @@ class RequestorWorkOrdersRelationManager extends RelationManager
         return $table
             ->headerActions([
                 CreateAction::make()
-                    ->visible(fn (): bool => (bool) $this->getOwnerRecord()->eqm_is_active)
-                    ->authorize(fn () => Auth::user()->can('create', RequestorWorkOrder::class))
+                    ->visible(fn(): bool => (bool) $this->getOwnerRecord()->eqm_is_active)
+                    ->authorize(fn() => Auth::user()->can('create', RequestorWorkOrder::class))
                     ->color('primary')
                     ->closeModalByClickingAway(false)
                     ->modalCloseButton(false)
@@ -145,7 +145,7 @@ class RequestorWorkOrdersRelationManager extends RelationManager
                             ->whereDate('wo_created_dt', $now->toDateString())
                             ->count() + 1;
 
-                        $data['wo_no'] = 'WO-'.$depCode.'-'.$now->format('ymd').str_pad($count, 3, '0', STR_PAD_LEFT);
+                        $data['wo_no'] = 'WO-' . $depCode . '-' . $now->format('ymd') . str_pad($count, 3, '0', STR_PAD_LEFT);
                         $data['wo_status_id'] = 'pndwor';
                         $data['wo_created_by'] = Auth::id();
                         $data['wo_created_dt'] = $now;
@@ -170,7 +170,7 @@ class RequestorWorkOrdersRelationManager extends RelationManager
                         }
 
                         // 2. Notify managers of the assigned department
-                        $managers = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
+                        $managers = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
                             ->where('user_dep_id', $record->wo_dep_id)
                             ->get();
 
@@ -198,15 +198,15 @@ class RequestorWorkOrdersRelationManager extends RelationManager
                 TextColumn::make('status.status_title')
                     ->label('Status')
                     ->badge()
-                    ->color(fn ($record) => $record->status->status_color)
-                    ->icon(fn ($record) => $record->status->status_icon)
+                    ->color(fn($record) => $record->status->status_color)
+                    ->icon(fn($record) => $record->status->status_icon)
                     ->sortable(),
                 TextColumn::make('wo_created_dt')
-                    ->label('Created At')
+                    ->label('Date Created')
                     ->dateTime('M d, Y h:i A')
                     ->sortable(),
             ])
-            ->modifyQueryUsing(fn (Builder $query) => $query->where('wo_created_by', Auth::id()))
+            ->modifyQueryUsing(fn(Builder $query) => $query->where('wo_created_by', Auth::id()))
             ->filters([
                 SelectFilter::make('wo_status_id')
                     ->label('Status')
@@ -214,20 +214,20 @@ class RequestorWorkOrdersRelationManager extends RelationManager
                     ->searchable()
                     ->preload(),
                 Filter::make('wo_created_dt')
-                    ->label('Created At')
+                    ->label('Date Created')
                     ->schema([
                         DatePicker::make('from')->label('From')->native(false),
                         DatePicker::make('until')->label('Until')->native(false),
                     ])
                     ->query(function (Builder $query, array $data) {
                         return $query
-                            ->when($data['from'], fn ($q) => $q->whereDate('wo_created_dt', '>=', $data['from']))
-                            ->when($data['until'], fn ($q) => $q->whereDate('wo_created_dt', '<=', $data['until']));
+                            ->when($data['from'], fn($q) => $q->whereDate('wo_created_dt', '>=', $data['from']))
+                            ->when($data['until'], fn($q) => $q->whereDate('wo_created_dt', '<=', $data['until']));
                     }),
             ])
             ->recordActions([
                 ViewAction::make()
-                    ->url(fn (Model $record): string => RequestorWorkOrderResource::getUrl('view', ['record' => $record])),
+                    ->url(fn(Model $record): string => RequestorWorkOrderResource::getUrl('view', ['record' => $record])),
                 EditAction::make(),
             ]);
     }

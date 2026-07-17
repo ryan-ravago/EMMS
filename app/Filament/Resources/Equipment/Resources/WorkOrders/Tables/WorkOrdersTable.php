@@ -39,6 +39,12 @@ class WorkOrdersTable
                     ->label('WO No.')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('status.status_title')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn($record) => $record->status->status_color)
+                    ->icon(fn($record) => $record->status->status_icon)
+                    ->sortable(),
                 TextColumn::make('equipment.eqm_name')
                     ->label('Equipment')
                     ->searchable()
@@ -47,24 +53,18 @@ class WorkOrdersTable
                     ->label('Department')
                     ->sortable()
                     ->visible(fn() => auth()->user()->hasRole('super_admin')),
-                TextColumn::make('wo_title')
-                    ->label('Title')
-                    ->searchable()
-                    ->wrap(),
+                // TextColumn::make('wo_title')
+                //     ->label('Title')
+                //     ->searchable()
+                //     ->wrap(),
                 TextColumn::make('priority.prio_name')
                     ->label('Priority')
                     ->badge()
                     ->sortable(),
-                TextColumn::make('status.status_title')
-                    ->label('Status')
-                    ->badge()
-                    ->color(fn($record) => $record->status->status_color)
-                    ->icon(fn($record) => $record->status->status_icon)
-                    ->sortable(),
                 TextColumn::make('workers')
                     ->badge()
                     ->listWithLineBreaks()
-                    ->icon('heroicon-o-user-circle')
+                    ->icon('heroicon-s-user-circle')
                     ->state(fn($record) => $record->workers->map(fn($w) => "{$w->user_fname} {$w->user_lname}")->toArray()),
                 TextColumn::make('wo_closed_dt')
                     ->label('Closed At')
@@ -73,7 +73,7 @@ class WorkOrdersTable
                     ->placeholder('-')
                     ->sortable(),
                 TextColumn::make('wo_created_dt')
-                    ->label('Created At')
+                    ->label('Date Created')
                     ->dateTime('M d, Y h:i A')
                     ->sortable(),
             ])
@@ -95,7 +95,7 @@ class WorkOrdersTable
                     ->searchable()
                     ->preload(),
                 Filter::make('wo_created_dt')
-                    ->label('Created At')
+                    ->label('Date Submitted')
                     ->schema([
                         DatePicker::make('from')->label('From')->native(false),
                         DatePicker::make('until')->label('Until')->native(false),

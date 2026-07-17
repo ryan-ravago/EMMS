@@ -595,9 +595,21 @@ class ViewWorkOrder extends ViewRecord
                     ->closeModalByClickingAway(false)
                     ->modalCloseButton(false)
                     ->schema([
+                        Textarea::make('wo_root_cause')
+                            ->label('Root Cause')
+                            ->required()
+                            ->rows(4)
+                            ->autosize(),
+                        Textarea::make('wo_corrective_action')
+                            ->label('Corrective Action')
+                            ->required()
+                            ->rows(4)
+                            ->autosize(),
                         Textarea::make('wol_note')
                             ->label('Note')
-                            ->rows(4),
+                            ->required()
+                            ->rows(4)
+                            ->autosize(),
                     ])
                     ->action(function (array $data, WorkOrder $record) {
                         try {
@@ -626,6 +638,8 @@ class ViewWorkOrder extends ViewRecord
                                 ]);
 
                                 $workOrder->update([
+                                    'wo_root_cause' => $data['wo_root_cause'],
+                                    'wo_corrective_action' => $data['wo_corrective_action'],
                                     'wo_status_id' => $status->status_id,
                                     'wo_closed_dt' => $now,
                                 ]);

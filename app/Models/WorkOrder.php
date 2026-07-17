@@ -28,6 +28,8 @@ class WorkOrder extends Model
         'wo_title',
         'wo_req_desc',
         'wo_desc',
+        'wo_root_cause',
+        'wo_corrective_action',
         'wo_prio_id',
         'wo_status_id',
         'wo_attachments',
@@ -94,6 +96,11 @@ class WorkOrder extends Model
     public function reportSubmissions(): HasMany
     {
         return $this->hasMany(ReportSubmission::class, 'rs_wo_id', 'wo_id');
+    }
+
+    public function notes()
+    {
+        return $this->hasMany(WorkOrderNote::class, 'won_wo_id');
     }
 
     // public function getRouteKeyName()

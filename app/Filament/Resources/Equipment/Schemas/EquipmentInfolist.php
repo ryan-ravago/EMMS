@@ -32,7 +32,7 @@ class EquipmentInfolist
                                     ->label('Status')
                                     ->badge()
                                     ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
-                                    ->icon(fn(bool $state): string => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
+                                    ->icon(fn(bool $state): string => $state ? 'heroicon-s-check-circle' : 'heroicon-s-x-circle')
                                     ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
                             ]),
 

@@ -8,6 +8,7 @@ use App\Filament\Resources\Equipment\Resources\WorkOrders\Pages\EditWorkOrder;
 use App\Filament\Resources\Equipment\Resources\WorkOrders\Pages\ViewWorkOrder;
 use App\Filament\Resources\Equipment\Resources\WorkOrders\RelationManagers\LogsRelationManager;
 use App\Filament\Resources\Equipment\Resources\WorkOrders\RelationManagers\LogUpdatesRelationManager;
+use App\Filament\Resources\Equipment\Resources\WorkOrders\RelationManagers\NotesRelationManager;
 use App\Filament\Resources\Equipment\Resources\WorkOrders\Schemas\WorkOrderForm;
 use App\Filament\Resources\Equipment\Resources\WorkOrders\Schemas\WorkOrderInfolist;
 use App\Filament\Resources\Equipment\Resources\WorkOrders\Tables\WorkOrdersTable;
@@ -53,6 +54,7 @@ class WorkOrderResource extends Resource
         return [
             LogsRelationManager::class,
             LogUpdatesRelationManager::class,
+            NotesRelationManager::class
         ];
     }
 

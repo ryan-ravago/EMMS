@@ -8,6 +8,7 @@ use App\Filament\Resources\WorkOrders\Pages\ListWorkOrders;
 use App\Filament\Resources\WorkOrders\Pages\ViewWorkOrder;
 use App\Filament\Resources\WorkOrders\RelationManagers\LogsRelationManager;
 use App\Filament\Resources\WorkOrders\RelationManagers\LogUpdatesRelationManager;
+use App\Filament\Resources\WorkOrders\RelationManagers\NotesRelationManager;
 use App\Filament\Resources\WorkOrders\RelationManagers\ReportSubmissionsRelationManager;
 use App\Filament\Resources\WorkOrders\Schemas\WorkOrderForm;
 use App\Filament\Resources\WorkOrders\Schemas\WorkOrderInfolist;
@@ -72,6 +73,7 @@ class WorkOrderResource extends Resource
         return [
             LogsRelationManager::class,
             LogUpdatesRelationManager::class,
+            NotesRelationManager::class,
             // ReportSubmissionsRelationManager::class,
         ];
     }

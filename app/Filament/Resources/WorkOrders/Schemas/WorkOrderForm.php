@@ -36,14 +36,14 @@ class WorkOrderForm
                                 ->relationship(
                                     'department',
                                     'dep_name',
-                                    fn (Builder $query) => $query->where('is_maintenance', 1)
+                                    fn(Builder $query) => $query->where('is_maintenance', 1)
                                 )
                                 ->searchable()
                                 ->preload()
                                 ->required()
                                 ->native(false)
                                 ->live()
-                                ->visible(fn () => auth()->user()->hasRole('super_admin')),
+                                ->visible(fn() => auth()->user()->hasRole('super_admin')),
                             Select::make('wo_prio_id')
                                 ->label('Priority')
                                 ->relationship('priority', 'prio_name')
@@ -51,12 +51,14 @@ class WorkOrderForm
                                 ->preload()
                                 ->required()
                                 ->native(false),
-                            TextInput::make('wo_title')
-                                ->label('Subject')
-                                ->required(),
+                            // TextInput::make('wo_title')
+                            //     ->label('Subject')
+                            //     ->required(),
                             Textarea::make('wo_desc')
-                                ->label('Description')
+                                ->label('Problem Description')
                                 ->required()
+                                ->rows(5)
+                                ->autosize()
                                 ->placeholder('Provide detailed request here')
                                 ->columnSpanFull(),
                             FileUpload::make('wo_attachments')
@@ -101,10 +103,10 @@ class WorkOrderForm
                                         return [];
                                     }
 
-                                    return AppUser::whereHas('roles', fn ($q) => $q->where('name', 'technician'))
+                                    return AppUser::whereHas('roles', fn($q) => $q->where('name', 'technician'))
                                         ->where('user_dep_id', $depId)
                                         ->get()
-                                        ->mapWithKeys(fn ($user) => [
+                                        ->mapWithKeys(fn($user) => [
                                             $user->user_id => "{$user->user_fname} {$user->user_lname}",
                                         ]);
                                 })

@@ -23,6 +23,8 @@ class RequestorWorkOrderResource extends Resource
 {
     protected static ?string $model = RequestorWorkOrder::class;
 
+    protected static ?int $navigationSort = 3;
+
     protected static ?string $slug = 'requestor-work-orders';
 
     public static function getNavigationLabel(): string

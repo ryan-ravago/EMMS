@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use BackedEnum;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
 
 class MyProfile extends Page implements HasInfolists
 {
-    use InteractsWithInfolists;
+    use HasPageShield, InteractsWithInfolists;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-user-circle';
 

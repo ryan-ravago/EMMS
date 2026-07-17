@@ -66,11 +66,11 @@ class RequestorWorkOrdersTable
                     //         ? (Status::find('appr')->status_icon ?? 'heroicon-o-check-badge')
                     //         : $record->status->status_icon;
                     // })
-                    ->color(fn (WorkOrder $record) => $record->status->status_color)
-                    ->icon(fn (WorkOrder $record) => $record->status->status_icon)
+                    ->color(fn(WorkOrder $record) => $record->status->status_color)
+                    ->icon(fn(WorkOrder $record) => $record->status->status_icon)
                     ->sortable(),
                 TextColumn::make('wo_created_dt')
-                    ->label('Created At')
+                    ->label('Date Created')
                     ->dateTime('M d, Y h:i A')
                     ->sortable(),
             ])
@@ -86,15 +86,15 @@ class RequestorWorkOrdersTable
                     ->searchable()
                     ->preload(),
                 Filter::make('wo_created_dt')
-                    ->label('Created At')
+                    ->label('Date Submitted')
                     ->schema([
                         DatePicker::make('from')->label('From')->native(false),
                         DatePicker::make('until')->label('Until')->native(false),
                     ])
                     ->query(function (Builder $query, array $data) {
                         return $query
-                            ->when($data['from'], fn ($q) => $q->whereDate('wo_created_dt', '>=', $data['from']))
-                            ->when($data['until'], fn ($q) => $q->whereDate('wo_created_dt', '<=', $data['until']));
+                            ->when($data['from'], fn($q) => $q->whereDate('wo_created_dt', '>=', $data['from']))
+                            ->when($data['until'], fn($q) => $q->whereDate('wo_created_dt', '<=', $data['until']));
                     }),
             ])
             ->recordActions([
