@@ -31,6 +31,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use SolutionForest\FilamentSimpleLightBox\SimpleLightBoxPlugin;
+use Filament\Enums\GlobalSearchPosition;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -40,6 +41,8 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('')
+            ->passwordReset()
+            ->globalSearch(position: GlobalSearchPosition::Sidebar)
             ->spa(hasPrefetching: true)
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
