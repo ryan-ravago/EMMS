@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\Insps\Schemas;
 
+use App\Filament\Resources\Equipment\EquipmentResource;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\IconPosition;
 
 class InspInfolist
 {
@@ -21,11 +23,14 @@ class InspInfolist
                             ->placeholder('—'),
                         TextEntry::make('insp_dep_id')
                             ->label('Department')
-                            ->visible(fn () => auth()->user()->hasRole(['super_admin']))
+                            ->visible(fn() => auth()->user()->hasRole(['super_admin']))
                             ->placeholder('—'),
                         TextEntry::make('equipment.eqm_name')
                             ->label('Equipment Unit')
-                            ->placeholder('—'),
+                            ->url(fn($record) => EquipmentResource::getUrl('view', ['record' => $record->insp_eqm_id]))
+                            ->placeholder('—')
+                            ->icon('heroicon-o-arrow-top-right-on-square')
+                            ->iconPosition(IconPosition::After),
                         TextEntry::make('is_submitted')
                             ->label('Submitted Status')
                             ->placeholder('—')
