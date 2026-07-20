@@ -10,7 +10,7 @@ class SyncGoogleWorkOrderReplies extends Command
 {
     protected $signature = 'work-orders:sync-google-replies {--email= : Google mailbox account email override}';
 
-    protected $description = 'Sync Gmail replies into work order log updates.';
+    protected $description = 'Sync Gmail replies into work order updates.';
 
     public function handle(GmailWorkOrderReplySyncService $service): int
     {

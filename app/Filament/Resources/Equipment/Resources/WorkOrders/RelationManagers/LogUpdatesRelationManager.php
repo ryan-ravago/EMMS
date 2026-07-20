@@ -18,6 +18,8 @@ class LogUpdatesRelationManager extends RelationManager
 {
     protected static string $relationship = 'logUpdates';
 
+    protected static ?string $title = 'Update';
+
     protected function getListeners(): array
     {
         return [
@@ -38,7 +40,7 @@ class LogUpdatesRelationManager extends RelationManager
                             ->columnSpanFull(),
                         TextEntry::make('by.user_fname')
                             ->label('By')
-                            ->formatStateUsing(fn ($record) => "{$record->by->user_fname} {$record->by->user_lname}"),
+                            ->formatStateUsing(fn($record) => "{$record->by->user_fname} {$record->by->user_lname}"),
                         TextEntry::make('wolu_dt')
                             ->label('Date/Time')
                             ->dateTime('M d, Y | h:i A'),
@@ -89,7 +91,7 @@ class LogUpdatesRelationManager extends RelationManager
                     ->imageGallery(),
                 TextEntry::make('wolu_by')
                     ->label('Added by')
-                    ->formatStateUsing(fn ($record) => "{$record->by->user_fname} {$record->by->user_lname}"),
+                    ->formatStateUsing(fn($record) => "{$record->by->user_fname} {$record->by->user_lname}"),
                 TextEntry::make('wolu_dt')
                     ->label('Timestamp')
                     ->dateTime('M d, Y | h:i A'),
@@ -121,7 +123,7 @@ class LogUpdatesRelationManager extends RelationManager
                     ->imageGallery(), // Enables the gallery viewer,
                 TextColumn::make('by.user_fname')
                     ->label('By')
-                    ->formatStateUsing(fn ($record) => "{$record->by->user_fname} {$record->by->user_lname}")
+                    ->formatStateUsing(fn($record) => "{$record->by->user_fname} {$record->by->user_lname}")
                     ->placeholder('-'),
                 TextColumn::make('wolu_dt')
                     ->label('Timestamp')

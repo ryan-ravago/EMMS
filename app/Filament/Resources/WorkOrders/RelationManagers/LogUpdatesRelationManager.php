@@ -18,6 +18,8 @@ class LogUpdatesRelationManager extends RelationManager
 {
     protected static string $relationship = 'logUpdates';
 
+    protected static ?string $title = 'Update';
+
     protected function getListeners(): array
     {
         return [

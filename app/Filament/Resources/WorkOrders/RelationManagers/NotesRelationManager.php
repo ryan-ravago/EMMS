@@ -30,6 +30,8 @@ class NotesRelationManager extends RelationManager
 {
     protected static string $relationship = 'notes';
 
+    protected static ?string $title = 'Note';
+
     public function form(Schema $schema): Schema
     {
         return $schema
