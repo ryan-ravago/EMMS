@@ -19,6 +19,7 @@ class TechnicianWorkOrdersTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('wo_created_at', 'desc')
             ->columns([
                 TextColumn::make('wo_no')
                     ->label('WO No.')
