@@ -2,13 +2,16 @@
 
 namespace App\Filament\Resources\Equipment\Resources\WorkOrders\Tables;
 
+use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -34,6 +37,7 @@ class WorkOrdersTable
 
                 return $query->where('wo_dep_id', $user->user_dep_id);
             })
+            ->defaultSort('wo_created_dt', 'desc')
             ->columns([
                 TextColumn::make('wo_no')
                     ->label('WO No.')
@@ -63,6 +67,14 @@ class WorkOrdersTable
                     ->sortable(),
                 TextColumn::make('workers')
                     ->badge()
+                    ->searchable(
+                        query: fn(Builder $query, string $search): Builder => $query->orWhereHas(
+                            'workers',
+                            fn(Builder $q) =>
+                            $q->where('user_fname', 'like', "%{$search}%")
+                                ->orWhere('user_lname', 'like', "%{$search}%")
+                        )
+                    )
                     ->listWithLineBreaks()
                     ->icon('heroicon-s-user-circle')
                     ->state(fn($record) => $record->workers->map(fn($w) => "{$w->user_fname} {$w->user_lname}")->toArray()),
@@ -84,26 +96,85 @@ class WorkOrdersTable
                     ->searchable()
                     ->preload()
                     ->visible(fn() => auth()->user()->hasRole('super_admin')),
+                SelectFilter::make('eqm_id')
+                    ->label('Equipment')
+                    ->relationship('equipment', 'eqm_name')
+                    ->searchable()
+                    ->preload(),
                 SelectFilter::make('wo_prio_id')
                     ->label('Priority')
-                    ->relationship('priority', 'prio_name')
+                    ->relationship(
+                        'priority',
+                        'prio_name',
+                        fn($query) => $query->orderByRaw("FIELD(prio_id, 1, 2, 3, 4)")
+                    )
                     ->searchable()
                     ->preload(),
                 SelectFilter::make('wo_status_id')
                     ->label('Status')
-                    ->relationship('status', 'status_title')
+                    ->relationship(
+                        'status',
+                        'status_title',
+                        fn($query) => $query
+                            ->whereIn('status_id', ['pndwor', 'inprog', 'rej', 'cnc', 'cmp'])
+                            ->orderByRaw("FIELD(status_id, 'pndwor', 'inprog', 'cmp', 'rej', 'cnc')")
+                    )
                     ->searchable()
                     ->preload(),
+                Filter::make('wo_desc')
+                    ->label('Manager Problem Description')
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['wo_desc'] ?? null) {
+                            $indicators[] = "Manager Problem Description: " . $data['wo_desc'];
+                        }
+
+                        return $indicators;
+                    })
+                    ->schema([
+                        TextInput::make('wo_desc')
+                            ->placeholder('Search...')
+                            ->label('Manager Problem Description')
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['wo_desc'],
+                                fn(Builder $query, $managerProbDesc): Builder => $query->where('wo_desc', 'like', "%{$managerProbDesc}%")
+                            );
+                    }),
                 Filter::make('wo_created_dt')
                     ->label('Date Submitted')
                     ->schema([
-                        DatePicker::make('from')->label('From')->native(false),
-                        DatePicker::make('until')->label('Until')->native(false),
+                        DatePicker::make('from')
+                            ->label('From')
+                            ->native(false)
+                            ->nullable(),
+                        DatePicker::make('until')
+                            ->label('Until')
+                            ->native(false)
+                            ->nullable(),
                     ])
-                    ->query(function (Builder $query, array $data) {
+                    ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['from'], fn($q) => $q->whereDate('wo_created_dt', '>=', $data['from']))
-                            ->when($data['until'], fn($q) => $q->whereDate('wo_created_dt', '<=', $data['until']));
+                            ->when($data['from'] ?? null, fn($q, $date): Builder => $q->whereDate('wo_created_dt', '>=', $date))
+                            ->when($data['until'] ?? null, fn($q, $date): Builder => $q->whereDate('wo_created_dt', '<=', $date));
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['from'] ?? null) {
+                            $indicators[] = Indicator::make('From ' . Carbon::parse($data['from'])->toFormattedDateString())
+                                ->removeField('from');
+                        }
+
+                        if ($data['until'] ?? null) {
+                            $indicators[] = Indicator::make('Until ' . Carbon::parse($data['until'])->toFormattedDateString())
+                                ->removeField('until');
+                        }
+
+                        return $indicators;
                     }),
             ])
             ->recordActions([

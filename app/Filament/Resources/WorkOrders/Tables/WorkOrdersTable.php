@@ -26,7 +26,7 @@ class WorkOrdersTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->defaultSort('wo_created_at', 'desc')
+            ->defaultSort('wo_created_dt', 'desc')
             ->columns([
                 TextColumn::make('wo_no')
                     ->label('WO No.')
@@ -56,7 +56,14 @@ class WorkOrdersTable
                     ->sortable(),
                 TextColumn::make('workers')
                     ->badge()
-                    ->searchable()
+                    ->searchable(
+                        query: fn(Builder $query, string $search): Builder => $query->orWhereHas(
+                            'workers',
+                            fn(Builder $q) =>
+                            $q->where('user_fname', 'like', "%{$search}%")
+                                ->orWhere('user_lname', 'like', "%{$search}%")
+                        )
+                    )
                     ->listWithLineBreaks()
                     ->icon('heroicon-o-user-circle')
                     ->state(fn($record) => $record->workers->map(fn($w) => "{$w->user_fname} {$w->user_lname}")->toArray()),
