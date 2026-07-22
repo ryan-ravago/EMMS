@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\WorkOrders\Tables;
 
 use App\Models\WorkOrder;
+use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -13,6 +14,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\Indicator;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
@@ -102,6 +104,16 @@ class WorkOrdersTable
                     ->searchable()
                     ->preload(),
                 Filter::make('wo_desc')
+                    ->label('Manager Problem Description')
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['wo_desc'] ?? null) {
+                            $indicators[] = "Manager Problem Description: " . $data['wo_desc'];
+                        }
+
+                        return $indicators;
+                    })
                     ->schema([
                         TextInput::make('wo_desc')
                             ->placeholder('Search...')
@@ -111,19 +123,40 @@ class WorkOrdersTable
                         return $query
                             ->when(
                                 $data['wo_desc'],
-                                fn(Builder $query, $managerProbDesc) => $query->where('wo_desc', 'like', "%{$managerProbDesc}%")
+                                fn(Builder $query, $managerProbDesc): Builder => $query->where('wo_desc', 'like', "%{$managerProbDesc}%")
                             );
                     }),
                 Filter::make('wo_created_dt')
                     ->label('Date Submitted')
                     ->schema([
-                        DatePicker::make('from')->label('From')->native(false),
-                        DatePicker::make('until')->label('Until')->native(false),
+                        DatePicker::make('from')
+                            ->label('From')
+                            ->native(false)
+                            ->nullable(),
+                        DatePicker::make('until')
+                            ->label('Until')
+                            ->native(false)
+                            ->nullable(),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['from'], fn($q) => $q->whereDate('wo_created_dt', '>=', $data['from']))
-                            ->when($data['until'], fn($q) => $q->whereDate('wo_created_dt', '<=', $data['until']));
+                            ->when($data['from'] ?? null, fn($q, $date): Builder => $q->whereDate('wo_created_dt', '>=', $date))
+                            ->when($data['until'] ?? null, fn($q, $date): Builder => $q->whereDate('wo_created_dt', '<=', $date));
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['from'] ?? null) {
+                            $indicators[] = Indicator::make('From ' . Carbon::parse($data['from'])->toFormattedDateString())
+                                ->removeField('from');
+                        }
+
+                        if ($data['until'] ?? null) {
+                            $indicators[] = Indicator::make('Until ' . Carbon::parse($data['until'])->toFormattedDateString())
+                                ->removeField('until');
+                        }
+
+                        return $indicators;
                     }),
             ])
             ->recordActions([
