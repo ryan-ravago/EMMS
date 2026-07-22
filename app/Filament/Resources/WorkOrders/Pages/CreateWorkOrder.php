@@ -45,7 +45,7 @@ class CreateWorkOrder extends CreateRecord
                     ->whereDate('wo_created_dt', $now->toDateString())
                     ->count() + 1;
 
-                $data['wo_no'] = 'WO-'.$depCode.'-'.$now->format('ymd').str_pad($count, 3, '0', STR_PAD_LEFT);
+                $data['wo_no'] = 'WO-' . $depCode . '-' . $now->format('ymd') . str_pad($count, 3, '0', STR_PAD_LEFT);
                 $data['wo_status_id'] = 'inprog';
                 $data['wo_created_by'] = auth()->id();
                 $data['wo_created_dt'] = $now;
@@ -81,22 +81,29 @@ class CreateWorkOrder extends CreateRecord
         $workOrder = $this->getRecord();
         $workOrder->load(['workers', 'priority', 'createdBy']);
 
-        // Notify manager
-        $manager = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
+        // Notify managers
+        $managerEmails = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
             ->where('user_dep_id', $workOrder->wo_dep_id)
-            ->first();
+            ->whereNotNull('user_email')
+            ->pluck('user_email')
+            ->unique()
+            ->all();
 
-        if ($manager?->user_email) {
-            Mail::to($manager->user_email)
+        if (! empty($managerEmails)) {
+            Mail::to($managerEmails)
                 ->queue(new WorkOrderConfirmationMail($workOrder));
         }
 
         // Notify each assigned technician
-        foreach ($workOrder->workers as $worker) {
-            if ($worker->user_email) {
-                Mail::to($worker->user_email)
-                    ->queue(new WorkOrderAssignedMail($workOrder, $worker));
-            }
+        $workerEmails = $workOrder->workers
+            ->pluck('user_email')
+            ->filter()
+            ->unique()
+            ->all();
+
+        if (! empty($workerEmails)) {
+            Mail::to($workerEmails)
+                ->queue(new WorkOrderAssignedMail($workOrder));
         }
     }
 }

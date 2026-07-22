@@ -37,15 +37,16 @@ class CreateRequestorWorkOrder extends CreateRecord
         }
 
         // 2. Notify managers of the assigned department
-        $managers = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
+        $managerEmails = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
             ->where('user_dep_id', $workOrder->wo_dep_id)
-            ->get();
+            ->whereNotNull('user_email')
+            ->pluck('user_email')
+            ->unique()
+            ->all();
 
-        foreach ($managers as $manager) {
-            if ($manager->user_email) {
-                Mail::to($manager->user_email)
-                    ->queue(new WorkOrderActionRequiredMail($workOrder, $manager));
-            }
+        if (! empty($managerEmails)) {
+            Mail::to($managerEmails)
+                ->queue(new WorkOrderActionRequiredMail($workOrder));
         }
     }
 
@@ -70,7 +71,7 @@ class CreateRequestorWorkOrder extends CreateRecord
                     ->whereDate('wo_created_dt', $now->toDateString())
                     ->count() + 1;
 
-                $data['wo_no'] = 'WO-'.$depCode.'-'.$now->format('ymd').str_pad($count, 3, '0', STR_PAD_LEFT);
+                $data['wo_no'] = 'WO-' . $depCode . '-' . $now->format('ymd') . str_pad($count, 3, '0', STR_PAD_LEFT);
                 $data['wo_status_id'] = 'pndwor';
                 $data['wo_created_by'] = auth()->id();
                 $data['wo_created_dt'] = $now;

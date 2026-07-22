@@ -529,24 +529,30 @@ class ViewWorkOrder extends ViewRecord
                             $note = $data['wol_note'];
 
                             // 1. Notify manager (canceller) — Confirmation
-                            Mail::to($canceller->user_email)
-                                ->queue(new WorkOrderManagerCancellationConfirmationMail(
-                                    workOrder: $record,
-                                    canceller: $canceller,
-                                    reason: $note,
-                                ));
+                            if ($canceller->user_email) {
+                                Mail::to($canceller->user_email)
+                                    ->queue(new WorkOrderManagerCancellationConfirmationMail(
+                                        workOrder: $record,
+                                        canceller: $canceller,
+                                        reason: $note,
+                                    ));
+                            }
 
                             // 2. Notify all assigned technicians — Update
-                            foreach ($record->workers as $technician) {
-                                if ($technician->user_email) {
-                                    Mail::to($technician->user_email)
-                                        ->queue(new WorkOrderCancellationMail(
-                                            workOrder: $record,
-                                            canceller: $canceller,
-                                            reason: $note,
-                                            recipientType: 'technician',
-                                        ));
-                                }
+                            $technicianEmails = $record->workers
+                                ->pluck('user_email')
+                                ->filter()
+                                ->unique()
+                                ->all();
+
+                            if (! empty($technicianEmails)) {
+                                Mail::bcc($technicianEmails)
+                                    ->queue(new WorkOrderCancellationMail(
+                                        workOrder: $record,
+                                        canceller: $canceller,
+                                        reason: $note,
+                                        recipientType: 'technician',
+                                    ));
                             }
 
                             Notification::make()
@@ -639,25 +645,31 @@ class ViewWorkOrder extends ViewRecord
                             $note = $data['wol_note'];
 
                             // 1. Notify manager (completer) — Confirmation
-                            Mail::to($completer->user_email)
-                                ->queue(new WorkOrderApprovalMail(
-                                    workOrder: $record,
-                                    approver: $completer,
-                                    note: $note,
-                                    recipientType: 'manager',
-                                ));
+                            if ($completer->user_email) {
+                                Mail::to($completer->user_email)
+                                    ->queue(new WorkOrderApprovalMail(
+                                        workOrder: $record,
+                                        approver: $completer,
+                                        note: $note,
+                                        recipientType: 'manager',
+                                    ));
+                            }
 
                             // 2. Notify all assigned technicians — Update
-                            foreach ($record->workers as $technician) {
-                                if ($technician->user_email) {
-                                    Mail::to($technician->user_email)
-                                        ->queue(new WorkOrderApprovalMail(
-                                            workOrder: $record,
-                                            approver: $completer,
-                                            note: $note,
-                                            recipientType: 'technician',
-                                        ));
-                                }
+                            $technicianEmails = $record->workers
+                                ->pluck('user_email')
+                                ->filter()
+                                ->unique()
+                                ->all();
+
+                            if (! empty($technicianEmails)) {
+                                Mail::bcc($technicianEmails)
+                                    ->queue(new WorkOrderApprovalMail(
+                                        workOrder: $record,
+                                        approver: $completer,
+                                        note: $note,
+                                        recipientType: 'technician',
+                                    ));
                             }
 
                             Notification::make()

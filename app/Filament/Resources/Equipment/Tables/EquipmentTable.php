@@ -23,12 +23,12 @@ class EquipmentTable
                     ->label('Equipment Code')
                     ->toggleable()
                     ->sortable()
-                    ->searchable(),
+                    ->searchable(isIndividual: true),
                 TextColumn::make('eqm_name')
                     ->label('Name')
                     ->toggleable()
                     ->sortable()
-                    ->searchable(),
+                    ->searchable(isIndividual: true),
                 TextColumn::make('eqm_is_active')
                     ->label('Status')
                     ->toggleable()

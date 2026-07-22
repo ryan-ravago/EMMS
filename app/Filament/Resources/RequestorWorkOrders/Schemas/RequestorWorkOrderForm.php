@@ -35,7 +35,7 @@ class RequestorWorkOrderForm
                             ->relationship(
                                 'department',
                                 'dep_name',
-                                fn (Builder $query) => $query->where('is_maintenance', 1)
+                                fn(Builder $query) => $query->where('is_maintenance', 1)
                             )
                             ->searchable()
                             ->preload()
@@ -51,12 +51,12 @@ class RequestorWorkOrderForm
                             ->preload()
                             ->required()
                             ->native(false),
-                        TextInput::make('wo_title')
-                            ->label('Subject')
-                            ->required()
-                            ->columnSpanFull(),
+                        // TextInput::make('wo_title')
+                        //     ->label('Subject')
+                        //     ->required()
+                        //     ->columnSpanFull(),
                         Textarea::make('wo_req_desc')
-                            ->label('Description')
+                            ->label('Problem Description')
                             ->required()
                             ->placeholder('Provide detailed request here')
                             ->columnSpanFull(),

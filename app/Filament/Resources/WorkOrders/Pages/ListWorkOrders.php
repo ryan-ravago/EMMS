@@ -35,7 +35,7 @@ class ListWorkOrders extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make('Work Order')
+            'all' => Tab::make('All')
                 ->badge(fn() => $this->getBaseQuery()->count()),
 
             'pndwor' => Tab::make('Pending WO Review')

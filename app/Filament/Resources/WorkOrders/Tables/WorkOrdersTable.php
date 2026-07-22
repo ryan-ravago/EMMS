@@ -8,6 +8,8 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
@@ -52,6 +54,7 @@ class WorkOrdersTable
                     ->sortable(),
                 TextColumn::make('workers')
                     ->badge()
+                    ->searchable()
                     ->listWithLineBreaks()
                     ->icon('heroicon-o-user-circle')
                     ->state(fn($record) => $record->workers->map(fn($w) => "{$w->user_fname} {$w->user_lname}")->toArray()),
@@ -73,23 +76,51 @@ class WorkOrdersTable
                     ->searchable()
                     ->preload()
                     ->visible(fn() => auth()->user()->hasRole('super_admin')),
+                SelectFilter::make('eqm_id')
+                    ->label('Equipment')
+                    ->relationship('equipment', 'eqm_name')
+                    ->searchable()
+                    ->preload(),
                 SelectFilter::make('wo_prio_id')
                     ->label('Priority')
-                    ->relationship('priority', 'prio_name')
+                    ->relationship(
+                        'priority',
+                        'prio_name',
+                        fn($query) => $query->orderByRaw("FIELD(prio_id, 1, 2, 3, 4)")
+                    )
                     ->searchable()
                     ->preload(),
                 SelectFilter::make('wo_status_id')
                     ->label('Status')
-                    ->relationship('status', 'status_title')
+                    ->relationship(
+                        'status',
+                        'status_title',
+                        fn($query) => $query
+                            ->whereIn('status_id', ['pndwor', 'inprog', 'rej', 'cnc', 'cmp'])
+                            ->orderByRaw("FIELD(status_id, 'pndwor', 'inprog', 'cmp', 'rej', 'cnc')")
+                    )
                     ->searchable()
                     ->preload(),
+                Filter::make('wo_desc')
+                    ->schema([
+                        TextInput::make('wo_desc')
+                            ->placeholder('Search...')
+                            ->label('Manager Problem Description')
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['wo_desc'],
+                                fn(Builder $query, $managerProbDesc) => $query->where('wo_desc', 'like', "%{$managerProbDesc}%")
+                            );
+                    }),
                 Filter::make('wo_created_dt')
                     ->label('Date Submitted')
                     ->schema([
                         DatePicker::make('from')->label('From')->native(false),
                         DatePicker::make('until')->label('Until')->native(false),
                     ])
-                    ->query(function (Builder $query, array $data) {
+                    ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when($data['from'], fn($q) => $q->whereDate('wo_created_dt', '>=', $data['from']))
                             ->when($data['until'], fn($q) => $q->whereDate('wo_created_dt', '<=', $data['until']));

@@ -19,10 +19,8 @@ class WorkOrderActionRequiredMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(
-        public WorkOrder $workOrder,
-        public AppUser $recipient,
-    ) {
+    public function __construct(public WorkOrder $workOrder)
+    {
         //
     }
 

@@ -25,9 +25,6 @@
                     <!-- Body -->
                     <tr>
                         <td style="padding:32px 40px;">
-                            <p style="margin:0 0 20px;font-size:15px;color:#374151;">
-                                Hello <strong>{{ $recipient->user_fname }}</strong>,
-                            </p>
                             <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
                                 A new work order has been created for your department. Please review the details below
                                 and take the necessary action.
@@ -56,24 +53,24 @@
                                     <td style="padding:12px 16px;font-size:13px;color:#111827;">
                                         {{ $workOrder->equipment?->eqm_name ?? 'N/A' }}</td>
                                 </tr>
-                                <tr style="border-top:1px solid #e5e7eb;">
+                                {{-- <tr style="border-top:1px solid #e5e7eb;">
                                     <td
                                         style="padding:12px 16px;font-size:13px;color:#6b7280;border-right:1px solid #e5e7eb;">
                                         Subject</td>
                                     <td style="padding:12px 16px;font-size:13px;color:#111827;">
                                         {{ $workOrder->wo_title }}</td>
-                                </tr>
+                                </tr> --}}
                                 <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
                                     <td
                                         style="padding:12px 16px;font-size:13px;color:#6b7280;border-right:1px solid #e5e7eb;">
-                                        Requestor Description</td>
+                                        Requestor Problem Description</td>
                                     <td style="padding:12px 16px;font-size:13px;color:#111827;">
                                         {{ $workOrder->wo_req_desc ?: 'N/A' }}</td>
                                 </tr>
                                 <tr style="border-top:1px solid #e5e7eb;">
                                     <td
                                         style="padding:12px 16px;font-size:13px;color:#6b7280;border-right:1px solid #e5e7eb;">
-                                        Manager Description</td>
+                                        Manager Problem Description</td>
                                     <td style="padding:12px 16px;font-size:13px;color:#111827;">
                                         {{ $workOrder->wo_desc ?: 'N/A' }}</td>
                                 </tr>

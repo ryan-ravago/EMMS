@@ -82,21 +82,27 @@ class CreateWorkOrder extends CreateRecord
         $workOrder->load(['workers', 'priority', 'createdBy']);
 
         // Notify manager
-        $manager = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
+        $managerEmails = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
             ->where('user_dep_id', $workOrder->wo_dep_id)
-            ->first();
+            ->whereNotNull('user_email')
+            ->pluck('user_email')
+            ->all();
 
-        if ($manager?->user_email) {
-            Mail::to($manager->user_email)
+        if (! empty($managerEmails)) {
+            Mail::to($managerEmails)
                 ->queue(new WorkOrderConfirmationMail($workOrder));
         }
 
         // Notify each assigned technician
-        foreach ($workOrder->workers as $worker) {
-            if ($worker->user_email) {
-                Mail::to($worker->user_email)
-                    ->queue(new WorkOrderAssignedMail($workOrder, $worker));
-            }
+        $workerEmails = $workOrder->workers
+            ->pluck('user_email')
+            ->filter()
+            ->unique()
+            ->all();
+
+        if (! empty($workerEmails)) {
+            Mail::to($workerEmails)
+                ->queue(new WorkOrderAssignedMail($workOrder));
         }
     }
 }

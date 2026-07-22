@@ -56,11 +56,8 @@ class WorkOrderForm
                                 ->preload()
                                 ->required()
                                 ->native(false),
-                            TextInput::make('wo_title')
-                                ->label('Subject')
-                                ->required(),
                             Textarea::make('wo_desc')
-                                ->label('Description')
+                                ->label('Problem Description')
                                 ->required()
                                 ->placeholder('Provide detailed request here')
                                 ->columnSpanFull(),
