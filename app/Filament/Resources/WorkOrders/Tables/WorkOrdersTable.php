@@ -194,7 +194,6 @@ class WorkOrdersTable
                         ->successNotificationTitle('Work orders deleted successfully.')
                         ->failureNotificationTitle('Failed to delete work orders.'),
                 ]),
-            ])
-            ->defaultSort('wo_created_dt', 'desc');
+            ]);
     }
 }

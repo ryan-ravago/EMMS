@@ -20,8 +20,8 @@ Route::get('/auth/google/callback', [SocialiteController::class, 'handleGoogleCa
     ->name('auth.google.callback')
     ->middleware('throttle:google-auth');
 
-Route::get('/wo-preview-confirmation', function () {
-    $workOrder = WorkOrder::with(['priority', 'createdBy'])->first();
+// Route::get('/wo-preview-confirmation', function () {
+//     $workOrder = WorkOrder::with(['priority', 'createdBy'])->first();
 
-    return new WorkOrderConfirmationMail($workOrder);
-});
+//     return new WorkOrderConfirmationMail($workOrder);
+// });

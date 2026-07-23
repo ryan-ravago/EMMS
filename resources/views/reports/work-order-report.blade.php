@@ -218,20 +218,8 @@
                     <div class="details-value">{{ $workOrder->wo_no }}</div>
                 </div>
                 <div class="details-row">
-                    <div class="details-label">Title:</div>
-                    <div class="details-value">{{ $workOrder->wo_title }}</div>
-                </div>
-                <div class="details-row">
-                    <div class="details-label">Status:</div>
-                    <div class="details-value">
-                        <span class="badge badge-{{ $workOrder->status?->status_id ?? 'default' }}">
-                            {{ $workOrder->status?->status_title ?? 'N/A' }}
-                        </span>
-                    </div>
-                </div>
-                <div class="details-row">
-                    <div class="details-label">Priority:</div>
-                    <div class="details-value">{{ $workOrder->priority?->prio_name ?? 'N/A' }}</div>
+                    <div class="details-label">Equipment:</div>
+                    <div class="details-value">{{ $workOrder->equipment?->eqm_name ?? 'N/A' }}</div>
                 </div>
                 @if (filled($workOrder->wo_req_desc))
                     <div class="details-row">
@@ -245,25 +233,34 @@
                     <div class="details-value">{{ $workOrder->wo_desc ?? '-' }}</div>
                 </div>
                 <div class="details-row">
-                    <div class="details-label">Equipment:</div>
-                    <div class="details-value">{{ $workOrder->equipment?->eqm_name ?? 'N/A' }}</div>
+                    <div class="details-label">Status:</div>
+                    <div class="details-value">
+                        <span class="badge badge-{{ $workOrder->status?->status_id ?? 'default' }}">
+                            {{ $workOrder->status?->status_title ?? 'N/A' }}
+                        </span>
+                    </div>
                 </div>
+                <div class="details-row">
+                    <div class="details-label">Priority:</div>
+                    <div class="details-value">{{ $workOrder->priority?->prio_name ?? 'N/A' }}</div>
+                </div>
+
                 <div class="details-row">
                     <div class="details-label">Department:</div>
                     <div class="details-value">{{ $workOrder->department?->dep_name ?? 'N/A' }}</div>
                 </div>
                 <div class="details-row">
-                    <div class="details-label">Created By:</div>
+                    <div class="details-label">Submitted By:</div>
                     <div class="details-value">{{ $workOrder->createdBy?->full_name ?? 'N/A' }}</div>
                 </div>
                 <div class="details-row">
-                    <div class="details-label">Created At:</div>
+                    <div class="details-label">Date Submitted:</div>
                     <div class="details-value">
                         {{ $workOrder->wo_created_dt ? \Carbon\Carbon::parse($workOrder->wo_created_dt)->format('M d, Y | h:i A') : 'N/A' }}
                     </div>
                 </div>
                 <div class="details-row">
-                    <div class="details-label">Closed At:</div>
+                    <div class="details-label">Date Closed:</div>
                     <div class="details-value">
                         {{ $workOrder->wo_closed_dt ? \Carbon\Carbon::parse($workOrder->wo_closed_dt)->format('M d, Y | h:i A') : '-' }}
                     </div>
@@ -346,7 +343,7 @@
         </div>
 
         {{-- Reports --}}
-        <div class="section">
+        {{-- <div class="section">
             <div class="section-title">Reports (Report Submissions)</div>
             @if ($workOrder->reportSubmissions->count())
                 <table class="table">
@@ -381,7 +378,7 @@
             @else
                 <p class="no-data">No reports submitted.</p>
             @endif
-        </div>
+        </div> --}}
 
         {{-- Footer --}}
         <div class="footer">
