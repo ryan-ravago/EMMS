@@ -268,6 +268,22 @@
             </div>
         </div>
 
+        @if (filled($workOrder->wo_root_cause))
+            <div class="section">
+                <div class="section-title">Post Mortem</div>
+                <div class="details-grid">
+                    <div class="details-row">
+                        <div class="details-label">Root Cause:</div>
+                        <div class="details-value">{{ $workOrder->wo_root_cause }}</div>
+                    </div>
+                    <div class="details-row">
+                        <div class="details-label">Corrective Action:</div>
+                        <div class="details-value">{{ $workOrder->wo_corrective_action }}</div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- Assigned Technicians --}}
         <div class="section">
             <div class="section-title">Assigned Technicians</div>
