@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\WorkOrders\Schemas;
 
 use App\Models\AppUser;
+use App\Models\Equipment;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -26,7 +27,10 @@ class WorkOrderForm
                             Select::make('wo_eqm_id')
                                 ->label('Equipment')
                                 ->relationship('equipment', 'eqm_name')
-                                ->searchable()
+                                ->searchable(['eqm_name', 'eqm_prc_code'])
+                                ->getOptionLabelFromRecordUsing(function (Equipment $record): string {
+                                    return "($record->eqm_prc_code) {$record->eqm_name}";
+                                })
                                 ->preload()
                                 ->required()
                                 ->native(false)

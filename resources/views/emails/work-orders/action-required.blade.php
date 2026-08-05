@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> --}}
 </head>
 
 <body style="margin:0;padding:0;background-color:#f4f4f5;font-family:Arial,sans-serif;">
