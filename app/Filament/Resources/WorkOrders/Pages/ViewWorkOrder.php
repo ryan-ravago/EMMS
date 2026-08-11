@@ -816,7 +816,7 @@ class ViewWorkOrder extends ViewRecord
                                 ->all();
 
                             if (! empty($emails)) {
-                                Mail::bcc($emails)
+                                Mail::to($emails)
                                     ->queue(new WorkOrderAssignedMail($record, null));
                             }
 
@@ -899,8 +899,8 @@ class ViewWorkOrder extends ViewRecord
                             $reason = $data['wol_note'];
 
                             // 1. Notify Manager (Confirmation)
-                            Mail::to($manager->user_email)
-                                ->queue(new WorkOrderRejectedMail($record, $manager, $reason, 'manager'));
+                            // Mail::to($manager->user_email)
+                            //     ->queue(new WorkOrderRejectedMail($record, $manager, $reason, 'manager'));
 
                             // 2. Notify Requestor (Update)
                             if ($record->createdBy && $record->createdBy->user_email) {
