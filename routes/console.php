@@ -42,9 +42,9 @@ Schedule::command(SyncGoogleWorkOrderReplies::class)
     ->everyMinute()
     ->withoutOverlapping();
 
-Schedule::command(SyncGoogleSheetInspections::class)
-    ->everyMinute()
-    ->withoutOverlapping();
+// Schedule::command(SyncGoogleSheetInspections::class)
+//     ->everyMinute()
+//     ->withoutOverlapping();
 
 Schedule::command(CheckDueMaintenanceCommand::class)
     ->daily()
