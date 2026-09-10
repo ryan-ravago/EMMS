@@ -33,6 +33,8 @@ class EquipmentTypeResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function form(Schema $schema): Schema
     {
         return EquipmentTypeForm::configure($schema);

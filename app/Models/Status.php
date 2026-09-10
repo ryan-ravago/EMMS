@@ -8,8 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Status extends Model
 {
     protected $table = 'statuses';
+
     protected $primaryKey = 'status_id';
+
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $fillable = [
@@ -19,6 +22,11 @@ class Status extends Model
     ];
 
     public $timestamps = false;
+
+    public function equipmentUnits(): HasMany
+    {
+        return $this->hasMany(Equipment::class, 'lifecycle_status_id', 'status_id');
+    }
 
     public function maintenanceTasks(): HasMany
     {

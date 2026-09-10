@@ -24,6 +24,8 @@ class EquipmentObserver
 
     public function saving(Equipment $equipment): void
     {
+        $this->normalizeParentAllocation($equipment);
+
         // Recalculate next due whenever PM intervals change
         if ($equipment->isDirty([
             'eqm_pm_itrv_years',
@@ -34,6 +36,31 @@ class EquipmentObserver
             'eqm_last_pm_notified_at',
         ])) {
             $equipment->eqm_next_pm_due_at = $equipment->calculateNextDueDate();
+        }
+    }
+
+    protected function normalizeParentAllocation(Equipment $equipment): void
+    {
+        if ($equipment->parent_id && $equipment->eqm_id && (int) $equipment->parent_id === (int) $equipment->eqm_id) {
+            $equipment->parent_id = null;
+        }
+
+        if (! $equipment->isAccessory()) {
+            $equipment->parent_id = null;
+
+            return;
+        }
+
+        if (! $equipment->parent_id) {
+            return;
+        }
+
+        $parent = Equipment::query()
+            ->with('assetType')
+            ->find($equipment->parent_id);
+
+        if (! $parent?->isEquipmentAsset()) {
+            $equipment->parent_id = null;
         }
     }
 

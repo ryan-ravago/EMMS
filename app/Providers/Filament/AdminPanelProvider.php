@@ -7,6 +7,7 @@ use App\Filament\Widgets\DashboardStatsOverview;
 use App\Http\Middleware\EnsureUserStillHasRole;
 use App\Models\SiteSetting;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use Filament\Enums\GlobalSearchPosition;
 use Filament\FontProviders\GoogleFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -31,7 +32,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use SolutionForest\FilamentSimpleLightBox\SimpleLightBoxPlugin;
-use Filament\Enums\GlobalSearchPosition;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -43,12 +43,12 @@ class AdminPanelProvider extends PanelProvider
             ->path('')
             ->passwordReset()
             ->globalSearch(position: GlobalSearchPosition::Sidebar)
-            ->spa(hasPrefetching: true)
+            // ->spa(hasPrefetching: true)
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 function () {
                     $font = rescue(
-                        fn() => SiteSetting::instance()->site_font_family ?? 'Inter',
+                        fn () => SiteSetting::instance()->site_font_family ?? 'Inter',
                         'Inter',
                         report: false
                     );
@@ -58,7 +58,7 @@ class AdminPanelProvider extends PanelProvider
                     $vite = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
 
                     return new HtmlString(
-                        $vite .
+                        $vite.
                             "<link href=\"https://fonts.googleapis.com/css2?family={$encoded}:wght@300;400;500;600;700&display=swap\" rel=\"stylesheet\">
                             <style>
                                 body, html { font-family: '{$font}', sans-serif !important; }
@@ -131,7 +131,7 @@ class AdminPanelProvider extends PanelProvider
                 }
             })
             // ->font(SiteSetting::instance()->site_font_family ?? 'Inter', provider: GoogleFontProvider::class)
-            ->maxContentWidth(Width::Full)
+            ->maxContentWidth(Width::SevenExtraLarge)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             // ->navigationGroups([
             //     NavigationGroup::make()
@@ -158,12 +158,12 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                EnsureUserStillHasRole::class
+                EnsureUserStillHasRole::class,
                 // 'throttle:filament',
             ])
             ->renderHook(
                 'panels::auth.login.form.after',
-                fn() => view('auth.socialite.google')
+                fn () => view('auth.socialite.google')
             )
             ->plugins([
                 FilamentShieldPlugin::make()

@@ -20,7 +20,7 @@ class EquipmentTable
         return $table
             ->columns([
                 TextColumn::make('eqm_prc_code')
-                    ->label('Equipment Code')
+                    ->label('Asset Code')
                     ->toggleable()
                     ->sortable()
                     ->searchable(),
@@ -29,14 +29,24 @@ class EquipmentTable
                     ->toggleable()
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('assetType.name')
+                    ->label('Asset Type')
+                    ->badge()
+                    ->toggleable()
+                    ->sortable(),
+                TextColumn::make('parent.eqm_name')
+                    ->label('Allocated to')
+                    ->placeholder('—')
+                    ->toggleable()
+                    ->searchable(),
                 TextColumn::make('eqm_is_active')
                     ->label('Status')
                     ->toggleable()
                     ->sortable()
                     ->badge()
-                    ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
-                    ->icon(fn(bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
-                    ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
+                    ->icon(fn (bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
+                    ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
                 TextColumn::make('equipmentModel.eqmm_name')
                     ->label('Model')
                     ->toggleable()
@@ -61,6 +71,9 @@ class EquipmentTable
                         1 => 'Active',
                         0 => 'Inactive',
                     ]),
+                SelectFilter::make('asset_type_id')
+                    ->label('Asset Type')
+                    ->relationship('assetType', 'name'),
                 // SelectFilter::make('eqm_eqmm_id')
                 //     ->label('Model')
                 //     ->relationship('equipmentModel', 'eqmm_name')
@@ -69,7 +82,7 @@ class EquipmentTable
                 //     ->multiple(),
             ])
             ->recordUrl(
-                fn(Model $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
+                fn (Model $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
             )
             ->recordActions([
                 // ViewAction::make(),

@@ -26,6 +26,7 @@
         "stechstudio/filament-impersonate": "^5.4"
     },
     "require-dev": {
+        "andreapollastri/checkpoint": "^1.1",
         "barryvdh/laravel-debugbar": "^4.3",
         "fakerphp/faker": "^1.23",
         "fruitcake/laravel-debugbar": "^4.3",

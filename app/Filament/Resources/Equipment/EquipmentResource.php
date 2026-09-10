@@ -6,6 +6,7 @@ use App\Filament\Resources\Equipment\Pages\CreateEquipment;
 use App\Filament\Resources\Equipment\Pages\EditEquipment;
 use App\Filament\Resources\Equipment\Pages\ListEquipment;
 use App\Filament\Resources\Equipment\Pages\ViewEquipment;
+use App\Filament\Resources\Equipment\RelationManagers\AccessoriesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\EquipmentTaskChecklistTemplatesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\EquipmentTasksSchedulesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\InspectionsRelationManager;
@@ -31,17 +32,17 @@ class EquipmentResource extends Resource
 {
     protected static ?string $model = Equipment::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTruck;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCube;
 
     protected static ?string $recordTitleAttribute = 'eqm_name';
 
-    protected static ?string $navigationLabel = 'Equipment';
+    protected static ?string $navigationLabel = 'Asset';
 
-    protected static ?string $modelLabel = 'Equipment';
+    protected static ?string $modelLabel = 'Asset';
 
-    protected static ?string $pluralModelLabel = 'Equipment';
+    protected static ?string $pluralModelLabel = 'Asset';
 
-    protected static ?string $slug = 'equipment';
+    protected static ?string $slug = 'asset';
 
     protected static ?int $navigationSort = 2;
 
@@ -70,7 +71,7 @@ class EquipmentResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['equipmentModel', 'type', 'brand']);
+            ->with(['equipmentModel', 'type', 'brand', 'assetType', 'parent']);
     }
 
     public static function table(Table $table): Table
@@ -80,21 +81,23 @@ class EquipmentResource extends Resource
 
     public static function getRelations(): array
     {
-        $relations = [];
+        $relations = [
+            AccessoriesRelationManager::class,
+        ];
 
         /** @var AppUser|null $user */
         $user = Auth::user();
 
         // Standard maintenance tabs for maintenance roles
         if ($user?->hasAnyRole(['super_admin', 'manager', 'technician'])) {
-            $relations = [
+            $relations = array_merge($relations, [
                 WorkOrdersRelationManager::class,
                 // EquipmentTaskChecklistTemplatesRelationManager::class,
                 // EquipmentTasksSchedulesRelationManager::class,
                 // InspectionsRelationManager::class,
                 MaintenanceTasksRelationManager::class,
                 InspsRelationManager::class,
-            ];
+            ]);
         }
 
         // Requestor specific tab

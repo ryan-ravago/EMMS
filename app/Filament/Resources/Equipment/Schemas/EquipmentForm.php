@@ -2,18 +2,23 @@
 
 namespace App\Filament\Resources\Equipment\Schemas;
 
+use App\Models\AssetType;
+use App\Models\Equipment;
 use Carbon\Carbon;
+use CodeWithDennis\FilamentSelectTree\SelectTree;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 
 class EquipmentForm
 {
@@ -51,7 +56,12 @@ class EquipmentForm
 
         return $schema
             ->components([
-                Grid::make(3)
+                Grid::make([
+                    'default' => 1,
+                    'md' => 2,
+                    'lg' => 1,
+                    'xl' => 2,
+                ])
                     ->schema([
                         Section::make('SAP Information')
                             ->description('Data synced from SAP. These fields are read-only.')
@@ -84,10 +94,10 @@ class EquipmentForm
                                         'monthly' => 'Monthly',
                                         'weekly' => 'Weekly',
                                     ])
-                                    ->required(fn(Get $get) => $get('eqm_pm_itrv_value') || $get('eqm_pm_itrv_start_date'))
+                                    ->required(fn (Get $get) => $get('eqm_pm_itrv_value') || $get('eqm_pm_itrv_start_date'))
                                     ->live()
                                     ->afterStateUpdated(function ($state, Set $set, Get $get) use ($clearAllPM, $calculateNextPMDue) {
-                                        if (!$state) {
+                                        if (! $state) {
                                             $clearAllPM($set);
                                         } else {
                                             $calculateNextPMDue($set, $get);
@@ -106,14 +116,14 @@ class EquipmentForm
                                         }
                                     })
                                     ->suffix(
-                                        fn(Get $get) => $get('eqm_pm_itrv_type')
+                                        fn (Get $get) => $get('eqm_pm_itrv_type')
                                             ? ($get('eqm_pm_itrv_type') === 'monthly' ? 'month(s)' : 'week(s)')
                                             : ''
                                     )
                                     ->live()
                                     ->required()
                                     ->afterStateUpdated(function ($state, Set $set, Get $get) use ($clearDueDate, $calculateNextPMDue) {
-                                        if (!$state || $state < 1) {
+                                        if (! $state || $state < 1) {
                                             $clearDueDate($set);
                                         } else {
                                             $calculateNextPMDue($set, $get);
@@ -125,9 +135,9 @@ class EquipmentForm
                                     ->native(false)
                                     ->live()
                                     ->columnStart(1)
-                                    ->required(fn(Get $get) => $get('eqm_pm_itrv_type') || $get('eqm_pm_itrv_value'))
+                                    ->required(fn (Get $get) => $get('eqm_pm_itrv_type') || $get('eqm_pm_itrv_value'))
                                     ->afterStateUpdated(function ($state, Set $set, Get $get) use ($clearDueDate, $calculateNextPMDue) {
-                                        if (!$state) {
+                                        if (! $state) {
                                             $clearDueDate($set);
                                         } else {
                                             $calculateNextPMDue($set, $get);
@@ -149,12 +159,73 @@ class EquipmentForm
                             ]),
                     ]),
 
-                Grid::make(3)
+                Grid::make([
+                    'default' => 1,
+                    'md' => 2,
+                    'lg' => 1,
+                    'xl' => 2,
+                ])
                     ->schema([
                         Section::make('Equipment Details')
                             ->description('Additional information you can fill in manually.')
                             ->icon('heroicon-o-wrench-screwdriver')
                             ->schema([
+                                ToggleButtons::make('asset_type_id')
+                                    ->label('Asset Type')
+                                    ->inline()
+                                    ->options(AssetType::orderBy('name')->pluck('name', 'id'))
+                                    ->colors([
+                                        1 => 'warning',
+                                        2 => 'success',
+                                    ])
+                                    ->live()
+                                    ->afterStateUpdated(function (mixed $state, Set $set): void {
+                                        if ((int) $state !== (int) AssetType::accessoryId()) {
+                                            $set('parent_id', null);
+                                        }
+                                    })
+                                    ->required(),
+                                Select::make('parent_id')
+                                    ->label('Allocated to')
+                                    ->relationship(
+                                        'parent',
+                                        'eqm_name',
+                                        fn (Builder $query): Builder => $query->equipmentAssets(),
+                                    )
+                                    ->getOptionLabelFromRecordUsing(
+                                        fn (Equipment $record): string => trim(
+                                            ($record->eqm_prc_code ? "{$record->eqm_prc_code} — " : '').$record->eqm_name
+                                        )
+                                    )
+                                    ->searchable()
+                                    ->preload()
+                                    ->native(false)
+                                    ->visible(fn (Get $get): bool => (int) $get('asset_type_id') === (int) AssetType::accessoryId())
+                                    ->helperText('Accessories can only be allocated to equipment.'),
+                                SelectTree::make('categories')
+                                    ->label('Tags')
+                                    ->relationship('categories', 'eqmc_name', 'eqmc_parent_id')
+                                    ->multiple()
+                                    ->enableBranchNode(),
+                                // ->getOptionLabelFromRecordUsing(function (EquipmentCategory $record): string {
+                                //     return $record->full_path;
+                                // }),
+                                // ->preload()
+                                // ->searchable()
+                                // ->native(false),
+                                // SelectTree::make('eqmc_parent_id')
+                                //     ->label('Category')
+                                //     ->relationship('parent', 'eqmc_name', 'eqmc_parent_id'),
+                                // ->required()
+                                // ->native(false)
+                                // ->preload(),
+                                SelectTree::make('location_id')
+                                    ->label('Location')
+                                    ->enableBranchNode()
+                                    ->relationship('location', 'name', 'parent_id'),
+                                // ->required()
+                                // ->native(false)
+                                // ->preload(),
                                 Select::make('eqm_eqmm_id')
                                     ->label('Model')
                                     ->relationship('equipmentModel', 'eqmm_name')
@@ -214,6 +285,8 @@ class EquipmentForm
                                     ->label('Brand')
                                     ->relationship('brand', 'eqmb_name')
                                     ->native(false)
+                                    ->searchable()
+                                    ->preload()
                                     ->createOptionForm([
                                         TextInput::make('eqmb_name')
                                             ->label('Brand Name')
@@ -225,31 +298,6 @@ class EquipmentForm
                                             ->modalHeading('Add New Equipment Brand')
                                             ->modalWidth('md'); // xs, sm, md, lg, xl, 2xl
                                     }),
-
-                                Select::make('eqm_eqmt_id')
-                                    ->label('Type')
-                                    ->relationship('type', 'eqmt_name')
-                                    ->native(false)
-                                    ->required()
-                                    ->createOptionForm([
-                                        TextInput::make('eqmt_name')
-                                            ->label('Type Name')
-                                            ->required()
-                                            ->unique()
-                                            ->maxLength(255),
-                                    ])
-                                    ->createOptionAction(function (Action $action) {
-                                        return $action
-                                            ->modalHeading('Add New Equipment Type')
-                                            ->modalWidth('md');
-                                    }),
-
-                                // TextInput::make('eqm_vin')
-                                //     ->label('Vehicle Identification Number')
-                                //     ->placeholder('e.g. 1HGBH41JXMN109186')
-                                //     ->maxLength(17)
-                                //     ->columnSpanFull(),
-
                                 TextInput::make('eqm_plate_num')
                                     ->label('Plate #')
                                     ->placeholder('e.g. ABC 1234')
@@ -262,17 +310,18 @@ class EquipmentForm
                                 //     ->maxLength(255)
                                 //     ->columnSpanFull(),
 
-                                // TextInput::make('eqm_engine')
-                                //     ->label('Engine')
-                                //     ->placeholder('e.g. 4JJ1')
-                                //     ->maxLength(255)
-                                //     ->columnSpanFull(),
-
                                 TextInput::make('eqm_chassis_no')
                                     ->label('Chassis #')
                                     ->columnStart(1)
                                     ->extraAttributes(['class' => 'max-w-lg'])
                                     ->maxLength(255),
+
+                                TextInput::make('year_model')
+                                    ->label('Year Model')
+                                    ->numeric()
+                                    ->minValue(1900)
+                                    ->maxValue((int) date('Y') + 1)
+                                    ->nullable(),
 
                                 DatePicker::make('eqm_date_purchased')
                                     ->label('Date Purchased')
@@ -280,6 +329,13 @@ class EquipmentForm
                                     ->extraAttributes(['class' => 'max-w-lg'])
                                     ->native(false)
                                     ->maxDate(today()),
+
+                                RichEditor::make('specifications')
+                                    ->label('Specifications')
+                                    ->placeholder('Enter asset specifications...')
+                                    ->extraAttributes([
+                                        'style' => 'min-height: 300px;',
+                                    ]),
                             ]),
                     ]),
             ])->columns(1);

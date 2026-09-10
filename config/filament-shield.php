@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Filament\Resources\EquipmentUnitCategories\EquipmentUnitCategoryResource;
 use App\Filament\Resources\InspectionItems\InspectionItemResource;
 use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
 use App\Filament\Resources\RequestorWorkOrders\RequestorWorkOrderResource;
@@ -223,6 +224,9 @@ return [
             InspectionItemResource::class => [
                 'disregard',
                 'makeWorkOrder',
+            ],
+            EquipmentUnitCategoryResource::class => [
+                'allocateCategory',
             ],
         ],
         'exclude' => [

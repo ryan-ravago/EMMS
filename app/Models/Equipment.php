@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Database\Factories\EquipmentFactory;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -15,6 +18,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Equipment extends Model
 {
+    /** @use HasFactory<EquipmentFactory> */
+    use HasFactory;
+
     use LogsActivity;
 
     protected $table = 'equipment_units';
@@ -22,6 +28,13 @@ class Equipment extends Model
     protected $primaryKey = 'eqm_id';
 
     protected $fillable = [
+        'asset_type_id',
+        'parent_id',
+        'lifecycle_status_id',
+        'location_id',
+        'year_model',
+        'specifications',
+
         'eqmc_name',
         'eqm_eqmm_id',
         'eqm_brand_id',
@@ -63,6 +76,85 @@ class Equipment extends Model
     //         'eqmm_eqmt_id'
     //     );
     // }
+
+    public function assetType(): BelongsTo
+    {
+        return $this->belongsTo(AssetType::class);
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id', 'eqm_id');
+    }
+
+    public function accessories(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id', 'eqm_id');
+    }
+
+    public function isEquipmentAsset(): bool
+    {
+        if ($this->relationLoaded('assetType')) {
+            return $this->assetType?->isEquipment() === true;
+        }
+
+        return (int) $this->asset_type_id === (int) AssetType::equipmentId();
+    }
+
+    public function isAccessory(): bool
+    {
+        if ($this->relationLoaded('assetType')) {
+            return $this->assetType?->isAccessory() === true;
+        }
+
+        return (int) $this->asset_type_id === (int) AssetType::accessoryId();
+    }
+
+    /**
+     * @param  Builder<Equipment>  $query
+     * @return Builder<Equipment>
+     */
+    public function scopeEquipmentAssets(Builder $query): Builder
+    {
+        return $query->whereHas(
+            'assetType',
+            fn (Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::EQUIPMENT)])
+        );
+    }
+
+    /**
+     * @param  Builder<Equipment>  $query
+     * @return Builder<Equipment>
+     */
+    public function scopeAccessories(Builder $query): Builder
+    {
+        return $query->whereHas(
+            'assetType',
+            fn (Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::ACCESSORY)])
+        );
+    }
+
+    public function lifecycleStatus(): BelongsTo
+    {
+        return $this->belongsTo(Status::class, 'lifecycle_status_id', 'status_id');
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            EquipmentCategory::class,
+            'equipment_unit_category',
+            'eqm_id',
+            'eqmc_id',
+            'eqm_id',
+            'eqmc_id'
+        );
+    }
+
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
+    }
 
     public function type(): BelongsTo
     {
@@ -109,7 +201,7 @@ class Equipment extends Model
         return $this->hasMany(EquipmentTasksSchedule::class, 'ets_eqm_id', 'eqm_id')
             ->when(
                 Auth::check() && ! Auth::user()->hasRole('super_admin'),
-                fn($query) => $query->where('ets_dep_id', Auth::user()->user_dep_id)
+                fn ($query) => $query->where('ets_dep_id', Auth::user()->user_dep_id)
             );
     }
 
@@ -147,7 +239,7 @@ class Equipment extends Model
 
     public function calculateNextDueDate(): ?Carbon
     {
-        if (!$this->eqm_pm_itrv_start_date || !$this->eqm_pm_itrv_type || !$this->eqm_pm_itrv_value) {
+        if (! $this->eqm_pm_itrv_start_date || ! $this->eqm_pm_itrv_type || ! $this->eqm_pm_itrv_value) {
             return null;
         }
 

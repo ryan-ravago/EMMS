@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class EquipmentCategory extends Model
 {
@@ -17,13 +18,37 @@ class EquipmentCategory extends Model
     // Parent category
     public function parent()
     {
-        return $this->belongsTo(EquipmentCategory::class, 'eqmc_parent_id');
+        return $this->belongsTo(EquipmentCategory::class, 'eqmc_parent_id', 'eqmc_id');
     }
 
     // Child categories
     public function children()
     {
-        return $this->hasMany(EquipmentCategory::class, 'eqmc_parent_id');
+        return $this->hasMany(EquipmentCategory::class, 'eqmc_parent_id', 'eqmc_id');
+    }
+
+    public function equipments(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Equipment::class,
+            'equipment_unit_category',
+            'eqmc_id',
+            'eqm_id',
+            'eqmc_id',
+            'eqm_id'
+        );
+    }
+
+    public function equipment(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Equipment::class,
+            'equipment_unit_category',
+            'eqmc_id',
+            'eqm_id',
+            'eqmc_id',
+            'eqm_id'
+        );
     }
 
     public function getParentPathAttribute(): string

@@ -7,7 +7,7 @@ use App\Filament\Resources\Categories\Pages\EditCategory;
 use App\Filament\Resources\Categories\Pages\ListCategories;
 use App\Filament\Resources\Categories\Pages\ViewCategory;
 use App\Filament\Resources\Categories\RelationManagers\ChildrenRelationManager;
-use App\Filament\Resources\Categories\RelationManagers\ModelsRelationManager;
+use App\Filament\Resources\Categories\RelationManagers\EquipmentsRelationManager;
 use App\Filament\Resources\Categories\Schemas\CategoryForm;
 use App\Filament\Resources\Categories\Schemas\CategoryInfolist;
 use App\Filament\Resources\Categories\Tables\CategoriesTable;
@@ -23,17 +23,19 @@ class CategoryResource extends Resource
 {
     protected static ?string $model = EquipmentCategory::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquare3Stack3d;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
     protected static ?string $recordTitleAttribute = 'eqmc_name';
 
-    protected static ?string $navigationLabel = 'Category';
+    protected static ?string $navigationLabel = 'Tag';
 
-    protected static ?string $modelLabel = 'Category';
+    protected static ?string $modelLabel = 'Tag';
 
-    protected static ?string $pluralModelLabel = 'Category';
+    protected static ?string $pluralModelLabel = 'Tag';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 1;
+
+    protected static ?string $slug = 'tag';
 
     protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
 
@@ -88,6 +90,7 @@ class CategoryResource extends Resource
     {
         return [
             ChildrenRelationManager::class,
+            EquipmentsRelationManager::class,
         ];
     }
 

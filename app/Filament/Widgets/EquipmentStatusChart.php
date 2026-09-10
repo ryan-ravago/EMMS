@@ -13,7 +13,7 @@ class EquipmentStatusChart extends ChartWidget
 
     public function getHeading(): string|HtmlString|null
     {
-        return new HtmlString('<a href="'.EquipmentResource::getUrl().'" class="hover:underline transition">Equipment Status Distribution</a>');
+        return new HtmlString('<a href="'.EquipmentResource::getUrl().'" class="hover:underline transition">Asset Status Distribution</a>');
     }
 
     protected function getData(): array

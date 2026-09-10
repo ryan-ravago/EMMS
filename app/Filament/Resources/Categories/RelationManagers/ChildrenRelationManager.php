@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Categories\RelationManagers;
 
+use App\Filament\Resources\Categories\CategoryResource;
+use App\Models\EquipmentCategory;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -42,18 +44,21 @@ class ChildrenRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
-                CreateAction::make(),
+                // CreateAction::make(),
                 AssociateAction::make(),
             ])
+            ->recordUrl(
+                fn(EquipmentCategory $record): string => CategoryResource::getUrl('view', ['record' => $record]),
+            )
             ->recordActions([
-                EditAction::make(),
+                // EditAction::make(),
                 DissociateAction::make(),
-                DeleteAction::make(),
+                // DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DissociateBulkAction::make(),
-                    DeleteBulkAction::make(),
+                    // DeleteBulkAction::make(),
                 ]),
             ]);
     }

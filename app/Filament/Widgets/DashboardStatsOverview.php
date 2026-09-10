@@ -47,7 +47,7 @@ class DashboardStatsOverview extends StatsOverviewWidget
 
         if ($user->hasRole('asset_admin')) {
             return [
-                Stat::make('Total Equipment', Equipment::count())
+                Stat::make('Total Asset', Equipment::count())
                     ->icon(Heroicon::CubeTransparent)
                     ->description('All registered assets')
                     ->descriptionIcon(Heroicon::InformationCircle)
@@ -55,17 +55,17 @@ class DashboardStatsOverview extends StatsOverviewWidget
                     ->url(EquipmentResource::getUrl()),
                 Stat::make('Models', EquipmentModel::count())
                     ->icon(Heroicon::Squares2x2)
-                    ->description('Configured equipment models')
+                    ->description('Configured asset models')
                     ->color('info')
                     ->url(ModelResource::getUrl()),
-                Stat::make('Equipment Types', EquipmentType::count())
+                Stat::make('Asset Types', EquipmentType::count())
                     ->icon(Heroicon::RectangleGroup)
-                    ->description('Available equipment type records')
+                    ->description('Available asset type records')
                     ->color('success')
                     ->url(EquipmentTypeResource::getUrl()),
                 Stat::make('Categories', EquipmentCategory::count())
                     ->icon(Heroicon::Square3Stack3d)
-                    ->description('Equipment category taxonomy')
+                    ->description('Asset category taxonomy')
                     ->color('warning')
                     ->url(CategoryResource::getUrl()),
             ];
@@ -75,7 +75,7 @@ class DashboardStatsOverview extends StatsOverviewWidget
             $overdueCount = MaintenanceTask::where('mt_dep_id', $preventiveDepId)->where('mt_due_dt', '<', now())->where('mt_status_id', '!=', 'cmp')->count();
 
             return [
-                Stat::make('Total Equipment', Equipment::count())
+                Stat::make('Total Asset', Equipment::count())
                     ->icon(Heroicon::CubeTransparent)
                     ->description('All registered assets')
                     ->descriptionIcon(Heroicon::InformationCircle)
@@ -216,7 +216,7 @@ class DashboardStatsOverview extends StatsOverviewWidget
         }
 
         return [
-            Stat::make('Active Equipment', Equipment::count())
+            Stat::make('Active Asset', Equipment::count())
                 ->icon(Heroicon::CubeTransparent)
                 ->color('primary'),
             Stat::make('Open Work Orders', WorkOrder::where('wo_status_id', 'inprog')->count())

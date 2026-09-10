@@ -2,7 +2,11 @@
 
 namespace App\Filament\Resources\Equipment\Schemas;
 
+use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Models\Equipment;
+use Carbon\Carbon;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -26,9 +30,9 @@ class EquipmentInfolist
                             ->icon('heroicon-o-server')
                             ->schema([
                                 TextEntry::make('eqm_prc_code')
-                                    ->label('Equipment Code'),
+                                    ->label('Asset Code'),
                                 TextEntry::make('eqm_name')
-                                    ->label('Equipment Name')
+                                    ->label('Asset Name')
                                     ->columnSpanFull(),
                                 TextEntry::make('eqm_is_active')
                                     ->label('Status')
@@ -60,8 +64,7 @@ class EquipmentInfolist
                                 TextEntry::make('eqm_pm_itrv_value')
                                     ->label('Every')
                                     ->formatStateUsing(
-                                        fn($state, $record) =>
-                                        $state && $record->eqm_pm_itrv_type
+                                        fn($state, $record) => $state && $record->eqm_pm_itrv_type
                                             ? "{$state} " . ($record->eqm_pm_itrv_type === 'monthly' ? 'month(s)' : 'week(s)')
                                             : '—'
                                     )
@@ -77,7 +80,7 @@ class EquipmentInfolist
                                     ->label('Next PM Due')
                                     ->date('M d, Y')
                                     ->badge()
-                                    ->color(fn($state) => $state && \Carbon\Carbon::parse($state)->isPast() ? 'danger' : 'info')
+                                    ->color(fn($state) => $state && Carbon::parse($state)->isPast() ? 'danger' : 'info')
                                     ->columnSpanFull()
                                     ->placeholder('—'),
 
@@ -85,13 +88,33 @@ class EquipmentInfolist
                                     ->label('Last Notified')
                                     ->date('M d, Y')
                                     ->columnSpanFull()
-                                    ->placeholder('—'),
+                                    ->placeholder('—')
                             ]),
 
-                        Section::make('Equipment Details')
+                        Section::make('Asset Details')
                             ->description('Additional information you can fill in manually.')
                             ->icon('heroicon-o-wrench-screwdriver')
                             ->schema([
+                                TextEntry::make('assetType.name')
+                                    ->label('Asset Type'),
+                                TextEntry::make('parent.eqm_name')
+                                    ->label('Allocated to')
+                                    ->visible(fn(Equipment $record): bool => $record->isAccessory())
+                                    ->url(fn(Equipment $record): ?string => $record->parent_id
+                                        ? EquipmentResource::getUrl('view', ['record' => $record->parent_id])
+                                        : null)
+                                    ->placeholder('Unallocated'),
+                                // TextEntry::make('categories.full_path')
+                                //     ->label('Categories')
+                                //     ->badge()
+                                //     ->listWithLineBreaks()
+                                //     ->placeholder('—'),
+                                ViewEntry::make('categories')
+                                    ->label('Tags')
+                                    ->inlineLabel()
+                                    ->view('filament.infolists.entries.category-badges'),
+                                TextEntry::make('location.full_path')
+                                    ->label('Location'),
                                 TextEntry::make('equipmentModel.eqmm_name')
                                     ->label('Model')
                                     ->columnSpanFull()
@@ -100,13 +123,6 @@ class EquipmentInfolist
                                     ->label('Brand')
                                     ->columnSpanFull()
                                     ->placeholder('—'),
-                                TextEntry::make('type.eqmt_name')
-                                    ->label('Type')
-                                    ->columnSpanFull()
-                                    ->placeholder('—'),
-                                // TextEntry::make('eqm_vin')
-                                //     ->label('Vehicle Identification Number')
-                                //     ->placeholder('—'),
                                 TextEntry::make('eqm_plate_num')
                                     ->label('Plate Number')
                                     ->placeholder('—'),
@@ -125,6 +141,12 @@ class EquipmentInfolist
                                     ->columnSpanFull()
                                     ->date('M d, Y')
                                     ->placeholder('—'),
+                                TextEntry::make('specifications')
+                                    ->label('Specifications')
+                                    ->inlineLabel(false)
+                                    ->columnSpanFull()
+                                    ->placeholder('—')
+                                    ->markdown()
                             ]),
                     ]),
             ])->columns(1);

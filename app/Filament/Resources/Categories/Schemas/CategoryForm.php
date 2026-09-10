@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Categories\Schemas;
 
 use CodeWithDennis\FilamentSelectTree\SelectTree;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
@@ -14,7 +13,7 @@ class CategoryForm
         return $schema
             ->components([
                 TextInput::make('eqmc_name')
-                    ->label('Name')
+                    ->label('Category')
                     ->required(),
                 // ->unique(table: 'equipment_categories', column: 'eqmc_name', ignoreRecord: true),
                 SelectTree::make('eqmc_parent_id')
