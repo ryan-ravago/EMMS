@@ -23,4 +23,9 @@ class Action extends Model
     {
         return $this->hasMany(MaintenanceTaskLog::class, 'mtl_last_act_made');
     }
+
+    public function lifeCycleLogs(): HasMany
+    {
+        return $this->hasMany(LifecycleLog::class, 'action_id');
+    }
 }

@@ -82,6 +82,16 @@ class Equipment extends Model
         return $this->belongsTo(AssetType::class);
     }
 
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'location_id');
+    }
+
+    public function editLogs(): HasMany
+    {
+        return $this->hasMany(AssetEditLog::class, 'asset_id', 'eqm_id');
+    }
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_id', 'eqm_id');
@@ -118,7 +128,7 @@ class Equipment extends Model
     {
         return $query->whereHas(
             'assetType',
-            fn (Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::EQUIPMENT)])
+            fn(Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::EQUIPMENT)])
         );
     }
 
@@ -130,13 +140,18 @@ class Equipment extends Model
     {
         return $query->whereHas(
             'assetType',
-            fn (Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::ACCESSORY)])
+            fn(Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::ACCESSORY)])
         );
     }
 
     public function lifecycleStatus(): BelongsTo
     {
         return $this->belongsTo(Status::class, 'lifecycle_status_id', 'status_id');
+    }
+
+    public function lifecycleLogs(): HasMany
+    {
+        return $this->hasMany(LifecycleLog::class, 'asset_id', 'eqm_id');
     }
 
     public function categories(): BelongsToMany
@@ -149,11 +164,6 @@ class Equipment extends Model
             'eqm_id',
             'eqmc_id'
         );
-    }
-
-    public function location(): BelongsTo
-    {
-        return $this->belongsTo(Location::class);
     }
 
     public function type(): BelongsTo
@@ -201,7 +211,7 @@ class Equipment extends Model
         return $this->hasMany(EquipmentTasksSchedule::class, 'ets_eqm_id', 'eqm_id')
             ->when(
                 Auth::check() && ! Auth::user()->hasRole('super_admin'),
-                fn ($query) => $query->where('ets_dep_id', Auth::user()->user_dep_id)
+                fn($query) => $query->where('ets_dep_id', Auth::user()->user_dep_id)
             );
     }
 

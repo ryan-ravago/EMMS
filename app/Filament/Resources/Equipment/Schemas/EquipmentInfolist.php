@@ -109,6 +109,12 @@ class EquipmentInfolist
                                 //     ->badge()
                                 //     ->listWithLineBreaks()
                                 //     ->placeholder('—'),
+                                TextEntry::make('lifecycleStatus.status_title')
+                                    ->label('Lifecycle Status')
+                                    ->inlineLabel()
+                                    ->badge()
+                                    ->color(fn(Equipment $record) => $record->lifecycleStatus->status_color)
+                                    ->icon(fn(Equipment $record) => $record->lifecycleStatus->status_icon),
                                 ViewEntry::make('categories')
                                     ->label('Tags')
                                     ->inlineLabel()

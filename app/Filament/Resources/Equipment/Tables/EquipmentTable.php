@@ -44,19 +44,21 @@ class EquipmentTable
                     ->toggleable()
                     ->sortable()
                     ->badge()
-                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
-                    ->icon(fn (bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
-                    ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
+                    ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
+                    ->icon(fn(bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
+                    ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
+                TextColumn::make('lifecycleStatus.status_title')
+                    ->label('Lifecycle Status')
+                    ->toggleable()
+                    ->sortable()
+                    ->badge()
+                    ->icon(fn($record) => $record->lifecycleStatus->status_icon)
+                    ->color(fn($record) => $record->lifecycleStatus->status_color),
                 TextColumn::make('equipmentModel.eqmm_name')
                     ->label('Model')
                     ->toggleable()
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('eqm_vin')
-                    ->label('VIN')
-                    ->toggleable()
-                    ->sortable()
-                    ->searchable(),
                 TextColumn::make('eqm_plate_num')
                     ->label('Plate #')
                     ->toggleable()
@@ -82,7 +84,7 @@ class EquipmentTable
                 //     ->multiple(),
             ])
             ->recordUrl(
-                fn (Model $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
+                fn(Model $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
             )
             ->recordActions([
                 // ViewAction::make(),

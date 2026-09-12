@@ -28,7 +28,7 @@ class AccessoriesRelationManager extends RelationManager
     {
         $count = $ownerRecord->accessories()->count();
 
-        return $count ? (string) $count : null;
+        return (string) $count;
     }
 
     public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool

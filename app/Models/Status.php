@@ -37,4 +37,9 @@ class Status extends Model
     {
         return $this->hasMany(InspectionItem::class, 'insi_status_id', 'status_id');
     }
+
+    public function lifeCycleLogs(): HasMany
+    {
+        return $this->hasMany(LifecycleLog::class, 'status_id');
+    }
 }
