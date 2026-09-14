@@ -15,6 +15,38 @@ class Location extends Model
         'parent_id',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (self $location) {
+            if ($location->parent_id === null) {
+                return;
+            }
+
+            if ((int) $location->parent_id === (int) $location->id) {
+                throw new \InvalidArgumentException('A location cannot be its own parent.');
+            }
+
+            if ($location->exists && in_array((int) $location->parent_id, $location->getDescendantIds(), true)) {
+                throw new \InvalidArgumentException('A location cannot have one of its own descendants as its parent.');
+            }
+        });
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function getDescendantIds(): array
+    {
+        $ids = [];
+
+        foreach ($this->children()->pluck('id') as $childId) {
+            $ids[] = (int) $childId;
+            $ids = [...$ids, ...self::query()->find($childId)?->getDescendantIds() ?? []];
+        }
+
+        return $ids;
+    }
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Location::class, 'parent_id');

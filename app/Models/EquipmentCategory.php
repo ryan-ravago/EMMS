@@ -15,6 +15,38 @@ class EquipmentCategory extends Model
 
     public $timestamps = false;
 
+    protected static function booted(): void
+    {
+        static::saving(function (self $category) {
+            if ($category->eqmc_parent_id === null) {
+                return;
+            }
+
+            if ((int) $category->eqmc_parent_id === (int) $category->eqmc_id) {
+                throw new \InvalidArgumentException('A category cannot be its own parent.');
+            }
+
+            if ($category->exists && in_array((int) $category->eqmc_parent_id, $category->getDescendantIds(), true)) {
+                throw new \InvalidArgumentException('A category cannot have one of its own descendants as its parent.');
+            }
+        });
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function getDescendantIds(): array
+    {
+        $ids = [];
+
+        foreach ($this->children()->pluck('eqmc_id') as $childId) {
+            $ids[] = (int) $childId;
+            $ids = [...$ids, ...self::query()->find($childId)?->getDescendantIds() ?? []];
+        }
+
+        return $ids;
+    }
+
     // Parent category
     public function parent()
     {
