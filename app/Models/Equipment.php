@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -63,6 +64,7 @@ class Equipment extends Model
         'eqm_pm_itrv_start_date' => 'date',
         'eqm_next_pm_due_at' => 'date',
         'eqm_last_pm_notified_at' => 'date',
+        'eqm_is_active' => 'boolean',
     ];
 
     // public function type(): HasOneThrough
@@ -90,6 +92,45 @@ class Equipment extends Model
     public function editLogs(): HasMany
     {
         return $this->hasMany(AssetEditLog::class, 'asset_id', 'eqm_id');
+    }
+
+    /**
+     * Persist the model and, for updates, atomically record the change diff to AssetEditLog.
+     *
+     * @param  array<string, mixed>  $options
+     */
+    public function save(array $options = []): bool
+    {
+        if (! $this->exists) {
+            return parent::save($options);
+        }
+
+        $changes = collect($this->getDirty())->except('eqm_updated_at');
+
+        if ($changes->isEmpty()) {
+            return parent::save($options);
+        }
+
+        $diff = $changes->mapWithKeys(fn ($new, $field) => [
+            $field => [
+                'old' => AssetEditLog::resolveFieldValue($field, $this->getOriginal($field)),
+                'new' => AssetEditLog::resolveFieldValue($field, $new),
+            ],
+        ])->toArray();
+
+        return DB::transaction(function () use ($options, $diff): bool {
+            $saved = parent::save($options);
+
+            if ($saved) {
+                $this->editLogs()->create([
+                    'changes' => $diff,
+                    'performed_by' => Auth::id(),
+                    'logged_at' => now(),
+                ]);
+            }
+
+            return $saved;
+        });
     }
 
     public function parent(): BelongsTo
@@ -128,7 +169,7 @@ class Equipment extends Model
     {
         return $query->whereHas(
             'assetType',
-            fn(Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::EQUIPMENT)])
+            fn (Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::EQUIPMENT)])
         );
     }
 
@@ -140,7 +181,7 @@ class Equipment extends Model
     {
         return $query->whereHas(
             'assetType',
-            fn(Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::ACCESSORY)])
+            fn (Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::ACCESSORY)])
         );
     }
 
@@ -211,7 +252,7 @@ class Equipment extends Model
         return $this->hasMany(EquipmentTasksSchedule::class, 'ets_eqm_id', 'eqm_id')
             ->when(
                 Auth::check() && ! Auth::user()->hasRole('super_admin'),
-                fn($query) => $query->where('ets_dep_id', Auth::user()->user_dep_id)
+                fn ($query) => $query->where('ets_dep_id', Auth::user()->user_dep_id)
             );
     }
 

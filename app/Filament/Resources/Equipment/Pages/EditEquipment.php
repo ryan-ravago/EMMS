@@ -13,6 +13,8 @@ class EditEquipment extends EditRecord
 
     protected ?array $originalAttributes = null;
 
+    protected ?array $originalCategoryNames = null;
+
     protected function getHeaderActions(): array
     {
         return [
@@ -21,10 +23,18 @@ class EditEquipment extends EditRecord
         ];
     }
 
+    protected function getRedirectUrl(): string
+    {
+        return EquipmentResource::getUrl('view', ['record' => $this->record->eqm_id]);
+    }
 
     protected function beforeSave(): void
     {
         $this->originalAttributes = $this->record->getOriginal();
+        $this->originalCategoryNames = $this->record->categories()
+            ->orderBy('eqmc_name')
+            ->pluck('eqmc_name')
+            ->all();
     }
 
     protected function afterSave(): void
@@ -32,26 +42,50 @@ class EditEquipment extends EditRecord
         $changes = $this->record->getChanges();
         unset($changes['eqm_updated_at']);
 
-        if (empty($changes)) {
-            return;
-        }
+        $columnsChanged = ! empty($changes);
 
-        $diff = collect($changes)->mapWithKeys(fn($new, $field) => [
+        $diff = collect($changes)->mapWithKeys(fn ($new, $field) => [
             $field => [
                 'old' => $this->originalAttributes[$field] ?? null,
                 'new' => $new,
             ],
-        ])->toArray();
-
-        $this->record->editLogs()->create([
-            'changes' => $diff,
-            'performed_by' => auth()->id(),
-            'logged_at' => now(),
         ]);
+
+        $newCategoryNames = $this->record->categories()
+            ->orderBy('eqmc_name')
+            ->pluck('eqmc_name')
+            ->all();
+
+        $categoriesChanged = $newCategoryNames !== $this->originalCategoryNames;
+
+        if ($categoriesChanged) {
+            $categoriesDiff = [
+                'old' => $this->originalCategoryNames,
+                'new' => $newCategoryNames,
+            ];
+
+            $diff->put('categories', $categoriesDiff);
+
+            if ($columnsChanged) {
+                // Equipment::save() already created a log row for the column diff; fold categories into it instead of a second row.
+                $latestLog = $this->record->editLogs()->latest('id')->first();
+                $latestLog?->update(['changes' => [...$latestLog->changes, 'categories' => $categoriesDiff]]);
+            } else {
+                $this->record->editLogs()->create([
+                    'changes' => ['categories' => $categoriesDiff],
+                    'performed_by' => auth()->id(),
+                    'logged_at' => now(),
+                ]);
+            }
+        }
+
+        if ($diff->isEmpty()) {
+            return;
+        }
 
         activity()
             ->performedOn($this->record)
-            ->withProperties($diff)
+            ->withProperties($diff->toArray())
             ->log('Equipment updated');
     }
 }

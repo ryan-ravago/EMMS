@@ -13,8 +13,8 @@ use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
@@ -31,6 +31,21 @@ class EditLogsRelationManager extends RelationManager
         $count = $ownerRecord->editLogs()->count();
 
         return (string) $count;
+    }
+
+    protected static function renderValue(string $field, mixed $value): string
+    {
+        if (is_array($value)) {
+            if (empty($value)) {
+                return '-';
+            }
+
+            return collect($value)
+                ->map(fn ($item) => '<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-white/10 dark:text-gray-300">'.e((string) $item).'</span>')
+                ->implode(' ');
+        }
+
+        return e(AssetEditLog::resolveFieldValue($field, $value));
     }
 
     public function form(Schema $schema): Schema
@@ -54,7 +69,11 @@ class EditLogsRelationManager extends RelationManager
             ->components([
                 TextEntry::make('changes')
                     ->label('Changes')
-                    ->formatStateUsing(function ($state) {
+                    ->state(function ($record) {
+                        // Build the full HTML string upfront: TextEntry treats array state as a
+                        // comma-joined list of values and would call this per field otherwise.
+                        $state = $record->changes;
+
                         if (empty($state)) {
                             return '-';
                         }
@@ -66,30 +85,30 @@ class EditLogsRelationManager extends RelationManager
                                 }
 
                                 $column = e(AssetEditLog::fieldLabel($field));
-                                $old = e(AssetEditLog::resolveFieldValue($field, $value['old'] ?? null));
-                                $new = e(AssetEditLog::resolveFieldValue($field, $value['new'] ?? null));
+                                $old = self::renderValue($field, $value['old'] ?? null);
+                                $new = self::renderValue($field, $value['new'] ?? null);
 
                                 return <<<HTML
-                                    <tr class="border-b border-gray-200 dark:border-gray-700">
-                                        <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{$column}</td>
-                                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-pre-wrap">{$old}</td>
-                                        <td class="px-4 py-3 text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{$new}</td>
+                                    <tr class="border-b border-gray-200 last:border-b-0 dark:border-white/10">
+                                        <td class="px-4 py-3 align-top text-sm font-medium text-gray-900 dark:text-white">{$column}</td>
+                                        <td class="px-4 py-3 align-top text-sm whitespace-pre-wrap text-danger-600 dark:text-danger-400">{$old}</td>
+                                        <td class="px-4 py-3 align-top text-sm whitespace-pre-wrap text-success-600 dark:text-success-400">{$new}</td>
                                     </tr>
                                 HTML;
                             })
                             ->implode('');
 
                         return <<<HTML
-                            <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                            <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-white/10">
                                 <table class="w-full text-left">
-                                    <thead class="bg-gray-50 dark:bg-gray-800">
+                                    <thead class="bg-gray-50 dark:bg-white/5">
                                         <tr>
-                                            <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Column</th>
-                                            <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Old Value</th>
-                                            <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">New Value</th>
+                                            <th class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Column</th>
+                                            <th class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Old Value</th>
+                                            <th class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">New Value</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    <tbody>
                                         {$rows}
                                     </tbody>
                                 </table>
@@ -99,8 +118,8 @@ class EditLogsRelationManager extends RelationManager
                     ->html()
                     ->columnSpanFull(),
                 TextEntry::make('performedBy.user_email')
-                    ->numeric()
-                    ->placeholder('-'),
+                    ->label('Performed By')
+                    ->placeholder('System'),
                 TextEntry::make('logged_at')
                     ->dateTime(),
             ]);
@@ -109,10 +128,12 @@ class EditLogsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->defaultSort('logged_at', 'desc')
             ->recordTitleAttribute('id')
             ->columns([
                 TextColumn::make('performedBy.user_email')
-                    ->numeric()
+                    ->label('Performed By')
+                    ->placeholder('System')
                     ->sortable(),
                 TextColumn::make('logged_at')
                     ->dateTime()
