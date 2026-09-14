@@ -25,7 +25,7 @@ class EquipmentTypeResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
+    protected static string|UnitEnum|null $navigationGroup = 'Asset Details';
 
     protected static ?string $navigationLabel = 'Type';
 
@@ -33,7 +33,7 @@ class EquipmentTypeResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
-    protected static bool $shouldRegisterNavigation = false;
+    // protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Schema $schema): Schema
     {

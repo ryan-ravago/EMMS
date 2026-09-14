@@ -81,7 +81,7 @@ class AssetEditLog extends Model
             return collect($value)->map(fn ($item) => (string) $item)->implode(', ');
         }
 
-        if (isset(static::$relatedLookups[$field]) && is_numeric($value)) {
+        if (isset(static::$relatedLookups[$field]) && (is_int($value) || is_string($value))) {
             $lookup = static::$relatedLookups[$field];
 
             /** @var Model|null $related */

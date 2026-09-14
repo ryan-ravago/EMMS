@@ -113,8 +113,9 @@ class Equipment extends Model
 
         $diff = $changes->mapWithKeys(fn ($new, $field) => [
             $field => [
-                'old' => AssetEditLog::resolveFieldValue($field, $this->getOriginal($field)),
-                'new' => AssetEditLog::resolveFieldValue($field, $new),
+                // Store raw values; AssetEditLog::resolveFieldValue() resolves labels at render time.
+                'old' => $this->getOriginal($field),
+                'new' => $new,
             ],
         ])->toArray();
 

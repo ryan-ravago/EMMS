@@ -5,8 +5,6 @@ namespace App\Filament\Resources\Equipment\Pages;
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Models\Action as ModelsAction;
 use App\Models\Equipment;
-use App\Models\Location;
-use App\Models\Status;
 use CodeWithDennis\FilamentSelectTree\SelectTree;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -28,11 +26,112 @@ class ViewEquipment extends ViewRecord
         $headerActions = [];
 
         if ($record->eqm_is_active) {
+            $allocateActionModel = ModelsAction::where('a_id', 'alc')->firstOrFail();
+            $deployActionModel = ModelsAction::where('a_id', 'dep')->firstOrFail();
+            $setIdleActionModel = ModelsAction::where('a_id', 'sidle')->firstOrFail();
+            $setUnderMaintenanceActionModel = ModelsAction::where('a_id', 'smt')->firstOrFail();
+
             $headerActions[] = ActionGroup::make([
-                $this->allocateAction(),
-                $this->deployAction(),
-                $this->setIdleAction(),
-                $this->setUnderMaintenanceAction(),
+                Action::make('markAsalc')
+                    ->label($allocateActionModel->a_present_tense)
+                    ->icon($allocateActionModel->a_icon)
+                    ->color('success')
+                    ->visible(fn() => $this->record->asset_type_id === 2
+                        && $this->record->lifecycle_status_id !== 'alc')
+                    ->modalHeading("Mark as {$allocateActionModel->a_present_tense}")
+                    ->modalIcon($allocateActionModel->a_icon)
+                    ->modalWidth('md')
+                    ->modalSubmitActionLabel('Submit')
+                    ->schema([
+                        Select::make('allocate_to_equipment_id')
+                            ->label('Allocate To Equipment')
+                            ->options(fn() => Equipment::where('asset_type_id', 1)->pluck('eqm_name', 'eqm_id'))
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+
+                        Textarea::make('remarks')
+                            ->label('Remarks')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ])
+                    ->action(fn(array $data) => $this->saveLifecycleTransition($allocateActionModel, 'alc', $data)),
+
+                Action::make('markAsdep')
+                    ->label($deployActionModel->a_present_tense)
+                    ->icon($deployActionModel->a_icon)
+                    ->color('success')
+                    ->visible(fn() => $this->record->asset_type_id === 1
+                        && $this->record->lifecycle_status_id !== 'dep')
+                    ->modalHeading("Mark as {$deployActionModel->a_present_tense}")
+                    ->modalIcon($deployActionModel->a_icon)
+                    ->modalWidth('md')
+                    ->modalSubmitActionLabel('Submit')
+                    ->schema([
+                        SelectTree::make('location_id')
+                            ->label('Location')
+                            ->withCount()
+                            ->searchable()
+                            ->enableBranchNode()
+                            ->default(fn() => $this->record->location_id)
+                            ->relationship('location', 'name', 'parent_id'),
+
+                        Textarea::make('remarks')
+                            ->label('Remarks')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ])
+                    ->action(fn(array $data) => $this->saveLifecycleTransition($deployActionModel, 'dep', $data)),
+
+                Action::make('markAssidle')
+                    ->label($setIdleActionModel->a_present_tense)
+                    ->icon($setIdleActionModel->a_icon)
+                    ->color('danger')
+                    ->visible(fn() => $this->record->lifecycle_status_id !== 'idle')
+                    ->modalHeading("Mark as {$setIdleActionModel->a_present_tense}")
+                    ->modalIcon($setIdleActionModel->a_icon)
+                    ->modalWidth('md')
+                    ->modalSubmitActionLabel('Submit')
+                    ->schema([
+                        SelectTree::make('location_id')
+                            ->label('Location')
+                            ->withCount()
+                            ->searchable()
+                            ->enableBranchNode()
+                            ->default(fn() => $this->record->location_id)
+                            ->relationship('location', 'name', 'parent_id'),
+
+                        Textarea::make('remarks')
+                            ->label('Remarks')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ])
+                    ->action(fn(array $data) => $this->saveLifecycleTransition($setIdleActionModel, 'idle', $data)),
+
+                Action::make('markAssmt')
+                    ->label($setUnderMaintenanceActionModel->a_present_tense)
+                    ->icon($setUnderMaintenanceActionModel->a_icon)
+                    ->color('primary')
+                    ->visible(fn() => $this->record->lifecycle_status_id !== 'udmt')
+                    ->modalHeading("Mark as {$setUnderMaintenanceActionModel->a_present_tense}")
+                    ->modalIcon($setUnderMaintenanceActionModel->a_icon)
+                    ->modalWidth('md')
+                    ->modalSubmitActionLabel('Submit')
+                    ->schema([
+                        SelectTree::make('location_id')
+                            ->label('Location')
+                            ->withCount()
+                            ->searchable()
+                            ->enableBranchNode()
+                            ->default(fn() => $this->record->location_id)
+                            ->relationship('location', 'name', 'parent_id'),
+
+                        Textarea::make('remarks')
+                            ->label('Remarks')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ])
+                    ->action(fn(array $data) => $this->saveLifecycleTransition($setUnderMaintenanceActionModel, 'udmt', $data)),
             ])
                 ->label('More actions')
                 ->button()
@@ -42,127 +141,6 @@ class ViewEquipment extends ViewRecord
         $headerActions[] = EditAction::make();
 
         return $headerActions;
-    }
-
-    protected function allocateAction(): Action
-    {
-        $action = ModelsAction::where('a_id', 'alc')->firstOrFail();
-
-        return Action::make('markAsalc')
-            ->label($action->a_present_tense)
-            ->icon($action->a_icon)
-            ->color('success')
-            ->visible(fn() => $this->record->asset_type_id === 2
-                && $this->record->lifecycle_status_id !== 'alc')
-            ->modalHeading("Mark as {$action->a_present_tense}")
-            ->modalIcon($action->a_icon)
-            ->modalWidth('md')
-            ->modalSubmitActionLabel('Submit')
-            ->schema([
-                Select::make('allocate_to_equipment_id')
-                    ->label('Allocate To Equipment')
-                    ->options(fn() => Equipment::where('asset_type_id', 1)->pluck('eqm_name', 'eqm_id'))
-                    ->searchable()
-                    ->preload()
-                    ->required(),
-
-                Textarea::make('remarks')
-                    ->label('Remarks')
-                    ->rows(3)
-                    ->columnSpanFull(),
-            ])
-            ->action(fn(array $data) => $this->saveLifecycleTransition($action, 'alc', $data));
-    }
-
-    protected function deployAction(): Action
-    {
-        $action = ModelsAction::where('a_id', 'dep')->firstOrFail();
-
-        return Action::make('markAsdep')
-            ->label($action->a_present_tense)
-            ->icon($action->a_icon)
-            ->color('success')
-            ->visible(fn() => $this->record->asset_type_id === 1
-                && $this->record->lifecycle_status_id !== 'dep')
-            ->modalHeading("Mark as {$action->a_present_tense}")
-            ->modalIcon($action->a_icon)
-            ->modalWidth('md')
-            ->modalSubmitActionLabel('Submit')
-            ->schema([
-                SelectTree::make('location_id')
-                    ->label('Location')
-                    ->withCount()
-                    ->searchable()
-                    ->enableBranchNode()
-                    ->default(fn() => $this->record->location_id)
-                    ->relationship('location', 'name', 'parent_id'),
-
-                Textarea::make('remarks')
-                    ->label('Remarks')
-                    ->rows(3)
-                    ->columnSpanFull(),
-            ])
-            ->action(fn(array $data) => $this->saveLifecycleTransition($action, 'dep', $data));
-    }
-
-    protected function setIdleAction(): Action
-    {
-        $action = ModelsAction::where('a_id', 'sidle')->firstOrFail();
-
-        return Action::make('markAssidle')
-            ->label($action->a_present_tense)
-            ->icon($action->a_icon)
-            ->color('danger')
-            ->visible(fn() => $this->record->lifecycle_status_id !== 'idle')
-            ->modalHeading("Mark as {$action->a_present_tense}")
-            ->modalIcon($action->a_icon)
-            ->modalWidth('md')
-            ->modalSubmitActionLabel('Submit')
-            ->schema([
-                SelectTree::make('location_id')
-                    ->label('Location')
-                    ->withCount()
-                    ->searchable()
-                    ->enableBranchNode()
-                    ->default(fn() => $this->record->location_id)
-                    ->relationship('location', 'name', 'parent_id'),
-
-                Textarea::make('remarks')
-                    ->label('Remarks')
-                    ->rows(3)
-                    ->columnSpanFull(),
-            ])
-            ->action(fn(array $data) => $this->saveLifecycleTransition($action, 'idle', $data));
-    }
-
-    protected function setUnderMaintenanceAction(): Action
-    {
-        $action = ModelsAction::where('a_id', 'smt')->firstOrFail();
-
-        return Action::make('markAssmt')
-            ->label($action->a_present_tense)
-            ->icon($action->a_icon)
-            ->color('primary')
-            ->visible(fn() => $this->record->lifecycle_status_id !== 'udmt')
-            ->modalHeading("Mark as {$action->a_present_tense}")
-            ->modalIcon($action->a_icon)
-            ->modalWidth('md')
-            ->modalSubmitActionLabel('Submit')
-            ->schema([
-                SelectTree::make('location_id')
-                    ->label('Location')
-                    ->withCount()
-                    ->searchable()
-                    ->enableBranchNode()
-                    ->default(fn() => $this->record->location_id)
-                    ->relationship('location', 'name', 'parent_id'),
-
-                Textarea::make('remarks')
-                    ->label('Remarks')
-                    ->rows(3)
-                    ->columnSpanFull(),
-            ])
-            ->action(fn(array $data) => $this->saveLifecycleTransition($action, 'udmt', $data));
     }
 
     protected function saveLifecycleTransition(ModelsAction $action, string $newStatusId, array $data): void
@@ -179,15 +157,19 @@ class ViewEquipment extends ViewRecord
 
                 $record->update([
                     'lifecycle_status_id' => $newStatusId,
+                    'location_id' => match ($action->a_id) {
+                        'dep', 'sidle', 'smt' => $data['location_id'] ?? $record->location_id,
+                        default => $record->location_id,
+                    },
                     'parent_id' => match ($action->a_id) {
-                        'alc'   => $data['allocate_to_equipment_id'] ?? null,
+                        'alc' => $data['allocate_to_equipment_id'] ?? null,
                         'sidle' => null,
                         default => $record->parent_id,
                     },
                 ]);
 
                 $record->lifecycleLogs()->create([
-                    'asset_id'  => $record->eqm_id,
+                    'asset_id' => $record->eqm_id,
                     'action_id' => $action->a_id,
                     'status_id' => $newStatusId,
                     'deploy_to_loc_id' => $data['location_id'] ?? null,
@@ -209,7 +191,9 @@ class ViewEquipment extends ViewRecord
                     ->log("Marked as {$action->a_present_tense}");
             });
 
-            $this->record->refresh();
+            // $this->record->refresh();
+
+            $this->redirect(EquipmentResource::getUrl('view', ['record' => $this->record->eqm_id]), navigate: true);
 
             Notification::make()
                 ->title("Marked as {$action->a_present_tense}")

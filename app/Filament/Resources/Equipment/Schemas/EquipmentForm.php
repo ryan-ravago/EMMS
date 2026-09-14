@@ -166,7 +166,7 @@ class EquipmentForm
                     'xl' => 2,
                 ])
                     ->schema([
-                        Section::make('Equipment Details')
+                        Section::make('Asset Details')
                             ->description('Additional information you can fill in manually.')
                             ->icon('heroicon-o-wrench-screwdriver')
                             ->schema([
@@ -185,23 +185,23 @@ class EquipmentForm
                                         }
                                     })
                                     ->required(),
-                                Select::make('parent_id')
-                                    ->label('Allocated to')
-                                    ->relationship(
-                                        'parent',
-                                        'eqm_name',
-                                        fn (Builder $query): Builder => $query->equipmentAssets(),
-                                    )
-                                    ->getOptionLabelFromRecordUsing(
-                                        fn (Equipment $record): string => trim(
-                                            ($record->eqm_prc_code ? "{$record->eqm_prc_code} — " : '').$record->eqm_name
-                                        )
-                                    )
-                                    ->searchable()
-                                    ->preload()
-                                    ->native(false)
-                                    ->visible(fn (Get $get): bool => (int) $get('asset_type_id') === (int) AssetType::accessoryId())
-                                    ->helperText('Accessories can only be allocated to equipment.'),
+                                // Select::make('parent_id')
+                                //     ->label('Allocated to')
+                                //     ->relationship(
+                                //         'parent',
+                                //         'eqm_name',
+                                //         fn (Builder $query): Builder => $query->equipmentAssets(),
+                                //     )
+                                //     ->getOptionLabelFromRecordUsing(
+                                //         fn (Equipment $record): string => trim(
+                                //             ($record->eqm_prc_code ? "{$record->eqm_prc_code} — " : '').$record->eqm_name
+                                //         )
+                                //     )
+                                //     ->searchable()
+                                //     ->preload()
+                                //     ->native(false)
+                                //     ->visible(fn (Get $get): bool => (int) $get('asset_type_id') === (int) AssetType::accessoryId())
+                                //     ->helperText('Accessories can only be allocated to equipment.'),
                                 SelectTree::make('categories')
                                     ->label('Tags')
                                     ->relationship('categories', 'eqmc_name', 'eqmc_parent_id')

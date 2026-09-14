@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Equipment\RelationManagers;
 
 use App\Models\AssetEditLog;
+use Carbon\Carbon;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -43,6 +44,14 @@ class EditLogsRelationManager extends RelationManager
             return collect($value)
                 ->map(fn ($item) => '<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-white/10 dark:text-gray-300">'.e((string) $item).'</span>')
                 ->implode(' ');
+        }
+
+        if ($field === 'specifications') {
+            return empty($value) ? '-' : (string) $value;
+        }
+
+        if ($field === 'eqm_date_purchased' && filled($value)) {
+            return e(Carbon::parse($value)->format('F d, Y'));
         }
 
         return e(AssetEditLog::resolveFieldValue($field, $value));
@@ -121,7 +130,7 @@ class EditLogsRelationManager extends RelationManager
                     ->label('Performed By')
                     ->placeholder('System'),
                 TextEntry::make('logged_at')
-                    ->dateTime(),
+                    ->dateTime('F d, Y h:i A'),
             ]);
     }
 
@@ -136,7 +145,7 @@ class EditLogsRelationManager extends RelationManager
                     ->placeholder('System')
                     ->sortable(),
                 TextColumn::make('logged_at')
-                    ->dateTime()
+                    ->date('F d, Y h:i A')
                     ->sortable(),
             ])
             ->filters([

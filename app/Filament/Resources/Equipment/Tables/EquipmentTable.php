@@ -3,11 +3,14 @@
 namespace App\Filament\Resources\Equipment\Tables;
 
 use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Models\AssetType;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -29,11 +32,21 @@ class EquipmentTable
                     ->toggleable()
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('assetType.name')
+                SelectColumn::make('asset_type_id')
                     ->label('Asset Type')
-                    ->badge()
-                    ->toggleable()
-                    ->sortable(),
+                    ->native(false)
+                    ->optionsRelationship(name: 'assetType', titleAttribute: 'name')
+                    ->rules(['required', 'exists:asset_types,id']),
+                // ->afterStateUpdated(function (mixed $state, Set $set): void {
+                //     if ((int) $state !== (int) AssetType::accessoryId()) {
+                //         $set('parent_id', null);
+                //     }
+                // }),
+                // TextColumn::make('assetType.name')
+                //     ->label('Asset Type')
+                //     ->badge()
+                //     ->toggleable()
+                //     ->sortable(),
                 TextColumn::make('parent.eqm_name')
                     ->label('Allocated to')
                     ->placeholder('—')
@@ -44,16 +57,16 @@ class EquipmentTable
                     ->toggleable()
                     ->sortable()
                     ->badge()
-                    ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
-                    ->icon(fn(bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
-                    ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
+                    ->icon(fn (bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
+                    ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
                 TextColumn::make('lifecycleStatus.status_title')
                     ->label('Lifecycle Status')
                     ->toggleable()
                     ->sortable()
                     ->badge()
-                    ->icon(fn($record) => $record->lifecycleStatus->status_icon)
-                    ->color(fn($record) => $record->lifecycleStatus->status_color),
+                    ->icon(fn ($record) => $record->lifecycleStatus->status_icon)
+                    ->color(fn ($record) => $record->lifecycleStatus->status_color),
                 TextColumn::make('equipmentModel.eqmm_name')
                     ->label('Model')
                     ->toggleable()
@@ -84,7 +97,7 @@ class EquipmentTable
                 //     ->multiple(),
             ])
             ->recordUrl(
-                fn(Model $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
+                fn (Model $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
             )
             ->recordActions([
                 // ViewAction::make(),

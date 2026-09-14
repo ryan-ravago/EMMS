@@ -135,7 +135,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             // ->navigationGroups([
             //     NavigationGroup::make()
-            //         ->label('Equipment Details')
+            //         ->label('Asset Details')
             //         ->collapsed(false),
             // ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

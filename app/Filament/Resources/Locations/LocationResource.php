@@ -33,7 +33,7 @@ class LocationResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
+    protected static string|UnitEnum|null $navigationGroup = 'Asset Details';
 
     public static function form(Schema $schema): Schema
     {

@@ -32,7 +32,7 @@ class ModelResource extends Resource
     protected static ?string $modelLabel = 'Model';
     // protected static ?string $pluralModelLabel = 'Models';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
+    protected static string|UnitEnum|null $navigationGroup = 'Asset Details';
 
     protected static ?int $navigationSort = 5;
 

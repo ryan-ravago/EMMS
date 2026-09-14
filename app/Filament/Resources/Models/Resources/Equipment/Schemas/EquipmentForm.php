@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Models\Resources\Equipment\Schemas;
 
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -42,7 +41,7 @@ class EquipmentForm
 
                 Grid::make(3)
                     ->schema([
-                        Section::make('Equipment Details')
+                        Section::make('Asset Details')
                             ->description('Additional information you can fill in manually.')
                             ->icon('heroicon-o-wrench-screwdriver')
                             ->schema([

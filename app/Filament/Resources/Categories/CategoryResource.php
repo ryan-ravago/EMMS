@@ -37,7 +37,7 @@ class CategoryResource extends Resource
 
     protected static ?string $slug = 'tag';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Equipment Details';
+    protected static string|UnitEnum|null $navigationGroup = 'Asset Details';
 
     // public static function getNavigationGroup(): ?string
     // {

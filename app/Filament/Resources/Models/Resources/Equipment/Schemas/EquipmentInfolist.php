@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Models\Resources\Equipment\Schemas;
 
-use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -32,12 +31,12 @@ class EquipmentInfolist
                                 TextEntry::make('eqm_is_active')
                                     ->label('Status')
                                     ->badge()
-                                    ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
-                                    ->icon(fn(bool $state): string => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
-                                    ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
+                                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
+                                    ->icon(fn (bool $state): string => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
+                                    ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
                             ]),
 
-                        Section::make('Equipment Details')
+                        Section::make('Asset Details')
                             ->description('Additional information you can fill in manually.')
                             ->icon('heroicon-o-wrench-screwdriver')
                             ->schema([

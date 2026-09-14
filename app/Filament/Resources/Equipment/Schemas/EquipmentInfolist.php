@@ -37,9 +37,9 @@ class EquipmentInfolist
                                 TextEntry::make('eqm_is_active')
                                     ->label('Status')
                                     ->badge()
-                                    ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
-                                    ->icon(fn(bool $state): string => $state ? 'heroicon-s-check-circle' : 'heroicon-s-x-circle')
-                                    ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
+                                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
+                                    ->icon(fn (bool $state): string => $state ? 'heroicon-s-check-circle' : 'heroicon-s-x-circle')
+                                    ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
                             ]),
 
                         Section::make('Preventive Maintenance Schedule')
@@ -49,12 +49,12 @@ class EquipmentInfolist
                                 TextEntry::make('eqm_pm_itrv_type')
                                     ->label('Interval Type')
                                     ->badge()
-                                    ->formatStateUsing(fn($state) => match ($state) {
+                                    ->formatStateUsing(fn ($state) => match ($state) {
                                         'monthly' => 'Monthly',
                                         'weekly' => 'Weekly',
                                         default => '—',
                                     })
-                                    ->color(fn($state) => match ($state) {
+                                    ->color(fn ($state) => match ($state) {
                                         'monthly' => 'info',
                                         'weekly' => 'warning',
                                         default => 'gray',
@@ -64,8 +64,8 @@ class EquipmentInfolist
                                 TextEntry::make('eqm_pm_itrv_value')
                                     ->label('Every')
                                     ->formatStateUsing(
-                                        fn($state, $record) => $state && $record->eqm_pm_itrv_type
-                                            ? "{$state} " . ($record->eqm_pm_itrv_type === 'monthly' ? 'month(s)' : 'week(s)')
+                                        fn ($state, $record) => $state && $record->eqm_pm_itrv_type
+                                            ? "{$state} ".($record->eqm_pm_itrv_type === 'monthly' ? 'month(s)' : 'week(s)')
                                             : '—'
                                     )
                                     ->columnSpanFull(),
@@ -80,7 +80,7 @@ class EquipmentInfolist
                                     ->label('Next PM Due')
                                     ->date('M d, Y')
                                     ->badge()
-                                    ->color(fn($state) => $state && Carbon::parse($state)->isPast() ? 'danger' : 'info')
+                                    ->color(fn ($state) => $state && Carbon::parse($state)->isPast() ? 'danger' : 'info')
                                     ->columnSpanFull()
                                     ->placeholder('—'),
 
@@ -88,7 +88,7 @@ class EquipmentInfolist
                                     ->label('Last Notified')
                                     ->date('M d, Y')
                                     ->columnSpanFull()
-                                    ->placeholder('—')
+                                    ->placeholder('—'),
                             ]),
 
                         Section::make('Asset Details')
@@ -99,8 +99,8 @@ class EquipmentInfolist
                                     ->label('Asset Type'),
                                 TextEntry::make('parent.eqm_name')
                                     ->label('Allocated to')
-                                    ->visible(fn(Equipment $record): bool => $record->isAccessory())
-                                    ->url(fn(Equipment $record): ?string => $record->parent_id
+                                    ->visible(fn (Equipment $record): bool => $record->isAccessory())
+                                    ->url(fn (Equipment $record): ?string => $record->parent_id
                                         ? EquipmentResource::getUrl('view', ['record' => $record->parent_id])
                                         : null)
                                     ->placeholder('Unallocated'),
@@ -113,14 +113,16 @@ class EquipmentInfolist
                                     ->label('Lifecycle Status')
                                     ->inlineLabel()
                                     ->badge()
-                                    ->color(fn(Equipment $record) => $record->lifecycleStatus->status_color)
-                                    ->icon(fn(Equipment $record) => $record->lifecycleStatus->status_icon),
+                                    ->color(fn (Equipment $record) => $record->lifecycleStatus->status_color)
+                                    ->icon(fn (Equipment $record) => $record->lifecycleStatus->status_icon),
                                 ViewEntry::make('categories')
                                     ->label('Tags')
                                     ->inlineLabel()
                                     ->view('filament.infolists.entries.category-badges'),
                                 TextEntry::make('location.full_path')
-                                    ->label('Location'),
+                                    ->label('Location')
+                                    ->visible(fn (Equipment $record): bool => $record->isEquipmentAsset())
+                                    ->placeholder('—'),
                                 TextEntry::make('equipmentModel.eqmm_name')
                                     ->label('Model')
                                     ->columnSpanFull()
@@ -152,7 +154,7 @@ class EquipmentInfolist
                                     ->inlineLabel(false)
                                     ->columnSpanFull()
                                     ->placeholder('—')
-                                    ->markdown()
+                                    ->markdown(),
                             ]),
                     ]),
             ])->columns(1);
