@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Equipment\Schemas;
 
 use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Filament\Resources\EquipmentTypes\EquipmentTypeResource;
 use App\Models\Equipment;
 use Carbon\Carbon;
 use Filament\Infolists\Components\TextEntry;
@@ -126,6 +127,14 @@ class EquipmentInfolist
                                 TextEntry::make('equipmentModel.eqmm_name')
                                     ->label('Model')
                                     ->columnSpanFull()
+                                    ->placeholder('—'),
+                                TextEntry::make('type.eqmt_name')
+                                    ->label('Type')
+                                    ->url(fn (Equipment $record): ?string => $record->eqm_eqmt_id
+                                        ? EquipmentTypeResource::getUrl('view', ['record' => $record->eqm_eqmt_id])
+                                        : null)
+                                    ->color('primary')
+                                    ->icon('heroicon-m-arrow-top-right-on-square')
                                     ->placeholder('—'),
                                 TextEntry::make('brand.eqmb_name')
                                     ->label('Brand')

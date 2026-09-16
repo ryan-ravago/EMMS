@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 class EquipmentModel extends Model
 {
@@ -22,6 +23,26 @@ class EquipmentModel extends Model
     ];
 
     public $timestamps = false;
+
+    /**
+     * Save the model and synchronize the denormalized equipment type atomically.
+     *
+     * @param  array<string, mixed>  $options
+     */
+    public function save(array $options = []): bool
+    {
+        return DB::transaction(function () use ($options): bool {
+            $saved = parent::save($options);
+
+            if ($saved && $this->wasChanged('eqmm_eqmt_id')) {
+                Equipment::query()
+                    ->where('eqm_eqmm_id', $this->getKey())
+                    ->update(['eqm_eqmt_id' => $this->eqmm_eqmt_id]);
+            }
+
+            return $saved;
+        });
+    }
 
     public function brand()
     {

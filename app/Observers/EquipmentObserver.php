@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Equipment;
+use App\Models\EquipmentModel;
 
 class EquipmentObserver
 {
@@ -25,6 +26,7 @@ class EquipmentObserver
     public function saving(Equipment $equipment): void
     {
         $this->normalizeParentAllocation($equipment);
+        $this->syncEquipmentType($equipment);
 
         // Recalculate next due whenever PM intervals change
         if ($equipment->isDirty([
@@ -62,6 +64,17 @@ class EquipmentObserver
         if (! $parent?->isEquipmentAsset()) {
             $equipment->parent_id = null;
         }
+    }
+
+    protected function syncEquipmentType(Equipment $equipment): void
+    {
+        if (! $equipment->isDirty('eqm_eqmm_id') || ! $equipment->eqm_eqmm_id) {
+            return;
+        }
+
+        $equipment->eqm_eqmt_id = EquipmentModel::query()
+            ->whereKey($equipment->eqm_eqmm_id)
+            ->value('eqmm_eqmt_id');
     }
 
     /**

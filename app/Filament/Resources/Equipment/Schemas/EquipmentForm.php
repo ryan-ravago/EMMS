@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Equipment\Schemas;
 
 use App\Models\AssetType;
 use App\Models\Equipment;
+use App\Models\EquipmentModel;
 use Carbon\Carbon;
 use CodeWithDennis\FilamentSelectTree\SelectTree;
 use Filament\Actions\Action;
@@ -85,6 +86,7 @@ class EquipmentForm
                         Section::make('Preventive Maintenance Schedule')
                             ->description('Set up automatic maintenance reminders')
                             ->icon('heroicon-o-bell-alert')
+                            ->visible(fn (Get $get): bool => (int) $get('asset_type_id') === (int) AssetType::equipmentId())
                             ->columnSpan(1)
                             ->columns(2)
                             ->schema([
@@ -94,7 +96,6 @@ class EquipmentForm
                                         'monthly' => 'Monthly',
                                         'weekly' => 'Weekly',
                                     ])
-                                    ->required(fn (Get $get) => $get('eqm_pm_itrv_value') || $get('eqm_pm_itrv_start_date'))
                                     ->live()
                                     ->afterStateUpdated(function ($state, Set $set, Get $get) use ($clearAllPM, $calculateNextPMDue) {
                                         if (! $state) {
@@ -121,7 +122,7 @@ class EquipmentForm
                                             : ''
                                     )
                                     ->live()
-                                    ->required()
+                                    ->required(fn (Get $get): bool => filled($get('eqm_pm_itrv_type')))
                                     ->afterStateUpdated(function ($state, Set $set, Get $get) use ($clearDueDate, $calculateNextPMDue) {
                                         if (! $state || $state < 1) {
                                             $clearDueDate($set);
@@ -135,7 +136,7 @@ class EquipmentForm
                                     ->native(false)
                                     ->live()
                                     ->columnStart(1)
-                                    ->required(fn (Get $get) => $get('eqm_pm_itrv_type') || $get('eqm_pm_itrv_value'))
+                                    ->required(fn (Get $get): bool => filled($get('eqm_pm_itrv_type')))
                                     ->afterStateUpdated(function ($state, Set $set, Get $get) use ($clearDueDate, $calculateNextPMDue) {
                                         if (! $state) {
                                             $clearDueDate($set);
@@ -179,9 +180,13 @@ class EquipmentForm
                                         2 => 'success',
                                     ])
                                     ->live()
-                                    ->afterStateUpdated(function (mixed $state, Set $set): void {
+                                    ->afterStateUpdated(function (mixed $state, Set $set) use ($clearAllPM): void {
                                         if ((int) $state !== (int) AssetType::accessoryId()) {
                                             $set('parent_id', null);
+                                        }
+
+                                        if ((int) $state !== (int) AssetType::equipmentId()) {
+                                            $clearAllPM($set);
                                         }
                                     })
                                     ->required(),
@@ -225,6 +230,15 @@ class EquipmentForm
                                     ->native(false)
                                     ->searchable()
                                     ->preload()
+                                    ->live()
+                                    ->afterStateUpdated(function (mixed $state, Set $set): void {
+                                        $model = $state
+                                            ? EquipmentModel::query()->find($state)
+                                            : null;
+
+                                        $set('eqm_brand_id', $model?->eqmm_brand_id);
+                                        $set('eqm_eqmt_id', $model?->eqmm_eqmt_id);
+                                    })
                                     ->createOptionForm([
                                         TextInput::make('eqmm_name')
                                             ->label('Model Name')
@@ -280,6 +294,8 @@ class EquipmentForm
                                     ->native(false)
                                     ->searchable()
                                     ->preload()
+                                    ->disabled(fn (Get $get): bool => filled($get('eqm_eqmm_id')) && filled($get('eqm_brand_id')))
+                                    ->dehydrated()
                                     ->createOptionForm([
                                         TextInput::make('eqmb_name')
                                             ->label('Brand Name')
@@ -290,6 +306,26 @@ class EquipmentForm
                                         return $action
                                             ->modalHeading('Add New Equipment Brand')
                                             ->modalWidth('md'); // xs, sm, md, lg, xl, 2xl
+                                    }),
+                                Select::make('eqm_eqmt_id')
+                                    ->label('Type')
+                                    ->relationship('type', 'eqmt_name')
+                                    ->native(false)
+                                    ->searchable()
+                                    ->preload()
+                                    ->disabled(fn (Get $get): bool => filled($get('eqm_eqmm_id')) && filled($get('eqm_eqmt_id')))
+                                    ->dehydrated()
+                                    ->createOptionForm([
+                                        TextInput::make('eqmt_name')
+                                            ->label('Type Name')
+                                            ->required()
+                                            ->unique()
+                                            ->maxLength(255),
+                                    ])
+                                    ->createOptionAction(function (Action $action) {
+                                        return $action
+                                            ->modalHeading('Add New Equipment Type')
+                                            ->modalWidth('md');
                                     }),
                                 TextInput::make('eqm_plate_num')
                                     ->label('Plate #')
