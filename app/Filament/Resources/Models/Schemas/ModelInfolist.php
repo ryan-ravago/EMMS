@@ -31,6 +31,10 @@ class ModelInfolist
                             ->color('primary')
                             ->icon('heroicon-m-arrow-top-right-on-square')
                             ->iconPosition(IconPosition::After),
+                        TextEntry::make('remarks')
+                            ->label('Remarks')
+                            ->placeholder('—')
+                            ->columnSpanFull(),
                     ]),
             ]);
     }

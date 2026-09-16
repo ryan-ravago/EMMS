@@ -15,11 +15,8 @@ class EquipmentModel extends Model
     protected $fillable = [
         'eqmm_name',
         'eqmm_brand_id',
-        'eqmm_fuel_type',
-        'eqmm_fuel_type',
         'eqmm_eqmt_id',
-        'eqmm_max_capacity_tons',
-        'eqmm_max_reach_meters',
+        'remarks',
     ];
 
     public $timestamps = false;
@@ -34,10 +31,13 @@ class EquipmentModel extends Model
         return DB::transaction(function () use ($options): bool {
             $saved = parent::save($options);
 
-            if ($saved && $this->wasChanged('eqmm_eqmt_id')) {
+            if ($saved && ($this->wasChanged('eqmm_brand_id') || $this->wasChanged('eqmm_eqmt_id'))) {
                 Equipment::query()
                     ->where('eqm_eqmm_id', $this->getKey())
-                    ->update(['eqm_eqmt_id' => $this->eqmm_eqmt_id]);
+                    ->update([
+                        'eqm_brand_id' => $this->eqmm_brand_id,
+                        'eqm_eqmt_id' => $this->eqmm_eqmt_id,
+                    ]);
             }
 
             return $saved;
