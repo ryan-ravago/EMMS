@@ -2,20 +2,13 @@
 
 namespace App\Filament\Resources\Equipment\RelationManagers;
 
-use App\Models\LifecycleLog;
-use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Section;
@@ -39,7 +32,7 @@ class LifecycleLogsRelationManager extends RelationManager
 
         if ($user->hasRole('super_admin')) {
             return (string) $query->count();
-        } else if ($user->hasRole('manager')) {
+        } elseif ($user->hasRole('manager')) {
             $query->where('wo_dep_id', $user->user_dep_id);
         }
 
@@ -83,23 +76,25 @@ class LifecycleLogsRelationManager extends RelationManager
                         TextEntry::make('action.a_present_tense')
                             ->label('Action')
                             ->badge()
-                            ->color(fn($record) => match ($record->action_id) {
+                            ->color(fn ($record) => match ($record->action_id) {
                                 'dep', 'alc' => 'success',
                                 'sidle' => 'danger',
                                 'smt' => 'warning',
                                 default => 'gray',
                             })
-                            ->icon(fn($record) => $record->action?->a_icon),
+                            ->icon(fn ($record) => $record->action?->a_icon),
                         TextEntry::make('status.status_title')
                             ->label('Status')
                             ->badge()
-                            ->color(fn($record) => $record->status->status_color)
-                            ->icon(fn($record) => $record->status->status_icon),
+                            ->color(fn ($record) => $record->status->status_color)
+                            ->icon(fn ($record) => $record->status->status_icon),
                         TextEntry::make('deployToLocation.name')
-                            ->label('Deployed To')
+                            ->label('Location')
+                            ->visible(fn (): bool => $this->ownerHasAssetType(1))
                             ->placeholder('—'),
                         TextEntry::make('allocateToEquipment.eqm_name')
                             ->label('Allocated To Equipment')
+                            ->visible(fn (): bool => $this->ownerHasAssetType(2))
                             ->placeholder('—'),
                         TextEntry::make('remarks')
                             ->label('Remarks')
@@ -111,13 +106,19 @@ class LifecycleLogsRelationManager extends RelationManager
                                 if (! $record->performedBy) {
                                     return '—';
                                 }
-                                return trim(implode(' ', array_filter([$record->performedBy->user_fname, $record->performedBy->user_mname, $record->performedBy->user_lname,])));
+
+                                return trim(implode(' ', array_filter([$record->performedBy->user_fname, $record->performedBy->user_mname, $record->performedBy->user_lname])));
                             }),
                         TextEntry::make('logged_at')
                             ->label('Logged At')
                             ->dateTime('M d, Y h:i A'),
-                    ])
+                    ]),
             ])->columns(1);
+    }
+
+    protected function ownerHasAssetType(int $assetTypeId): bool
+    {
+        return (int) $this->getOwnerRecord()->asset_type_id === $assetTypeId;
     }
 
     public function table(Table $table): Table
@@ -129,35 +130,37 @@ class LifecycleLogsRelationManager extends RelationManager
                 TextColumn::make('action.a_past_tense')
                     ->label('Action')
                     ->badge()
-                    ->color(fn($record) => match ($record->action_id) {
+                    ->color(fn ($record) => match ($record->action_id) {
                         'dep', 'alc' => 'success',
                         'sidle' => 'danger',
                         'smt' => 'warning',
                         default => 'gray',
                     })
-                    ->icon(fn($record) => $record->action?->a_icon)
+                    ->icon(fn ($record) => $record->action?->a_icon)
                     ->searchable(),
 
                 TextColumn::make('status.status_title')
                     ->label('Status')
                     ->badge()
-                    ->color(fn($record) => $record->status?->status_color)
+                    ->color(fn ($record) => $record->status?->status_color)
                     ->searchable(),
 
                 TextColumn::make('deployToLocation.name')
-                    ->label('Deployed To')
+                    ->label('Location')
                     ->placeholder('—')
+                    ->visible(fn (): bool => $this->ownerHasAssetType(1))
                     ->searchable(),
 
                 TextColumn::make('allocateToEquipment.eqm_name')
                     ->label('Allocated To')
                     ->placeholder('—')
+                    ->visible(fn (): bool => $this->ownerHasAssetType(2))
                     ->searchable(),
 
                 TextColumn::make('remarks')
                     ->label('Remarks')
                     ->limit(40)
-                    ->tooltip(fn($record) => $record->remarks)
+                    ->tooltip(fn ($record) => $record->remarks)
                     ->placeholder('—'),
 
                 TextColumn::make('performedBy.user_fname')
@@ -198,7 +201,7 @@ class LifecycleLogsRelationManager extends RelationManager
             ->recordActions([
                 // Keep history read-only.
                 ViewAction::make()
-                    ->modalWidth('xl')
+                    ->modalWidth('xl'),
             ])
 
             ->toolbarActions([

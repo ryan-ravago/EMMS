@@ -7,8 +7,6 @@ use App\Models\AssetType;
 use App\Models\Equipment;
 use App\Models\EquipmentBrand;
 use App\Models\EquipmentModel;
-use CodeWithDennis\FilamentSelectTree\SelectTree;
-use Filament\Actions\Action;
 use Filament\Actions\AttachAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -23,6 +21,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
 
@@ -32,11 +31,11 @@ class EquipmentsRelationManager extends RelationManager
 
     protected static ?string $inverseRelationship = 'categories';
 
-    protected static ?string $title = 'Equipment Units';
+    protected static ?string $title = 'Equipment';
 
     public static function getBadge(Model $ownerRecord, string $pageClass): ?string
     {
-        return (string) $ownerRecord->equipments()->count() ?: null;
+        return (string) $ownerRecord->equipments()->equipmentAssets()->count();
     }
 
     public function form(Schema $schema): Schema
@@ -76,8 +75,9 @@ class EquipmentsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->equipmentAssets())
             ->recordTitle(
-                fn(Equipment $record): string => "{$record->eqm_prc_code} - {$record->eqm_name}"
+                fn (Equipment $record): string => "{$record->eqm_prc_code} - {$record->eqm_name}"
             )
             ->recordTitleAttribute('eqm_name')
             ->columns([
@@ -111,7 +111,7 @@ class EquipmentsRelationManager extends RelationManager
                     ]),
             ])
             ->recordUrl(
-                fn(Equipment $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
+                fn (Equipment $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
             )
             ->headerActions([
                 CreateAction::make()
@@ -142,11 +142,11 @@ class EquipmentsRelationManager extends RelationManager
                         }
 
                         // 2. Business Logic: Check active status across all items
-                        $inactive = $equipments->filter(fn(Equipment $item) => ! $item->eqm_is_active);
+                        $inactive = $equipments->filter(fn (Equipment $item) => ! $item->eqm_is_active);
 
                         if ($inactive->isNotEmpty()) {
                             throw ValidationException::withMessages([
-                                'recordId' => 'Inactive equipment cannot be assigned (' . $inactive->pluck('eqm_name')->implode(', ') . ').',
+                                'recordId' => 'Inactive equipment cannot be assigned ('.$inactive->pluck('eqm_name')->implode(', ').').',
                             ]);
                         }
 
@@ -163,7 +163,7 @@ class EquipmentsRelationManager extends RelationManager
                                 'recordId' => "The following equipment items are already attached: {$duplicates}.",
                             ]);
                         }
-                    })
+                    }),
             ])
             ->recordActions([
                 DetachAction::make(),

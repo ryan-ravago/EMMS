@@ -17,10 +17,18 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class ChildrenRelationManager extends RelationManager
 {
     protected static string $relationship = 'children';
+
+    protected static ?string $title = 'Children';
+
+    public static function getBadge(Model $ownerRecord, string $pageClass): ?string
+    {
+        return (string) $ownerRecord->children()->count();
+    }
 
     public function form(Schema $schema): Schema
     {
@@ -48,7 +56,7 @@ class ChildrenRelationManager extends RelationManager
                 AssociateAction::make(),
             ])
             ->recordUrl(
-                fn(EquipmentCategory $record): string => CategoryResource::getUrl('view', ['record' => $record]),
+                fn (EquipmentCategory $record): string => CategoryResource::getUrl('view', ['record' => $record]),
             )
             ->recordActions([
                 // EditAction::make(),

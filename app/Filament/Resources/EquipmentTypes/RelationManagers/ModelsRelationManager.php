@@ -15,10 +15,18 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class ModelsRelationManager extends RelationManager
 {
     protected static string $relationship = 'models';
+
+    protected static ?string $title = 'Models';
+
+    public static function getBadge(Model $ownerRecord, string $pageClass): ?string
+    {
+        return (string) $ownerRecord->models()->count();
+    }
 
     public function form(Schema $schema): Schema
     {

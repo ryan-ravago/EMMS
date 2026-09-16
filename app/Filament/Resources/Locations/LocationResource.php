@@ -6,6 +6,10 @@ use App\Filament\Resources\Locations\Pages\CreateLocation;
 use App\Filament\Resources\Locations\Pages\EditLocation;
 use App\Filament\Resources\Locations\Pages\ListLocations;
 use App\Filament\Resources\Locations\Pages\ViewLocation;
+use App\Filament\Resources\Locations\RelationManagers\AccessoriesRelationManager;
+use App\Filament\Resources\Locations\RelationManagers\ChildrenRelationManager;
+use App\Filament\Resources\Locations\RelationManagers\DescendantsRelationManager;
+use App\Filament\Resources\Locations\RelationManagers\EquipmentUnitsRelationManager;
 use App\Filament\Resources\Locations\Schemas\LocationForm;
 use App\Filament\Resources\Locations\Schemas\LocationInfolist;
 use App\Filament\Resources\Locations\Tables\LocationsTable;
@@ -58,7 +62,10 @@ class LocationResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            EquipmentUnitsRelationManager::class,
+            AccessoriesRelationManager::class,
+            ChildrenRelationManager::class,
+            DescendantsRelationManager::class,
         ];
     }
 

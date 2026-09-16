@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Models\RelationManagers;
+namespace App\Filament\Resources\Brands\RelationManagers;
 
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Models\Equipment;

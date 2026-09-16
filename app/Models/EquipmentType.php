@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class EquipmentType extends Model
 {
@@ -29,5 +30,17 @@ class EquipmentType extends Model
     public function models(): HasMany
     {
         return $this->hasMany(EquipmentModel::class, 'eqmm_eqmt_id', 'eqmt_id');
+    }
+
+    public function equipments(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Equipment::class,
+            EquipmentModel::class,
+            'eqmm_eqmt_id',
+            'eqm_eqmm_id',
+            'eqmt_id',
+            'eqmm_id',
+        );
     }
 }

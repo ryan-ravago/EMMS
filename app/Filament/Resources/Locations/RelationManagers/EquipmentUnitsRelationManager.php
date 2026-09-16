@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Models\RelationManagers;
+namespace App\Filament\Resources\Locations\RelationManagers;
 
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Models\Equipment;
@@ -10,15 +10,15 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
-class EquipmentsRelationManager extends RelationManager
+class EquipmentUnitsRelationManager extends RelationManager
 {
-    protected static string $relationship = 'equipments';
+    protected static string $relationship = 'equipmentUnits';
 
     protected static ?string $title = 'Equipment';
 
     public static function getBadge(Model $ownerRecord, string $pageClass): ?string
     {
-        return (string) $ownerRecord->equipments()->equipmentAssets()->count();
+        return (string) $ownerRecord->equipmentUnits()->equipmentAssets()->count();
     }
 
     public function table(Table $table): Table
@@ -35,9 +35,9 @@ class EquipmentsRelationManager extends RelationManager
                     ->label('Name')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('equipmentModel.eqmm_name')
-                    ->label('Model')
-                    ->placeholder('—'),
+                TextColumn::make('assetType.name')
+                    ->label('Asset Type')
+                    ->badge(),
             ])
             ->recordUrl(fn (Equipment $record): string => EquipmentResource::getUrl('view', ['record' => $record]));
     }

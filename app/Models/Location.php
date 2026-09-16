@@ -57,6 +57,11 @@ class Location extends Model
         return $this->hasMany(Location::class, 'parent_id');
     }
 
+    public function descendants(): HasMany
+    {
+        return $this->children();
+    }
+
     public function getParentPathAttribute(): string
     {
         $names = [];

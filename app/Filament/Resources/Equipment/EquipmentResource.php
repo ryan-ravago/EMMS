@@ -23,6 +23,7 @@ use App\Models\AppUser;
 use App\Models\Equipment;
 use BackedEnum;
 use Filament\Resources\Resource;
+use Filament\Resources\ResourceConfiguration;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
@@ -36,17 +37,21 @@ class EquipmentResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCube;
 
+    protected static ?string $configurationClass = ResourceConfiguration::class;
+
     protected static ?string $recordTitleAttribute = 'eqm_name';
 
-    protected static ?string $navigationLabel = 'Asset';
+    protected static ?string $navigationLabel = 'Equipment';
 
-    protected static ?string $modelLabel = 'Asset';
+    protected static ?string $modelLabel = 'Equipment';
 
-    protected static ?string $pluralModelLabel = 'Asset';
+    protected static ?string $pluralModelLabel = 'Equipment';
 
     protected static ?string $slug = 'asset';
 
     protected static ?int $navigationSort = 2;
+
+    protected static bool $shouldRegisterNavigation = false;
 
     // protected static string|UnitEnum|null $navigationGroup = 'Asset Details';
 
@@ -57,7 +62,52 @@ class EquipmentResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        $query = static::getModel()::query();
+
+        if (static::isAccessoriesConfiguration()) {
+            $query->accessories();
+        } elseif (static::isEquipmentConfiguration()) {
+            $query->equipmentAssets();
+        }
+
+        return (string) $query->count();
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return match (true) {
+            static::isAccessoriesConfiguration() => 'Accessories',
+            static::isEquipmentConfiguration() => 'Equipment',
+            default => 'Assets',
+        };
+    }
+
+    public static function getModelLabel(): string
+    {
+        return match (true) {
+            static::isAccessoriesConfiguration() => 'Accessory',
+            static::isEquipmentConfiguration() => 'Equipment',
+            default => 'Asset',
+        };
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return match (true) {
+            static::isAccessoriesConfiguration() => 'Accessories',
+            static::isEquipmentConfiguration() => 'Equipment',
+            default => 'Assets',
+        };
+    }
+
+    protected static function isAccessoriesConfiguration(): bool
+    {
+        return static::getConfiguration()?->getKey() === 'accessories';
+    }
+
+    protected static function isEquipmentConfiguration(): bool
+    {
+        return static::getConfiguration()?->getKey() === 'equipment';
     }
 
     public static function form(Schema $schema): Schema
@@ -72,8 +122,16 @@ class EquipmentResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->with(['equipmentModel', 'type', 'brand', 'assetType', 'parent']);
+        $query = parent::getEloquentQuery()
+            ->with(['equipmentModel', 'type', 'brand', 'assetType', 'parent', 'location.parent', 'lifecycleStatus']);
+
+        if (static::isAccessoriesConfiguration()) {
+            $query->accessories();
+        } elseif (static::isEquipmentConfiguration()) {
+            $query->equipmentAssets();
+        }
+
+        return $query;
     }
 
     public static function table(Table $table): Table

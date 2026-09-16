@@ -6,7 +6,9 @@ use App\Filament\Resources\Categories\Pages\CreateCategory;
 use App\Filament\Resources\Categories\Pages\EditCategory;
 use App\Filament\Resources\Categories\Pages\ListCategories;
 use App\Filament\Resources\Categories\Pages\ViewCategory;
+use App\Filament\Resources\Categories\RelationManagers\AccessoriesRelationManager;
 use App\Filament\Resources\Categories\RelationManagers\ChildrenRelationManager;
+use App\Filament\Resources\Categories\RelationManagers\DescendantsRelationManager;
 use App\Filament\Resources\Categories\RelationManagers\EquipmentsRelationManager;
 use App\Filament\Resources\Categories\Schemas\CategoryForm;
 use App\Filament\Resources\Categories\Schemas\CategoryInfolist;
@@ -89,8 +91,10 @@ class CategoryResource extends Resource
     public static function getRelations(): array
     {
         return [
-            ChildrenRelationManager::class,
             EquipmentsRelationManager::class,
+            AccessoriesRelationManager::class,
+            ChildrenRelationManager::class,
+            DescendantsRelationManager::class,
         ];
     }
 

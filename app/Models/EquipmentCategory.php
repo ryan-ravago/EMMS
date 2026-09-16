@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class EquipmentCategory extends Model
 {
@@ -54,9 +55,14 @@ class EquipmentCategory extends Model
     }
 
     // Child categories
-    public function children()
+    public function children(): HasMany
     {
         return $this->hasMany(EquipmentCategory::class, 'eqmc_parent_id', 'eqmc_id');
+    }
+
+    public function descendants(): HasMany
+    {
+        return $this->children();
     }
 
     public function equipments(): BelongsToMany

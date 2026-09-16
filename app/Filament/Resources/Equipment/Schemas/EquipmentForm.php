@@ -219,13 +219,6 @@ class EquipmentForm
                                 // ->required()
                                 // ->native(false)
                                 // ->preload(),
-                                SelectTree::make('location_id')
-                                    ->label('Location')
-                                    ->enableBranchNode()
-                                    ->relationship('location', 'name', 'parent_id'),
-                                // ->required()
-                                // ->native(false)
-                                // ->preload(),
                                 Select::make('eqm_eqmm_id')
                                     ->label('Model')
                                     ->relationship('equipmentModel', 'eqmm_name')

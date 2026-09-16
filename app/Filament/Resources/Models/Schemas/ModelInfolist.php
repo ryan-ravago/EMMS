@@ -19,25 +19,19 @@ class ModelInfolist
                     ->schema([
                         TextEntry::make('eqmm_name')
                             ->label('Name'),
-                        // TextEntry::make('type.eqmt_name')
-                        //     ->label('Equipment Type')
-                        //     ->url(
-                        //         fn($record) => $record->eqmm_eqmt_id
-                        //             ? EquipmentTypeResource::getUrl('view', ['record' => $record->eqmm_eqmt_id])
-                        //             : null
-                        //     )
-                        //     ->color('primary')
-                        //     ->icon('heroicon-m-arrow-top-right-on-square')
-                        //     ->iconPosition(IconPosition::After),
-                        // TextEntry::make('brand.eqmb_name')
-                        //     ->label('Brand'),
-                        // TextEntry::make('fuel_type.fuel_name')
-                        //     ->label('Fuel Type'),
-                        TextEntry::make('eqmm_max_capacity_tons')
-                            ->label('Max Capacity (tons)'),
-                        TextEntry::make('eqmm_max_reach_meters')
-                            ->label('Max Reach (meters)'),
-                    ])
+                        TextEntry::make('brand.eqmb_name')
+                            ->label('Brand'),
+                        TextEntry::make('type.eqmt_name')
+                            ->label('Equipment Type')
+                            ->url(
+                                fn ($record) => $record->eqmm_eqmt_id
+                                    ? EquipmentTypeResource::getUrl('view', ['record' => $record->eqmm_eqmt_id])
+                                    : null
+                            )
+                            ->color('primary')
+                            ->icon('heroicon-m-arrow-top-right-on-square')
+                            ->iconPosition(IconPosition::After),
+                    ]),
             ]);
     }
 }

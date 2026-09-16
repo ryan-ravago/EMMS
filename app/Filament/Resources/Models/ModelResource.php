@@ -6,6 +6,7 @@ use App\Filament\Resources\Models\Pages\CreateModel;
 use App\Filament\Resources\Models\Pages\EditModel;
 use App\Filament\Resources\Models\Pages\ListModels;
 use App\Filament\Resources\Models\Pages\ViewModel;
+use App\Filament\Resources\Models\RelationManagers\AccessoriesRelationManager;
 use App\Filament\Resources\Models\RelationManagers\EquipmentsRelationManager;
 use App\Filament\Resources\Models\Schemas\ModelForm;
 use App\Filament\Resources\Models\Schemas\ModelInfolist;
@@ -66,6 +67,7 @@ class ModelResource extends Resource
     {
         return [
             EquipmentsRelationManager::class,
+            AccessoriesRelationManager::class,
         ];
     }
 

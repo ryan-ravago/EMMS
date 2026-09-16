@@ -3,8 +3,10 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Helper\CustomLogin;
+use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Filament\Widgets\DashboardStatsOverview;
 use App\Http\Middleware\EnsureUserStillHasRole;
+use App\Models\Equipment;
 use App\Models\SiteSetting;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Enums\GlobalSearchPosition;
@@ -14,11 +16,13 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Width;
+use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
@@ -132,7 +136,30 @@ class AdminPanelProvider extends PanelProvider
             })
             // ->font(SiteSetting::instance()->site_font_family ?? 'Inter', provider: GoogleFontProvider::class)
             ->maxContentWidth(Width::SevenExtraLarge)
+            ->navigationItems([
+                NavigationItem::make('Assets')
+                    ->icon(Heroicon::OutlinedCube)
+                    ->badge(fn (): string => (string) Equipment::query()->count())
+                    ->url(fn (): string => route('filament.admin.resources.asset.index'))
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.asset.*')),
+                NavigationItem::make('Equipment')
+                    ->icon(Heroicon::OutlinedCube)
+                    ->badge(fn (): string => (string) Equipment::query()->equipmentAssets()->count())
+                    ->url(fn (): string => route('filament.admin.resources.equipment.index'))
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.equipment.*')),
+                NavigationItem::make('Accessories')
+                    ->icon(Heroicon::OutlinedCube)
+                    ->badge(fn (): string => (string) Equipment::query()->accessories()->count())
+                    ->url(fn (): string => route('filament.admin.resources.accessories.index'))
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.accessories.*')),
+            ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
+            ->resources([
+                EquipmentResource::make('equipment')
+                    ->slug('equipment'),
+                EquipmentResource::make('accessories')
+                    ->slug('accessories'),
+            ])
             // ->navigationGroups([
             //     NavigationGroup::make()
             //         ->label('Asset Details')
