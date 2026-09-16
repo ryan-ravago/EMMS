@@ -46,7 +46,7 @@ class ModelForm
                                     ]),
 
                                 Select::make('eqmm_eqmt_id')
-                                    ->label('Equipment Type')
+                                    ->label('Asset Type')
                                     ->relationship('type', 'eqmt_name')
                                     ->searchable()
                                     ->preload()
