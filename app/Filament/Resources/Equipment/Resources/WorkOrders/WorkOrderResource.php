@@ -15,13 +15,15 @@ use App\Filament\Resources\Equipment\Resources\WorkOrders\Tables\WorkOrdersTable
 use App\Models\WorkOrder;
 use BackedEnum;
 use Filament\Resources\Resource;
+use Filament\Resources\ResourceConfiguration;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class WorkOrderResource extends Resource
 {
+    protected static ?string $configurationClass = ResourceConfiguration::class;
+
     protected static ?string $model = WorkOrder::class;
 
     protected static ?string $navigationLabel = 'Work Order';
@@ -54,7 +56,7 @@ class WorkOrderResource extends Resource
         return [
             LogsRelationManager::class,
             LogUpdatesRelationManager::class,
-            NotesRelationManager::class
+            NotesRelationManager::class,
         ];
     }
 
