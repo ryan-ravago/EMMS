@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Technicians\Schemas;
 
+use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -52,6 +53,9 @@ class TechnicianInfolist
                             ->label('Roles')
                             ->badge()
                             ->separator(','),
+                        IconEntry::make('is_active')
+                            ->label('Active')
+                            ->boolean(),
                     ]),
             ]);
     }

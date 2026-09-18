@@ -28,6 +28,7 @@ class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasNam
         'user_contact_no',
         'user_fb_profile_link',
         'user_dep_id',
+        'is_active',
         'google_access_token',
         'google_refresh_token',
         'google_token_expires_at',
@@ -38,6 +39,7 @@ class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasNam
     protected function casts(): array
     {
         return [
+            'is_active' => 'boolean',
             'google_access_token' => 'encrypted',
             'google_refresh_token' => 'encrypted',
             'google_token_expires_at' => 'datetime',
@@ -58,8 +60,7 @@ class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasNam
 
     public function canAccessPanel(Panel $panel): bool
     {
-        // Define your logic here. For now, we'll allow all found users.
-        return true;
+        return $this->is_active;
     }
 
     public function department(): BelongsTo
@@ -86,6 +87,6 @@ class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasNam
 
     public function getFilamentAvatarUrl(): ?string
     {
-        return $this->user_avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user_fname . ' ' . $this->user_lname) . '&color=FFFFFF&background=03449d';
+        return $this->user_avatar ?: 'https://ui-avatars.com/api/?name='.urlencode($this->user_fname.' '.$this->user_lname).'&color=FFFFFF&background=03449d';
     }
 }

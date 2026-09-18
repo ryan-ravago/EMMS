@@ -17,4 +17,13 @@ class Technician extends AppUser
     {
         return AppUser::class;
     }
+
+    /**
+     * Spatie resolves guards from config('auth.guards') providers, which only
+     * matches the base AppUser class. Declare it explicitly for this subclass.
+     */
+    public function guardName(): string
+    {
+        return 'web';
+    }
 }

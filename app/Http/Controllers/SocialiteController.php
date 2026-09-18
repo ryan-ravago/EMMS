@@ -184,7 +184,7 @@ class SocialiteController extends Controller
             }
 
             // Check if user is active in Usr model
-            if ($usrUser->isActive != 1) {
+            if ($usrUser->isActive != 1 || ! $appUser->is_active) {
                 Notification::make()
                     ->title('Account Inactive')
                     ->body('Your account is currently inactive. Please contact your administrator.')

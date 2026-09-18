@@ -19,6 +19,20 @@ class EnsureUserStillHasRole
     {
         $user = Auth::user();
 
+        if ($user && ! $user->is_active) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            Notification::make()
+                ->title('Account Deactivated')
+                ->body('Your account has been deactivated. Please contact an administrator.')
+                ->danger()
+                ->send();
+
+            return redirect()->route('filament.admin.auth.login');
+        }
+
         if ($user && $user->roles()->count() === 0) {
             Auth::logout();
             $request->session()->invalidate();

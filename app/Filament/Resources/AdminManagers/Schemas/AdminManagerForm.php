@@ -5,6 +5,7 @@ namespace App\Filament\Resources\AdminManagers\Schemas;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rules\Exists;
@@ -32,9 +33,9 @@ class AdminManagerForm
                     ->relationship(
                         'department',
                         'dep_name',
-                        fn(Builder $query) => $query->where('is_maintenance', 0)
+                        fn (Builder $query) => $query->where('is_maintenance', 0)
                     )
-                    ->exists('departments', 'dep_id', modifyRuleUsing: fn(Exists $rule) => $rule->where('is_maintenance', 0))
+                    ->exists('departments', 'dep_id', modifyRuleUsing: fn (Exists $rule) => $rule->where('is_maintenance', 0))
                     ->native(false)
                     ->required(),
                 // ->createOptionForm([
@@ -57,6 +58,9 @@ class AdminManagerForm
                     ->label('Contact #'),
                 TextInput::make('user_fb_profile_link')
                     ->label('Facebook Profile Link'),
+                Toggle::make('is_active')
+                    ->label('Active')
+                    ->default(true),
             ]);
     }
 }

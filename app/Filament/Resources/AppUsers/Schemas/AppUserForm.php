@@ -6,6 +6,7 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 
 class AppUserForm
@@ -52,6 +53,9 @@ class AppUserForm
                     ->label('Contact #'),
                 TextInput::make('user_fb_profile_link')
                     ->label('Facebook Profile Link'),
+                Toggle::make('is_active')
+                    ->label('Active')
+                    ->default(true),
                 CheckboxList::make('roles')
                     // ->required()
                     ->relationship('roles', 'name')
