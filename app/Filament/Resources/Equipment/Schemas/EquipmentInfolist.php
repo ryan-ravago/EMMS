@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Equipment\Schemas;
 
-use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Filament\Resources\EquipmentTypes\EquipmentTypeResource;
 use App\Models\Equipment;
 use Carbon\Carbon;
@@ -102,7 +101,7 @@ class EquipmentInfolist
                                     ->label('Allocated to')
                                     ->visible(fn (Equipment $record): bool => $record->isAccessory())
                                     ->url(fn (Equipment $record): ?string => $record->parent_id
-                                        ? EquipmentResource::getUrl('view', ['record' => $record->parent_id])
+                                        ? route('filament.admin.resources.asset.view', ['record' => $record->parent_id])
                                         : null)
                                     ->placeholder('Unallocated'),
                                 // TextEntry::make('categories.full_path')

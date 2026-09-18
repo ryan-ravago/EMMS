@@ -172,7 +172,7 @@ class ViewEquipment extends ViewRecord
                     },
                     'parent_id' => match ($action->a_id) {
                         'alc' => $data['allocate_to_equipment_id'] ?? null,
-                        'sidle' => null,
+                        'sidle', 'smt' => null,
                         default => $record->parent_id,
                     },
                 ]);

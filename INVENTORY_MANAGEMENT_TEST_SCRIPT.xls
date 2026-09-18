@@ -1,0 +1,543 @@
+<html><head><meta charset="utf-8"><style>
+body{font-family:Calibri,Arial;font-size:11pt} table{border-collapse:collapse;table-layout:fixed;width:2200px} th{background:#356854;color:#fff;font-weight:bold;border:1px solid #b7c9c0;padding:8px;text-align:left} td{border:1px solid #b7c9c0;padding:8px;vertical-align:top;white-space:normal;word-wrap:break-word} tr:nth-child(even){background:#f3f6f5}.title{font-size:16pt;font-weight:bold;color:#356854}.meta{background:#e8f0ed;font-weight:bold} .result{background:#fff2cc}</style></head><body>
+<div class="title">Inventory Management QA Test Script</div><p>Manual execution workbook generated from INVENTORY_MANAGEMENT_TEST_SCRIPT.md</p>
+<table><tr>
+<th>Test Case ID</th>
+<th>Test Case Name</th>
+<th>Description</th>
+<th>Preconditions</th>
+<th>Test Steps</th>
+<th>Expected Results</th>
+<th>Tester Name</th>
+<th>Test Result</th>
+<th>Test Remarks</th>
+</tr>
+<tr>
+<td>NAV-01</td>
+<td>Assets link</td>
+<td>Verify that an authorized user can successfully complete the assets link workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>`/asset` opens and shows both Equipment and Accessories.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>NAV-02</td>
+<td>Equipment link</td>
+<td>Verify that an authorized user can successfully complete the equipment link workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>`/equipment` opens and shows Equipment only. The Asset Type column is hidden.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>NAV-03</td>
+<td>Accessories link</td>
+<td>Verify that an authorized user can successfully complete the accessories link workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>`/accessories` opens and shows Accessories only. The Asset Type column is hidden.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>NAV-04</td>
+<td>Navigation counts</td>
+<td>Verify that an authorized user can successfully complete the navigation counts workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Each count matches the records shown by its page.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>NAV-05</td>
+<td>Asset Details group</td>
+<td>Verify that an authorized user can successfully complete the asset details group workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Each resource opens successfully and its list, create, edit, and view pages work according to permissions.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>AST-01</td>
+<td>Equipment list columns</td>
+<td>Verify that an authorized user can successfully complete the equipment list columns workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Equipment Code, Name, Status, Lifecycle Status, Model, Type, and other applicable columns display correctly. `Allocated to` and Asset Type are hidden.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>AST-02</td>
+<td>Accessory list columns</td>
+<td>Verify that an authorized user can successfully complete the accessory list columns workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Accessory records display correctly. `Allocated to` is available where applicable. Asset Type is hidden.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>AST-03</td>
+<td>All-assets columns</td>
+<td>Verify that an authorized user can successfully complete the all-assets columns workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Both asset types display and Asset Type is visible.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>AST-04</td>
+<td>Equipment detail</td>
+<td>Verify that an authorized user can successfully complete the equipment detail workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Asset details show Model, Brand, Type, Location, Lifecycle Status, Tags, and applicable fields.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>AST-05</td>
+<td>Accessory detail</td>
+<td>Verify that an authorized user can successfully complete the accessory detail workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Accessory detail shows Allocated to Equipment and does not show equipment-only Location content where not applicable.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>AST-06</td>
+<td>Type link</td>
+<td>Verify that an authorized user can successfully complete the type link workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>The Equipment Type view page opens for the selected type.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>AST-07</td>
+<td>Model and Brand links</td>
+<td>Verify that an authorized user can successfully complete the model and brand links workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>The corresponding resource view opens and displays the correct record.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>REL-01</td>
+<td>Allocate accessory</td>
+<td>Verify that an authorized user can successfully complete the allocate accessory workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>The Accessory shows the Equipment in `Allocated to`; the relationship is saved.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>REL-02</td>
+<td>Prevent invalid allocation</td>
+<td>Verify that an authorized user can successfully complete the prevent invalid allocation workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>The invalid relationship is rejected or normalized to no parent.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>REL-03</td>
+<td>Equipment Accessories tab</td>
+<td>Verify that an authorized user can successfully complete the equipment accessories tab workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Related Accessories are listed with the correct count.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>REL-04</td>
+<td>Location related tabs</td>
+<td>Verify that an authorized user can successfully complete the location related tabs workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Equipment, Accessories, Children, and Descendants tabs display with counts.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>REL-05</td>
+<td>Tag related tabs</td>
+<td>Verify that an authorized user can successfully complete the tag related tabs workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Equipment, Accessories, Children, and Descendants tabs display with counts.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>REL-06</td>
+<td>Type related tabs</td>
+<td>Verify that an authorized user can successfully complete the type related tabs workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Models, Equipment, and Accessories tabs display with counts.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>REL-07</td>
+<td>Brand related tabs</td>
+<td>Verify that an authorized user can successfully complete the brand related tabs workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Models, Equipment, and Accessories tabs display with counts.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>REL-08</td>
+<td>Model related tabs</td>
+<td>Verify that an authorized user can successfully complete the model related tabs workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Equipment and Accessories tabs display with counts.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>LOG-01</td>
+<td>Equipment deployment</td>
+<td>Verify that an authorized user can successfully complete the equipment deployment workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Lifecycle status and cached `location_id` update; a lifecycle log is created with deployment location and remarks.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>LOG-02</td>
+<td>Equipment idle/maintenance</td>
+<td>Verify that an authorized user can successfully complete the equipment idle/maintenance workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Status, cached location, and lifecycle log update correctly.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>LOG-03</td>
+<td>Accessory allocation log</td>
+<td>Verify that an authorized user can successfully complete the accessory allocation log workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>An allocation lifecycle log records the accessory, action, status, and target Equipment.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>LOG-04</td>
+<td>Accessory unallocation log</td>
+<td>Verify that an authorized user can successfully complete the accessory unallocation log workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Each affected Accessory receives an Idle lifecycle log.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>LOG-05</td>
+<td>Lifecycle log modal for Equipment</td>
+<td>Verify that an authorized user can successfully complete the lifecycle log modal for equipment workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>`Deployed To` is visible; `Allocated To Equipment` is hidden.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>LOG-06</td>
+<td>Lifecycle log modal for Accessory</td>
+<td>Verify that an authorized user can successfully complete the lifecycle log modal for accessory workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>`Allocated To Equipment` is visible; `Deployed To` is hidden.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>LOG-07</td>
+<td>Lifecycle log history</td>
+<td>Verify that an authorized user can successfully complete the lifecycle log history workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Logs are sorted newest first and show Action, Status, applicable target, remarks, performer, and timestamp.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>EDIT-01</td>
+<td>Equipment edit log</td>
+<td>Verify that an authorized user can successfully complete the equipment edit log workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>An Edit Log is created with the old and new values.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>EDIT-02</td>
+<td>Multiple field changes</td>
+<td>Verify that an authorized user can successfully complete the multiple field changes workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>One edit operation records the changed fields accurately.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>EDIT-03</td>
+<td>No-op save</td>
+<td>Verify that an authorized user can successfully complete the no-op save workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>No empty edit log is created.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>EDIT-04</td>
+<td>Accessory edit log</td>
+<td>Verify that an authorized user can successfully complete the accessory edit log workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>The change is recorded against the Accessory.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>MOD-01</td>
+<td>Model with Brand and Type</td>
+<td>Verify that an authorized user can successfully complete the model with brand and type workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>All related Equipment and Accessories receive the same Brand and Type IDs.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>MOD-02</td>
+<td>Model with no Brand</td>
+<td>Verify that an authorized user can successfully complete the model with no brand workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>All related Equipment and Accessories have `eqm_brand_id = null`; Type remains synchronized.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>MOD-03</td>
+<td>Model with no Type</td>
+<td>Verify that an authorized user can successfully complete the model with no type workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>All related Equipment and Accessories have `eqm_eqmt_id = null`; Brand remains synchronized.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>MOD-04</td>
+<td>Model with neither</td>
+<td>Verify that an authorized user can successfully complete the model with neither workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>All related Equipment and Accessories have both Brand and Type set to `null`.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>MOD-05</td>
+<td>Fill previously blank Brand</td>
+<td>Verify that an authorized user can successfully complete the fill previously blank brand workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>All related Equipment and Accessories receive the selected Brand.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>MOD-06</td>
+<td>Fill previously blank Type</td>
+<td>Verify that an authorized user can successfully complete the fill previously blank type workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>All related Equipment and Accessories receive the selected Type.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>MOD-07</td>
+<td>Transaction rollback</td>
+<td>Verify that an authorized user can successfully complete the transaction rollback workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>The Model change and related asset updates roll back together.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>MOD-08</td>
+<td>Model form fields</td>
+<td>Verify that an authorized user can successfully complete the model form fields workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Only Model Name, nullable Brand, nullable Equipment Type, and Remarks are present.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>MOD-09</td>
+<td>Model infolist</td>
+<td>Verify that an authorized user can successfully complete the model infolist workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Model Name, Brand, Equipment Type, and Remarks display; Equipment Type is clickable.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>DB-01</td>
+<td>Delete Model with related assets</td>
+<td>Verify that an authorized user can successfully complete the delete model with related assets workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Delete is blocked by the restrictive foreign key. Related assets remain intact.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>DB-02</td>
+<td>Delete unused Model</td>
+<td>Verify that an authorized user can successfully complete the delete unused model workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Delete succeeds if authorized.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>DB-03</td>
+<td>Delete Equipment Type in use</td>
+<td>Verify that an authorized user can successfully complete the delete equipment type in use workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Delete is blocked by the restrictive foreign key.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>DB-04</td>
+<td>Delete Brand in use</td>
+<td>Verify that an authorized user can successfully complete the delete brand in use workflow.</td>
+<td>The user is successfully logged into the system.<br>The required inventory records for this test exist.</td>
+<td>1. Open the relevant resource or record.<br>2. Perform the action described in the test case.<br>3. Submit or save the change.<br>4. Review the resulting record and related data.</td>
+<td>Behavior matches the configured FK rule and does not cascade-delete assets.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>WO-01</td>
+<td>Open Work Orders from Assets</td>
+<td>Verify that an authorized user can access Work Orders from the combined Assets resource.</td>
+<td>- The user is successfully logged into the system.<br>- An Equipment record exists.</td>
+<td>1. Click the **Assets** link in the left navigation menu.<br>2. Select an Equipment record.<br>3. Open the **Work Orders** tab.<br>4. Test the create, view, and edit actions.</td>
+<td>- The Work Orders tab opens successfully.<br>- Create, view, and edit routes work.<br>- The Work Order remains associated with the selected Equipment.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>WO-02</td>
+<td>Open Work Orders from Equipment</td>
+<td>Verify that an authorized user can access Work Orders from the Equipment resource.</td>
+<td>- The user is successfully logged into the system.<br>- An Equipment record exists.</td>
+<td>1. Click the **Equipment** link in the left navigation menu.<br>2. Select an Equipment record.<br>3. Open the **Work Orders** tab.<br>4. Create or open a Work Order.</td>
+<td>- The Work Orders tab opens successfully.<br>- The Work Order opens under `/equipment/{equipment}/work-orders/...`.<br>- The Work Order references the correct Equipment.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>WO-03</td>
+<td>Open Work Orders from Accessories</td>
+<td>Verify that an authorized user can access Work Orders from the Accessories resource.</td>
+<td>- The user is successfully logged into the system.<br>- An Accessory record exists.</td>
+<td>1. Click the **Accessories** link in the left navigation menu.<br>2. Select an Accessory record.<br>3. Open the **Work Orders** tab.<br>4. Create or open a Work Order.</td>
+<td>- The Work Orders tab opens successfully.<br>- The Work Order opens under `/accessories/{equipment}/work-orders/...`.<br>- The Work Order references the correct Accessory.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+<tr>
+<td>WO-04</td>
+<td>Work Order relationship</td>
+<td>Verify that a Work Order created from an asset is linked to the correct parent resource.</td>
+<td>- The user is successfully logged into the system.<br>- An Equipment or Accessory record is available.</td>
+<td>1. Open an Equipment or Accessory record.<br>2. Open the **Work Orders** tab.<br>3. Click **New Work Order**.<br>4. Complete the form and submit it.<br>5. Reopen the Work Order and return to the parent record.</td>
+<td>- The Work Order is successfully created.<br>- The Work Order references the correct asset.<br>- The Work Order returns to the correct parent resource configuration.</td>
+<td class="result"></td>
+<td class="result"></td>
+<td class="result"></td>
+</tr>
+</table></body></html>
