@@ -23,13 +23,13 @@ class AdminManagerResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
 
-    protected static ?string $navigationLabel = 'Admin Manager';
+    protected static ?string $navigationLabel = 'Asset Manager';
 
-    protected static ?string $modelLabel = 'Admin Manager';
+    protected static ?string $modelLabel = 'Asset Manager';
 
-    protected static ?string $pluralModelLabel = 'Admin Managers';
+    protected static ?string $pluralModelLabel = 'Asset Manager';
 
-    protected static ?string $slug = 'admin-managers';
+    protected static ?string $slug = 'asset-managers';
 
     protected static ?string $recordTitleAttribute = 'user_fname';
 
