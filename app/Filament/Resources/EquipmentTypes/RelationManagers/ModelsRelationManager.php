@@ -44,7 +44,13 @@ class ModelsRelationManager extends RelationManager
             ->recordTitleAttribute('eqmm_name')
             ->columns([
                 TextColumn::make('eqmm_name')
-                    ->searchable(),
+                    ->label('Name')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('brand.eqmb_name')
+                    ->label('Brand')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->filters([
                 //

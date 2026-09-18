@@ -10,6 +10,7 @@ use Filament\Actions\DissociateAction;
 use Filament\Actions\DissociateBulkAction;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
@@ -34,25 +35,46 @@ class AssetsRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('eqm_prc_code')
                     ->label('Asset Code')
-                    ->searchable()
-                    ->sortable(),
+                    ->toggleable()
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('eqm_name')
                     ->label('Name')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('equipmentModel.eqmm_name')
-                    ->label('Model')
+                    ->toggleable()
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('parent.eqm_name')
+                    ->label('Allocated to')
                     ->placeholder('—')
-                    ->toggleable(),
+                    ->toggleable()
+                    ->searchable()
+                    ->visible(
+                        fn(): bool => EquipmentResource::getConfiguration()?->getKey() !== 'equipment'
+                    ),
                 TextColumn::make('eqm_is_active')
                     ->label('Status')
+                    ->toggleable()
+                    ->sortable()
                     ->badge()
-                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
-                    ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
+                    ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
+                    ->icon(fn(bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
+                    ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
+                TextColumn::make('lifecycleStatus.status_title')
+                    ->label('Lifecycle Status')
+                    ->toggleable()
+                    ->sortable()
+                    ->badge()
+                    ->icon(fn($record) => $record->lifecycleStatus->status_icon)
+                    ->color(fn($record) => $record->lifecycleStatus->status_color),
+                TextColumn::make('location.name')
+                    ->label('Location')
+                    ->toggleable()
+                    ->searchable()
+                    ->sortable()
             ])
             ->headerActions([
                 AssociateAction::make()
-                    ->authorize(fn (): bool => Auth::user()->hasPermissionTo('Update:EquipmentResource'))
+                    ->authorize(fn(): bool => Auth::user()->hasPermissionTo('Update:EquipmentResource'))
                     ->label('Associate assets')
                     ->modalHeading('Add assets')
                     ->modalSubmitActionLabel('Add')
@@ -60,11 +82,11 @@ class AssetsRelationManager extends RelationManager
                     ->schema([
                         CheckboxList::make('recordId')
                             ->label('Assets')
-                            ->options(fn (): array => Equipment::query()
+                            ->options(fn(): array => Equipment::query()
                                 ->where('asset_type_id', '=', null)
                                 ->orderBy('eqm_name')
                                 ->get()
-                                ->mapWithKeys(fn (Equipment $asset): array => [
+                                ->mapWithKeys(fn(Equipment $asset): array => [
                                     $asset->getKey() => "{$asset->eqm_prc_code} - {$asset->eqm_name}",
                                 ])
                                 ->all())
@@ -90,7 +112,7 @@ class AssetsRelationManager extends RelationManager
                             ]);
                         }
 
-                        if ($assets->contains(fn (Equipment $asset): bool => $asset->asset_type_id !== null)) {
+                        if ($assets->contains(fn(Equipment $asset): bool => $asset->asset_type_id !== null)) {
                             throw ValidationException::withMessages([
                                 'recordId' => 'One or more selected assets are already associated with an asset type.',
                             ]);
@@ -108,7 +130,7 @@ class AssetsRelationManager extends RelationManager
                 ]),
             ])
             ->recordUrl(
-                fn (Equipment $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
+                fn(Equipment $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
             );
     }
 }

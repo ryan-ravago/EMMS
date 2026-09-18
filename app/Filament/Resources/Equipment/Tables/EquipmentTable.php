@@ -37,7 +37,7 @@ class EquipmentTable
                     // ->toggleable()
                     // ->sortable()
                     // ->searchable()
-                    ->visible(fn (): bool => EquipmentResource::getConfiguration() === null)
+                    ->visible(fn(): bool => EquipmentResource::getConfiguration() === null)
                     ->native(false)
                     ->optionsRelationship(name: 'assetType', titleAttribute: 'name')
                     ->rules(['required', 'exists:asset_types,id']),
@@ -57,38 +57,28 @@ class EquipmentTable
                     ->toggleable()
                     ->searchable()
                     ->visible(
-                        fn (): bool => EquipmentResource::getConfiguration()?->getKey() !== 'equipment'
+                        fn(): bool => EquipmentResource::getConfiguration()?->getKey() !== 'equipment'
                     ),
                 TextColumn::make('eqm_is_active')
                     ->label('Status')
                     ->toggleable()
                     ->sortable()
                     ->badge()
-                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
-                    ->icon(fn (bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
-                    ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
+                    ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
+                    ->icon(fn(bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
+                    ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
                 TextColumn::make('lifecycleStatus.status_title')
                     ->label('Lifecycle Status')
                     ->toggleable()
                     ->sortable()
                     ->badge()
-                    ->icon(fn ($record) => $record->lifecycleStatus->status_icon)
-                    ->color(fn ($record) => $record->lifecycleStatus->status_color),
-                TextColumn::make('equipmentModel.eqmm_name')
-                    ->label('Model')
+                    ->icon(fn($record) => $record->lifecycleStatus->status_icon)
+                    ->color(fn($record) => $record->lifecycleStatus->status_color),
+                TextColumn::make('location.name')
+                    ->label('Location')
                     ->toggleable()
                     ->searchable()
-                    ->sortable(),
-                TextColumn::make('type.eqmt_name')
-                    ->label('Type')
-                    ->toggleable()
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('eqm_plate_num')
-                    ->label('Plate #')
-                    ->toggleable()
                     ->sortable()
-                    ->searchable(),
             ])
             ->defaultSort('eqm_name', 'asc')
             ->filters([
@@ -109,7 +99,7 @@ class EquipmentTable
                 //     ->multiple(),
             ])
             ->recordUrl(
-                fn (Model $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
+                fn(Model $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
             )
             ->recordActions([
                 // ViewAction::make(),

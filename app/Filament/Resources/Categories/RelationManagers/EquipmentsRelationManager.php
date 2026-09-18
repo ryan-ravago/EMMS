@@ -17,6 +17,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -75,32 +76,42 @@ class EquipmentsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query): Builder => $query->equipmentAssets())
+            ->modifyQueryUsing(fn(Builder $query): Builder => $query->equipmentAssets())
             ->recordTitle(
-                fn (Equipment $record): string => "{$record->eqm_prc_code} - {$record->eqm_name}"
+                fn(Equipment $record): string => "{$record->eqm_prc_code} - {$record->eqm_name}"
             )
             ->recordTitleAttribute('eqm_name')
             ->columns([
                 TextColumn::make('eqm_prc_code')
-                    ->label('Equipment Code')
-                    ->searchable()
-                    ->sortable(),
+                    ->label('Asset Code')
+                    ->toggleable()
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('eqm_name')
                     ->label('Name')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('equipmentModel.eqmm_name')
-                    ->label('Model')
+                    ->toggleable()
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('eqm_is_active')
+                    ->label('Status')
+                    ->toggleable()
+                    ->sortable()
+                    ->badge()
+                    ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
+                    ->icon(fn(bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
+                    ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
+                TextColumn::make('lifecycleStatus.status_title')
+                    ->label('Lifecycle Status')
+                    ->toggleable()
+                    ->sortable()
+                    ->badge()
+                    ->icon(fn($record) => $record->lifecycleStatus->status_icon)
+                    ->color(fn($record) => $record->lifecycleStatus->status_color),
+                TextColumn::make('location.name')
+                    ->label('Location')
+                    ->toggleable()
                     ->searchable()
                     ->sortable()
-                    ->placeholder('—'),
-                TextColumn::make('brand.eqmb_name')
-                    ->label('Brand')
-                    ->sortable()
-                    ->placeholder('—'),
-                IconColumn::make('eqm_is_active')
-                    ->label('Active')
-                    ->boolean(),
             ])
             ->filters([
                 SelectFilter::make('eqm_is_active')
@@ -111,7 +122,7 @@ class EquipmentsRelationManager extends RelationManager
                     ]),
             ])
             ->recordUrl(
-                fn (Equipment $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
+                fn(Equipment $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
             )
             ->headerActions([
                 CreateAction::make()
@@ -142,11 +153,11 @@ class EquipmentsRelationManager extends RelationManager
                         }
 
                         // 2. Business Logic: Check active status across all items
-                        $inactive = $equipments->filter(fn (Equipment $item) => ! $item->eqm_is_active);
+                        $inactive = $equipments->filter(fn(Equipment $item) => ! $item->eqm_is_active);
 
                         if ($inactive->isNotEmpty()) {
                             throw ValidationException::withMessages([
-                                'recordId' => 'Inactive equipment cannot be assigned ('.$inactive->pluck('eqm_name')->implode(', ').').',
+                                'recordId' => 'Inactive equipment cannot be assigned (' . $inactive->pluck('eqm_name')->implode(', ') . ').',
                             ]);
                         }
 

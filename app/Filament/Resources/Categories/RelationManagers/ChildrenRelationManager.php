@@ -46,7 +46,10 @@ class ChildrenRelationManager extends RelationManager
             ->recordTitleAttribute('eqmc_name')
             ->columns([
                 TextColumn::make('eqmc_name')
+                    ->label('Tag Name')
                     ->searchable(),
+                TextColumn::make('full_path')
+                    ->label('Full Path'),
             ])
             ->filters([
                 //
@@ -56,7 +59,7 @@ class ChildrenRelationManager extends RelationManager
                 AssociateAction::make(),
             ])
             ->recordUrl(
-                fn (EquipmentCategory $record): string => CategoryResource::getUrl('view', ['record' => $record]),
+                fn(EquipmentCategory $record): string => CategoryResource::getUrl('view', ['record' => $record]),
             )
             ->recordActions([
                 // EditAction::make(),

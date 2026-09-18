@@ -26,10 +26,14 @@ class ModelsRelationManager extends RelationManager
             ->recordTitleAttribute('eqmm_name')
             ->columns([
                 TextColumn::make('eqmm_name')
-                    ->label('Model')
+                    ->label('Name')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('type.eqmt_name')
+                    ->label('Type')
+                    ->searchable()
+                    ->sortable()
             ])
-            ->recordUrl(fn (EquipmentModel $record): string => ModelResource::getUrl('view', ['record' => $record]));
+            ->recordUrl(fn(EquipmentModel $record): string => ModelResource::getUrl('view', ['record' => $record]));
     }
 }
