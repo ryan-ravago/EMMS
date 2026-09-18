@@ -35,10 +35,10 @@ class AdminManagerResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
-    public static function getNavigationGroup(): ?string
-    {
-        return 'Super Admin';
-    }
+    // public static function getNavigationGroup(): ?string
+    // {
+    //     return 'Super Admin';
+    // }
 
     public static function form(Schema $schema): Schema
     {
@@ -54,7 +54,7 @@ class AdminManagerResource extends Resource
     {
         return parent::getEloquentQuery()
             ->with(['department', 'roles'])
-            ->whereHas('roles', fn (Builder $query): Builder => $query->where('name', 'admin_manager'));
+            ->whereHas('roles', fn(Builder $query): Builder => $query->where('name', 'admin_manager'));
     }
 
     public static function table(Table $table): Table
