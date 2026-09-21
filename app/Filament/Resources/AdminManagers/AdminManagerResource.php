@@ -54,7 +54,7 @@ class AdminManagerResource extends Resource
     {
         return parent::getEloquentQuery()
             ->with(['department', 'roles'])
-            ->whereHas('roles', fn(Builder $query): Builder => $query->where('name', 'admin_manager'));
+            ->whereHas('roles', fn(Builder $query): Builder => $query->where('name', 'asset_manager'));
     }
 
     public static function table(Table $table): Table
