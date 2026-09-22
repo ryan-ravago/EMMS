@@ -4,16 +4,26 @@ namespace App\Filament\Resources\Brands\RelationManagers;
 
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Models\Equipment;
+use Filament\Actions\Action;
+use Filament\Actions\AssociateAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DissociateAction;
+use Filament\Actions\DissociateBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class AccessoriesRelationManager extends RelationManager
 {
-    protected static string $relationship = 'equipments';
+    protected static string $relationship = 'equipmentUnits';
 
     protected static ?string $title = 'Accessories';
 
@@ -67,11 +77,45 @@ class AccessoriesRelationManager extends RelationManager
                     ->searchable()
                     ->sortable()
             ])
-            ->recordUrl(
-                fn(Equipment $record): string => EquipmentResource::withConfiguration(
-                    'accessories',
-                    fn(): string => EquipmentResource::getUrl('view', ['record' => $record]),
-                ),
-            );
+            ->recordUrl(fn(Equipment $record): string => EquipmentResource::withConfiguration('accessories', fn(): string => EquipmentResource::getUrl('view', ['record' => $record]),),)
+            ->headerActions([
+                AssociateAction::make()
+                    ->authorize(fn(): bool => Auth::user()->hasPermissionTo('Update:EquipmentResource'))
+                    ->label('Associate')
+                    ->modalHeading('Associate Accessory to Location')
+                    ->modalSubmitActionLabel('Associate')
+                    ->preloadRecordSelect()
+                    ->multiple()
+                    ->recordSelectSearchColumns(['eqm_name', 'eqm_prc_code'])
+                    ->recordSelectOptionsQuery(
+                        fn(Builder $query): Builder => $query->accessories(),
+                    )
+                    ->before(function (array $data) {
+                        $accessoryIds = (array) ($data['recordId'] ?? []);
+
+                        if (empty($accessoryIds)) {
+                            return;
+                        }
+
+                        $accessories = Equipment::query()
+                            ->accessories()
+                            ->whereIn('eqm_id', $accessoryIds)
+                            ->get();
+
+                        if ($accessories->count() !== count($accessoryIds)) {
+                            throw ValidationException::withMessages([
+                                'recordId' => 'One or more selected records are not valid accessories.',
+                            ]);
+                        }
+                    }),
+            ])
+            ->recordActions([
+                DissociateAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DissociateBulkAction::make(),
+                ]),
+            ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
 class EquipmentModel extends Model
@@ -60,6 +61,11 @@ class EquipmentModel extends Model
     }
 
     public function equipments()
+    {
+        return $this->hasMany(Equipment::class, 'eqm_eqmm_id', 'eqmm_id');
+    }
+
+    public function equipmentUnits(): HasMany
     {
         return $this->hasMany(Equipment::class, 'eqm_eqmm_id', 'eqmm_id');
     }

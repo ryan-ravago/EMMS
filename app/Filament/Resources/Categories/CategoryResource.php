@@ -93,8 +93,8 @@ class CategoryResource extends Resource
         return [
             EquipmentsRelationManager::class,
             AccessoriesRelationManager::class,
-            ChildrenRelationManager::class,
-            DescendantsRelationManager::class,
+            // ChildrenRelationManager::class,
+            // DescendantsRelationManager::class,
         ];
     }
 

@@ -18,22 +18,22 @@ class CategoryForm
                     ->label('Tag Name')
                     ->required(),
                 // ->unique(table: 'equipment_categories', column: 'eqmc_name', ignoreRecord: true),
-                SelectTree::make('eqmc_parent_id')
-                    ->label('Parent')
-                    ->relationship(
-                        'parent',
-                        'eqmc_name',
-                        'eqmc_parent_id',
-                        // Exclude itself and its own descendants from the query, since hiddenOptions() doesn't filter root-level nodes.
-                        modifyQueryUsing: fn (Builder $query, ?EquipmentCategory $record) => $record
-                            ? $query->whereNotIn('eqmc_id', [$record->getKey(), ...$record->getDescendantIds()])
-                            : $query,
-                        modifyChildQueryUsing: fn (Builder $query, ?EquipmentCategory $record) => $record
-                            ? $query->whereNotIn('eqmc_id', [$record->getKey(), ...$record->getDescendantIds()])
-                            : $query,
-                    )
-                    ->nullable()
-                    ->enableBranchNode(),
+                // SelectTree::make('eqmc_parent_id')
+                //     ->label('Parent')
+                //     ->relationship(
+                //         'parent',
+                //         'eqmc_name',
+                //         'eqmc_parent_id',
+                //         // Exclude itself and its own descendants from the query, since hiddenOptions() doesn't filter root-level nodes.
+                //         modifyQueryUsing: fn (Builder $query, ?EquipmentCategory $record) => $record
+                //             ? $query->whereNotIn('eqmc_id', [$record->getKey(), ...$record->getDescendantIds()])
+                //             : $query,
+                //         modifyChildQueryUsing: fn (Builder $query, ?EquipmentCategory $record) => $record
+                //             ? $query->whereNotIn('eqmc_id', [$record->getKey(), ...$record->getDescendantIds()])
+                //             : $query,
+                //     )
+                //     ->nullable()
+                //     ->enableBranchNode(),
             ]);
     }
 }

@@ -43,4 +43,9 @@ class EquipmentType extends Model
             'eqmm_id',
         );
     }
+
+    public function equipmentUnits(): HasMany
+    {
+        return $this->hasMany(Equipment::class, 'eqm_eqmt_id', 'eqmt_id');
+    }
 }

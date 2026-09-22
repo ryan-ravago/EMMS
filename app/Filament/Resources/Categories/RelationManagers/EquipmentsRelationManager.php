@@ -24,6 +24,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class EquipmentsRelationManager extends RelationManager
@@ -128,14 +129,23 @@ class EquipmentsRelationManager extends RelationManager
                 CreateAction::make()
                     ->label('New Equipment')
                     ->modalHeading('Create Equipment Unit'),
-                AttachAction::make()
-                    ->label('Add Existing')
-                    ->modalHeading('Attach Equipment to Category')
-                    ->modalSubmitActionLabel('Attach')
+                AttachAction::make('associate_equipment_to_tag')
+                    ->authorize(fn(): bool => Auth::user()->hasPermissionTo('Update:EquipmentResource'))
+                    ->label('Associate')
+                    ->modalHeading('Associate Equipment to Category')
+                    ->modalSubmitActionLabel('Associate')
                     ->preloadRecordSelect()
                     ->multiple() // Enables multi-select in the modal
                     ->recordSelectSearchColumns(['eqm_name', 'eqm_prc_code'])
-                    ->before(function (AttachAction $action, array $data) {
+                    ->recordSelectOptionsQuery(
+                        fn(Builder $query): Builder => $query
+                            ->equipmentAssets()
+                            ->whereDoesntHave(
+                                'categories',
+                                fn(Builder $q) => $q->whereKey($this->getOwnerRecord()->getKey()),
+                            )
+                    )
+                    ->before(function (array $data) {
                         $equipmentIds = (array) ($data['recordId'] ?? []);
                         $category = $this->getOwnerRecord();
 
@@ -143,16 +153,19 @@ class EquipmentsRelationManager extends RelationManager
                             return;
                         }
 
-                        // 1. Fetch submitted equipment items
-                        $equipments = Equipment::whereIn('eqm_id', $equipmentIds)->get();
+                        // 1. Equipment assets only (no accessories)
+                        $equipments = Equipment::query()
+                            ->equipmentAssets()
+                            ->whereIn('eqm_id', $equipmentIds)
+                            ->get();
 
                         if ($equipments->count() !== count($equipmentIds)) {
                             throw ValidationException::withMessages([
-                                'recordId' => 'One or more selected equipment records do not exist.',
+                                'recordId' => 'One or more selected records are not valid equipment.',
                             ]);
                         }
 
-                        // 2. Business Logic: Check active status across all items
+                        // 2. Inactive equipment cannot be assigned
                         $inactive = $equipments->filter(fn(Equipment $item) => ! $item->eqm_is_active);
 
                         if ($inactive->isNotEmpty()) {

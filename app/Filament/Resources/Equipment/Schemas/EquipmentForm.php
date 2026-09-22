@@ -86,7 +86,7 @@ class EquipmentForm
                         Section::make('Preventive Maintenance Schedule')
                             ->description('Set up automatic maintenance reminders')
                             ->icon('heroicon-o-bell-alert')
-                            ->visible(fn (Get $get): bool => (int) $get('asset_type_id') === (int) AssetType::equipmentId())
+                            ->visible(fn(Get $get): bool => (int) $get('asset_type_id') === (int) AssetType::equipmentId())
                             ->columnSpan(1)
                             ->columns(2)
                             ->schema([
@@ -117,12 +117,12 @@ class EquipmentForm
                                         }
                                     })
                                     ->suffix(
-                                        fn (Get $get) => $get('eqm_pm_itrv_type')
+                                        fn(Get $get) => $get('eqm_pm_itrv_type')
                                             ? ($get('eqm_pm_itrv_type') === 'monthly' ? 'month(s)' : 'week(s)')
                                             : ''
                                     )
                                     ->live()
-                                    ->required(fn (Get $get): bool => filled($get('eqm_pm_itrv_type')))
+                                    ->required(fn(Get $get): bool => filled($get('eqm_pm_itrv_type')))
                                     ->afterStateUpdated(function ($state, Set $set, Get $get) use ($clearDueDate, $calculateNextPMDue) {
                                         if (! $state || $state < 1) {
                                             $clearDueDate($set);
@@ -136,7 +136,7 @@ class EquipmentForm
                                     ->native(false)
                                     ->live()
                                     ->columnStart(1)
-                                    ->required(fn (Get $get): bool => filled($get('eqm_pm_itrv_type')))
+                                    ->required(fn(Get $get): bool => filled($get('eqm_pm_itrv_type')))
                                     ->afterStateUpdated(function ($state, Set $set, Get $get) use ($clearDueDate, $calculateNextPMDue) {
                                         if (! $state) {
                                             $clearDueDate($set);
@@ -244,42 +244,39 @@ class EquipmentForm
                                             ->label('Model Name')
                                             ->required()
                                             ->unique(),
-                                        // Select::make('eqmm_brand_id')
-                                        //     ->label('Brand')
-                                        //     ->relationship('brand', 'eqmb_name')
-                                        //     ->native(false)
-                                        //     ->createOptionForm([
-                                        //         TextInput::make('eqmb_name')
-                                        //             ->label('Brand Name')
-                                        //             ->required()
-                                        //             ->unique(),
-                                        //     ])
-                                        //     ->createOptionAction(function (Action $action) {
-                                        //         return $action
-                                        //             ->modalHeading('Add New Equipment Brand')
-                                        //             ->modalWidth('md'); // xs, sm, md, lg, xl, 2xl
-                                        //     }),
-                                        // Select::make('eqm_eqmt_id')
-                                        //     ->label('Type')
-                                        //     ->relationship('type', 'eqmt_name')
-                                        //     ->native(false)
-                                        //     ->required()
-                                        //     ->createOptionForm([
-                                        //         TextInput::make('eqmt_name')
-                                        //             ->label('Type Name')
-                                        //             ->required()
-                                        //             ->unique()
-                                        //             ->maxLength(255),
-                                        //     ])
-                                        //     ->createOptionAction(function (Action $action) {
-                                        //         return $action
-                                        //             ->modalHeading('Add New Equipment Type')
-                                        //             ->modalWidth('md');
-                                        //     }),
-                                        // Select::make('eqmm_fuel_type')
-                                        //     ->label('Fuel Type')
-                                        //     ->relationship('fuel_type', 'fuel_name')
-                                        //     ->native(false),
+                                        Select::make('eqmm_brand_id')
+                                            ->label('Brand')
+                                            ->relationship('brand', 'eqmb_name')
+                                            ->native(false)
+                                            ->exists('equipment_brands', 'eqmb_id')
+                                            ->createOptionForm([
+                                                TextInput::make('eqmb_name')
+                                                    ->label('Brand Name')
+                                                    ->required()
+                                                    ->unique(),
+                                            ])
+                                            ->createOptionAction(function (Action $action) {
+                                                return $action
+                                                    ->modalHeading('Add New Equipment Brand')
+                                                    ->modalWidth('md'); // xs, sm, md, lg, xl, 2xl
+                                            }),
+                                        Select::make('eqm_eqmt_id')
+                                            ->label('Type')
+                                            ->relationship('type', 'eqmt_name')
+                                            ->native(false)
+                                            ->exists('equipment_types', 'eqmt_id')
+                                            ->createOptionForm([
+                                                TextInput::make('eqmt_name')
+                                                    ->label('Type Name')
+                                                    ->required()
+                                                    ->unique()
+                                                    ->maxLength(255),
+                                            ])
+                                            ->createOptionAction(function (Action $action) {
+                                                return $action
+                                                    ->modalHeading('Add New Equipment Type')
+                                                    ->modalWidth('md');
+                                            }),
                                     ])
                                     ->createOptionAction(function (Action $action) {
                                         return $action
@@ -294,7 +291,7 @@ class EquipmentForm
                                     ->native(false)
                                     ->searchable()
                                     ->preload()
-                                    ->disabled(fn (Get $get): bool => filled($get('eqm_eqmm_id')) && filled($get('eqm_brand_id')))
+                                    ->disabled(fn(Get $get): bool => filled($get('eqm_eqmm_id')) && filled($get('eqm_brand_id')))
                                     ->dehydrated()
                                     ->createOptionForm([
                                         TextInput::make('eqmb_name')
@@ -313,7 +310,7 @@ class EquipmentForm
                                     ->native(false)
                                     ->searchable()
                                     ->preload()
-                                    ->disabled(fn (Get $get): bool => filled($get('eqm_eqmm_id')) && filled($get('eqm_eqmt_id')))
+                                    ->disabled(fn(Get $get): bool => filled($get('eqm_eqmm_id')) && filled($get('eqm_eqmt_id')))
                                     ->dehydrated()
                                     ->createOptionForm([
                                         TextInput::make('eqmt_name')

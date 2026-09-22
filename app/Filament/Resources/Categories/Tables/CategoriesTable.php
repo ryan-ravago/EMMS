@@ -22,8 +22,8 @@ class CategoriesTable
                 // TextColumn::make('parent_path')
                 //     ->label('Parent')
                 //     ->sortable(),
-                TextColumn::make('full_path')
-                    ->label('Full Path'),
+                // TextColumn::make('full_path')
+                //     ->label('Full Path'),
             ])
             ->filters([
                 //

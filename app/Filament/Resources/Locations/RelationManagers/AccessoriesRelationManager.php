@@ -4,11 +4,18 @@ namespace App\Filament\Resources\Locations\RelationManagers;
 
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Models\Equipment;
+use Filament\Actions\AssociateAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DissociateAction;
+use Filament\Actions\DissociateBulkAction;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class AccessoriesRelationManager extends RelationManager
 {
@@ -71,6 +78,46 @@ class AccessoriesRelationManager extends RelationManager
                     'accessories',
                     fn(): string => EquipmentResource::getUrl('view', ['record' => $record]),
                 ),
-            );
+            )
+            ->headerActions([
+                AssociateAction::make()
+                    // ->authorize(fn(): bool => Auth::user()->hasPermissionTo('Update:EquipmentResource'))
+                    ->authorize(false)
+                    ->label('Associate')
+                    ->modalHeading('Associate Accessory to Location')
+                    ->modalSubmitActionLabel('Associate')
+                    ->preloadRecordSelect()
+                    ->multiple()
+                    ->recordSelectSearchColumns(['eqm_name', 'eqm_prc_code'])
+                    ->recordSelectOptionsQuery(
+                        fn(Builder $query): Builder => $query->accessories(),
+                    )
+                    ->before(function (array $data) {
+                        $accessoryIds = (array) ($data['recordId'] ?? []);
+
+                        if (empty($accessoryIds)) {
+                            return;
+                        }
+
+                        $accessories = Equipment::query()
+                            ->accessories()
+                            ->whereIn('eqm_id', $accessoryIds)
+                            ->get();
+
+                        if ($accessories->count() !== count($accessoryIds)) {
+                            throw ValidationException::withMessages([
+                                'recordId' => 'One or more selected records are not valid accessories.',
+                            ]);
+                        }
+                    }),
+            ])
+            ->recordActions([
+                DissociateAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DissociateBulkAction::make(),
+                ]),
+            ]);
     }
 }

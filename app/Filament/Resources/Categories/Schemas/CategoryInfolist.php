@@ -19,14 +19,14 @@ class CategoryInfolist
                     ->schema([
                         TextEntry::make('eqmc_name')
                             ->label('Name'),
-                        TextEntry::make('full_path')
-                            ->label('Full Path'),
-                        TextEntry::make('parent.eqmc_name')
-                            ->label('Parent')
-                            ->url(fn ($record) => $record->eqmc_parent_id ? CategoryResource::getUrl('view', ['record' => $record->eqmc_parent_id]) : null)
-                            ->color('primary')
-                            ->icon('heroicon-m-arrow-top-right-on-square')
-                            ->iconPosition(IconPosition::After),
+                        // TextEntry::make('full_path')
+                        //     ->label('Full Path'),
+                        // TextEntry::make('parent.eqmc_name')
+                        //     ->label('Parent')
+                        //     ->url(fn ($record) => $record->eqmc_parent_id ? CategoryResource::getUrl('view', ['record' => $record->eqmc_parent_id]) : null)
+                        //     ->color('primary')
+                        //     ->icon('heroicon-m-arrow-top-right-on-square')
+                        //     ->iconPosition(IconPosition::After),
                     ])
                     ->columns(1),
             ]);

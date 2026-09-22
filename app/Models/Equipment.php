@@ -111,7 +111,7 @@ class Equipment extends Model
             return parent::save($options);
         }
 
-        $diff = $changes->mapWithKeys(fn ($new, $field) => [
+        $diff = $changes->mapWithKeys(fn($new, $field) => [
             $field => [
                 // Store raw values; AssetEditLog::resolveFieldValue() resolves labels at render time.
                 'old' => $this->getOriginal($field),
@@ -170,7 +170,7 @@ class Equipment extends Model
     {
         return $query->whereHas(
             'assetType',
-            fn (Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::EQUIPMENT)])
+            fn(Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::EQUIPMENT)])
         );
     }
 
@@ -182,7 +182,7 @@ class Equipment extends Model
     {
         return $query->whereHas(
             'assetType',
-            fn (Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::ACCESSORY)])
+            fn(Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::ACCESSORY)])
         );
     }
 
@@ -216,6 +216,11 @@ class Equipment extends Model
     public function brand(): BelongsTo
     {
         return $this->belongsTo(EquipmentBrand::class, 'eqm_brand_id', 'eqmb_id');
+    }
+
+    public function equipmentBrand(): BelongsTo
+    {
+        return $this->brand();
     }
 
     public function equipmentModel()
@@ -253,7 +258,7 @@ class Equipment extends Model
         return $this->hasMany(EquipmentTasksSchedule::class, 'ets_eqm_id', 'eqm_id')
             ->when(
                 Auth::check() && ! Auth::user()->hasRole('super_admin'),
-                fn ($query) => $query->where('ets_dep_id', Auth::user()->user_dep_id)
+                fn($query) => $query->where('ets_dep_id', Auth::user()->user_dep_id)
             );
     }
 
