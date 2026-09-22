@@ -23,7 +23,7 @@ class EquipmentModel extends Model
     public $timestamps = false;
 
     /**
-     * Save the model and synchronize the denormalized equipment type atomically.
+     * Save the model and synchronize the denormalized equipment type and brand atomically.
      *
      * @param  array<string, mixed>  $options
      */
@@ -33,12 +33,15 @@ class EquipmentModel extends Model
             $saved = parent::save($options);
 
             if ($saved && ($this->wasChanged('eqmm_brand_id') || $this->wasChanged('eqmm_eqmt_id'))) {
-                Equipment::query()
-                    ->where('eqm_eqmm_id', $this->getKey())
-                    ->update([
-                        'eqm_brand_id' => $this->eqmm_brand_id,
-                        'eqm_eqmt_id' => $this->eqmm_eqmt_id,
-                    ]);
+                // Fetch each related equipment unit so Equipment::save() executes
+                // and writes dirty fields (eqm_brand_id / eqm_eqmt_id) to AssetEditLog
+                $this->equipments()
+                    ->get()
+                    ->each(function (Equipment $equipment): void {
+                        $equipment->eqm_brand_id = $this->eqmm_brand_id;
+                        $equipment->eqm_eqmt_id = $this->eqmm_eqmt_id;
+                        $equipment->save();
+                    });
             }
 
             return $saved;

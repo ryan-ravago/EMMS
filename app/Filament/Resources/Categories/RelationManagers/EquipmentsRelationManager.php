@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Categories\RelationManagers;
 
 use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Models\AssetEditLog;
 use App\Models\AssetType;
 use App\Models\Equipment;
 use App\Models\EquipmentBrand;
@@ -18,11 +19,11 @@ use Filament\Forms\Components\ToggleButtons;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -38,6 +39,36 @@ class EquipmentsRelationManager extends RelationManager
     public static function getBadge(Model $ownerRecord, string $pageClass): ?string
     {
         return (string) $ownerRecord->equipments()->equipmentAssets()->count();
+    }
+
+    /**
+     * Log a tag (category) add/remove for one equipment as an old/new array diff.
+     */
+    protected function logCategoryChange(Equipment $equipment, string $categoryName, bool $attached): void
+    {
+        $currentTags = $equipment->categories()->pluck('eqmc_name')->filter()->values()->all();
+
+        if ($attached) {
+            // $currentTags already includes the just-attached category.
+            $newTags = $currentTags;
+            $oldTags = array_values(array_diff($newTags, [$categoryName]));
+        } else {
+            // $currentTags already excludes the just-detached category.
+            $newTags = $currentTags;
+            $oldTags = array_values(array_unique([...$currentTags, $categoryName]));
+        }
+
+        AssetEditLog::create([
+            'asset_id'     => $equipment->getKey(),
+            'performed_by' => Auth::id(),
+            'logged_at'    => now(),
+            'changes'      => [
+                'categories' => [
+                    'old' => $oldTags,
+                    'new' => $newTags,
+                ],
+            ],
+        ]);
     }
 
     public function form(Schema $schema): Schema
@@ -106,13 +137,13 @@ class EquipmentsRelationManager extends RelationManager
                     ->toggleable()
                     ->sortable()
                     ->badge()
-                    ->icon(fn($record) => $record->lifecycleStatus->status_icon)
-                    ->color(fn($record) => $record->lifecycleStatus->status_color),
+                    ->icon(fn($record) => $record->lifecycleStatus?->status_icon)
+                    ->color(fn($record) => $record->lifecycleStatus?->status_color),
                 TextColumn::make('location.name')
                     ->label('Location')
                     ->toggleable()
                     ->searchable()
-                    ->sortable()
+                    ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('eqm_is_active')
@@ -122,9 +153,7 @@ class EquipmentsRelationManager extends RelationManager
                         0 => 'Inactive',
                     ]),
             ])
-            ->recordUrl(
-                fn(Equipment $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
-            )
+            ->recordUrl(fn(Equipment $record): string => EquipmentResource::getUrl('view', ['record' => $record]))
             ->headerActions([
                 CreateAction::make()
                     ->label('New Equipment')
@@ -135,7 +164,7 @@ class EquipmentsRelationManager extends RelationManager
                     ->modalHeading('Associate Equipment to Category')
                     ->modalSubmitActionLabel('Associate')
                     ->preloadRecordSelect()
-                    ->multiple() // Enables multi-select in the modal
+                    ->multiple()
                     ->recordSelectSearchColumns(['eqm_name', 'eqm_prc_code'])
                     ->recordSelectOptionsQuery(
                         fn(Builder $query): Builder => $query
@@ -153,7 +182,6 @@ class EquipmentsRelationManager extends RelationManager
                             return;
                         }
 
-                        // 1. Equipment assets only (no accessories)
                         $equipments = Equipment::query()
                             ->equipmentAssets()
                             ->whereIn('eqm_id', $equipmentIds)
@@ -165,7 +193,6 @@ class EquipmentsRelationManager extends RelationManager
                             ]);
                         }
 
-                        // 2. Inactive equipment cannot be assigned
                         $inactive = $equipments->filter(fn(Equipment $item) => ! $item->eqm_is_active);
 
                         if ($inactive->isNotEmpty()) {
@@ -174,7 +201,6 @@ class EquipmentsRelationManager extends RelationManager
                             ]);
                         }
 
-                        // 3. Prevent duplicate attachments
                         $alreadyAttachedIds = $category->equipments()
                             ->whereIn('equipment_units.eqm_id', $equipmentIds)
                             ->pluck('equipment_units.eqm_id')
@@ -187,14 +213,40 @@ class EquipmentsRelationManager extends RelationManager
                                 'recordId' => "The following equipment items are already attached: {$duplicates}.",
                             ]);
                         }
+                    })
+                    ->after(function (array $data): void {
+                        $equipmentIds = (array) ($data['recordId'] ?? []);
+                        if (empty($equipmentIds)) {
+                            return;
+                        }
+
+                        $categoryName = $this->getOwnerRecord()->eqmc_name;
+
+                        Equipment::whereIn('eqm_id', $equipmentIds)
+                            ->get()
+                            ->each(fn(Equipment $equipment) => $this->logCategoryChange($equipment, $categoryName, attached: true));
                     }),
             ])
             ->recordActions([
-                DetachAction::make(),
+                DetachAction::make()
+                    ->after(fn(Equipment $record) => $this->logCategoryChange(
+                        $record,
+                        $this->getOwnerRecord()->eqmc_name,
+                        attached: false,
+                    )),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DetachBulkAction::make(),
+                    DetachBulkAction::make()
+                        ->after(function (Collection $records): void {
+                            $categoryName = $this->getOwnerRecord()->eqmc_name;
+
+                            $records->each(fn(Equipment $equipment) => $this->logCategoryChange(
+                                $equipment,
+                                $categoryName,
+                                attached: false,
+                            ));
+                        }),
                 ]),
             ]);
     }

@@ -13,6 +13,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -108,6 +109,12 @@ class AccessoriesRelationManager extends RelationManager
                                 'recordId' => 'One or more selected records are not valid accessories.',
                             ]);
                         }
+                    })
+                    // Runs after association completes to guarantee Equipment::save() triggers editLogs
+                    ->after(function (Collection $records) {
+                        $records->each(function (Equipment $record) {
+                            $record->touch(); // Ensures save context triggers if needed
+                        });
                     }),
             ])
             ->recordActions([
@@ -115,7 +122,14 @@ class AccessoriesRelationManager extends RelationManager
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DissociateBulkAction::make(),
+                    DissociateBulkAction::make()
+                        // Override default bulk SQL query to iterate model instances individually
+                        ->action(function (Collection $records) {
+                            $records->each(function (Equipment $record) {
+                                $record->equipmentModel()->dissociate();
+                                $record->save(); // Triggers Equipment::save() and logs changes to AssetEditLog
+                            });
+                        }),
                 ]),
             ]);
     }

@@ -15,6 +15,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
@@ -59,18 +60,13 @@ class ModelsRelationManager extends RelationManager
                             ->label('Model')
                             ->multiple()
                             ->preload()
-                            ->options(function (): array {
-                                $typeId = $this->getOwnerRecord()->getKey();
-
-                                return EquipmentModel::query()
-                                    ->where(
-                                        fn(Builder $q) => $q
-                                            ->whereNull('eqmm_brand_id')
-                                            ->orWhere('eqmm_brand_id', '!=', $typeId)
-                                    )
+                            ->options(
+                                // Only show models that currently DO NOT have a type assigned
+                                fn(): array => EquipmentModel::query()
+                                    ->whereNull('eqmm_brand_id')
                                     ->pluck('eqmm_name', 'eqmm_id')
-                                    ->toArray();
-                            })
+                                    ->toArray()
+                            )
                             ->searchable()
                             ->required(),
                     ])
@@ -87,6 +83,7 @@ class ModelsRelationManager extends RelationManager
                         // that references each model.
                         EquipmentModel::query()
                             ->whereIn('eqmm_id', $selectedIds)
+                            ->whereNull('eqmm_brand_id')
                             ->get()
                             ->each(function (EquipmentModel $model) use ($type): void {
                                 $model->eqmm_brand_id = $type->getKey();
@@ -97,11 +94,21 @@ class ModelsRelationManager extends RelationManager
             ])
             ->recordActions([
                 EditAction::make(),
-                DissociateAction::make(),
+                DissociateAction::make()
+                    ->action(function (EquipmentModel $record): void {
+                        $record->brand()->dissociate();
+                        $record->save(); // Triggers EquipmentModel::save() -> triggers Equipment::save()
+                    }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DissociateBulkAction::make(),
+                    DissociateBulkAction::make()
+                        ->action(function (Collection $records): void {
+                            $records->each(function (EquipmentModel $model): void {
+                                $model->brand()->dissociate();
+                                $model->save(); // Triggers EquipmentModel::save() -> triggers Equipment::save()
+                            });
+                        }),
                 ]),
             ]);
     }

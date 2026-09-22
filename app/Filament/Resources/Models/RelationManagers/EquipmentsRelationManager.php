@@ -13,6 +13,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -85,18 +86,20 @@ class EquipmentsRelationManager extends RelationManager
                             return;
                         }
 
-                        // Re-verify server-side — the dropdown scope alone
-                        // (recordSelectOptionsQuery) can be bypassed client-side.
                         $equipments = Equipment::query()
                             ->equipmentAssets()
                             ->whereIn('eqm_id', $equipmentIds)
                             ->get();
 
                         if ($equipments->count() !== count($equipmentIds)) {
-                            throw ValidationException::withMessages([
-                                'recordId' => 'One or more selected records are not valid equipment.',
-                            ]);
+                            throw ValidationException::withMessages(['recordId' => 'One or more selected records are not valid equipment.']);
                         }
+                    })
+                    // Ensure each newly associated record triggers Equipment::save()
+                    ->after(function (Collection $records) {
+                        $records->each(function (Equipment $record) {
+                            $record->save();
+                        });
                     }),
             ])
             ->recordActions([
@@ -104,7 +107,14 @@ class EquipmentsRelationManager extends RelationManager
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DissociateBulkAction::make(),
+                    DissociateBulkAction::make()
+                        // Override default bulk SQL query to iterate model instances individually
+                        ->action(function (Collection $records) {
+                            $records->each(function (Equipment $record) {
+                                $record->equipmentModel()->dissociate();
+                                $record->save(); // Triggers Equipment::save() edit log
+                            });
+                        }),
                 ]),
             ]);
     }

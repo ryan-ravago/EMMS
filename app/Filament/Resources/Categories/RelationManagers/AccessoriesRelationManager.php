@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Categories\RelationManagers;
 
 use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Models\AssetEditLog;
 use App\Models\Equipment;
 use Filament\Actions\AttachAction;
 use Filament\Actions\BulkActionGroup;
@@ -13,6 +14,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -26,6 +28,36 @@ class AccessoriesRelationManager extends RelationManager
     public static function getBadge(Model $ownerRecord, string $pageClass): ?string
     {
         return (string) $ownerRecord->equipments()->accessories()->count();
+    }
+
+    /**
+     * Log a tag (category) add/remove for one equipment as an old/new array diff.
+     */
+    protected function logCategoryChange(Equipment $equipment, string $categoryName, bool $attached): void
+    {
+        $currentTags = $equipment->categories()->pluck('eqmc_name')->filter()->values()->all();
+
+        if ($attached) {
+            // $currentTags already includes the just-attached category.
+            $newTags = $currentTags;
+            $oldTags = array_values(array_diff($newTags, [$categoryName]));
+        } else {
+            // $currentTags already excludes the just-detached category.
+            $newTags = $currentTags;
+            $oldTags = array_values(array_unique([...$currentTags, $categoryName]));
+        }
+
+        AssetEditLog::create([
+            'asset_id'     => $equipment->getKey(),
+            'performed_by' => Auth::id(),
+            'logged_at'    => now(),
+            'changes'      => [
+                'categories' => [
+                    'old' => $oldTags,
+                    'new' => $newTags,
+                ],
+            ],
+        ]);
     }
 
     public function table(Table $table): Table
@@ -69,13 +101,13 @@ class AccessoriesRelationManager extends RelationManager
                     ->toggleable()
                     ->sortable()
                     ->badge()
-                    ->icon(fn($record) => $record->lifecycleStatus->status_icon)
-                    ->color(fn($record) => $record->lifecycleStatus->status_color),
+                    ->icon(fn($record) => $record->lifecycleStatus?->status_icon)
+                    ->color(fn($record) => $record->lifecycleStatus?->status_color),
                 TextColumn::make('location.name')
                     ->label('Location')
                     ->toggleable()
                     ->searchable()
-                    ->sortable()
+                    ->sortable(),
             ])
             ->recordUrl(
                 fn(Equipment $record): string => EquipmentResource::withConfiguration(
@@ -108,7 +140,6 @@ class AccessoriesRelationManager extends RelationManager
                             return;
                         }
 
-                        // 1. Accessories only (no equipment)
                         $accessories = Equipment::query()
                             ->accessories()
                             ->whereIn('eqm_id', $accessoryIds)
@@ -120,7 +151,6 @@ class AccessoriesRelationManager extends RelationManager
                             ]);
                         }
 
-                        // 2. Inactive accessories cannot be assigned
                         $inactive = $accessories->filter(fn(Equipment $item) => ! $item->eqm_is_active);
 
                         if ($inactive->isNotEmpty()) {
@@ -129,7 +159,6 @@ class AccessoriesRelationManager extends RelationManager
                             ]);
                         }
 
-                        // 3. Prevent duplicate attachments
                         $alreadyAttachedIds = $category->equipments()
                             ->whereIn('equipment_units.eqm_id', $accessoryIds)
                             ->pluck('equipment_units.eqm_id')
@@ -142,14 +171,40 @@ class AccessoriesRelationManager extends RelationManager
                                 'recordId' => "The following accessories are already attached: {$duplicates}.",
                             ]);
                         }
+                    })
+                    ->after(function (array $data): void {
+                        $accessoryIds = (array) ($data['recordId'] ?? []);
+                        if (empty($accessoryIds)) {
+                            return;
+                        }
+
+                        $categoryName = $this->getOwnerRecord()->eqmc_name;
+
+                        Equipment::whereIn('eqm_id', $accessoryIds)
+                            ->get()
+                            ->each(fn(Equipment $equipment) => $this->logCategoryChange($equipment, $categoryName, attached: true));
                     }),
             ])
             ->recordActions([
-                DetachAction::make(),
+                DetachAction::make()
+                    ->after(fn(Equipment $record) => $this->logCategoryChange(
+                        $record,
+                        $this->getOwnerRecord()->eqmc_name,
+                        attached: false,
+                    )),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DetachBulkAction::make(),
+                    DetachBulkAction::make()
+                        ->after(function (Collection $records): void {
+                            $categoryName = $this->getOwnerRecord()->eqmc_name;
+
+                            $records->each(fn(Equipment $equipment) => $this->logCategoryChange(
+                                $equipment,
+                                $categoryName,
+                                attached: false,
+                            ));
+                        }),
                 ]),
             ]);
     }

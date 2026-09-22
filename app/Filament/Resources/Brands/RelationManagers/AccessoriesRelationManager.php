@@ -77,45 +77,45 @@ class AccessoriesRelationManager extends RelationManager
                     ->searchable()
                     ->sortable()
             ])
-            ->recordUrl(fn(Equipment $record): string => EquipmentResource::withConfiguration('accessories', fn(): string => EquipmentResource::getUrl('view', ['record' => $record]),),)
-            ->headerActions([
-                AssociateAction::make()
-                    ->authorize(fn(): bool => Auth::user()->hasPermissionTo('Update:EquipmentResource'))
-                    ->label('Associate')
-                    ->modalHeading('Associate Accessory to Location')
-                    ->modalSubmitActionLabel('Associate')
-                    ->preloadRecordSelect()
-                    ->multiple()
-                    ->recordSelectSearchColumns(['eqm_name', 'eqm_prc_code'])
-                    ->recordSelectOptionsQuery(
-                        fn(Builder $query): Builder => $query->accessories(),
-                    )
-                    ->before(function (array $data) {
-                        $accessoryIds = (array) ($data['recordId'] ?? []);
+            ->recordUrl(fn(Equipment $record): string => EquipmentResource::withConfiguration('accessories', fn(): string => EquipmentResource::getUrl('view', ['record' => $record])));
+        // ->headerActions([
+        //     AssociateAction::make()
+        //         ->authorize(fn(): bool => Auth::user()->hasPermissionTo('Update:EquipmentResource'))
+        //         ->label('Associate')
+        //         ->modalHeading('Associate Accessory to Location')
+        //         ->modalSubmitActionLabel('Associate')
+        //         ->preloadRecordSelect()
+        //         ->multiple()
+        //         ->recordSelectSearchColumns(['eqm_name', 'eqm_prc_code'])
+        //         ->recordSelectOptionsQuery(
+        //             fn(Builder $query): Builder => $query->accessories(),
+        //         )
+        //         ->before(function (array $data) {
+        //             $accessoryIds = (array) ($data['recordId'] ?? []);
 
-                        if (empty($accessoryIds)) {
-                            return;
-                        }
+        //             if (empty($accessoryIds)) {
+        //                 return;
+        //             }
 
-                        $accessories = Equipment::query()
-                            ->accessories()
-                            ->whereIn('eqm_id', $accessoryIds)
-                            ->get();
+        //             $accessories = Equipment::query()
+        //                 ->accessories()
+        //                 ->whereIn('eqm_id', $accessoryIds)
+        //                 ->get();
 
-                        if ($accessories->count() !== count($accessoryIds)) {
-                            throw ValidationException::withMessages([
-                                'recordId' => 'One or more selected records are not valid accessories.',
-                            ]);
-                        }
-                    }),
-            ])
-            ->recordActions([
-                DissociateAction::make(),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DissociateBulkAction::make(),
-                ]),
-            ]);
+        //             if ($accessories->count() !== count($accessoryIds)) {
+        //                 throw ValidationException::withMessages([
+        //                     'recordId' => 'One or more selected records are not valid accessories.',
+        //                 ]);
+        //             }
+        //         }),
+        // ])
+        // ->recordActions([
+        //     DissociateAction::make(),
+        // ])
+        // ->toolbarActions([
+        //     BulkActionGroup::make([
+        //         DissociateBulkAction::make(),
+        //     ]),
+        // ]);
     }
 }
