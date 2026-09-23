@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class Equipment extends Model
@@ -95,7 +96,7 @@ class Equipment extends Model
     }
 
     /**
-     * Persist the model and, for updates, atomically record the change diff to AssetEditLog.
+     * Persist the model inside a transaction so the edit-log write (below) is atomic with the save.
      *
      * @param  array<string, mixed>  $options
      */
@@ -105,33 +106,46 @@ class Equipment extends Model
             return parent::save($options);
         }
 
-        $changes = collect($this->getDirty())->except('eqm_updated_at');
+        return DB::transaction(fn(): bool => parent::save($options));
+    }
 
-        if ($changes->isEmpty()) {
-            return parent::save($options);
-        }
+    protected static function booted(): void
+    {
+        // Runs after the UPDATE query and after EquipmentObserver::saving() has
+        // mutated fields (parent_id, eqm_eqmt_id, eqm_next_pm_due_at), but before
+        // syncOriginal() — so getChanges()/getOriginal() both reflect the true diff.
+        static::updated(function (self $equipment): void {
+            $diff = collect($equipment->getChanges())
+                ->except('eqm_updated_at')
+                ->mapWithKeys(fn($new, $field) => [
+                    $field => [
+                        'old' => $equipment->getOriginal($field),
+                        'new' => $new,
+                    ],
+                ])
+                ->toArray();
 
-        $diff = $changes->mapWithKeys(fn($new, $field) => [
-            $field => [
-                // Store raw values; AssetEditLog::resolveFieldValue() resolves labels at render time.
-                'old' => $this->getOriginal($field),
-                'new' => $new,
-            ],
-        ])->toArray();
-
-        return DB::transaction(function () use ($options, $diff): bool {
-            $saved = parent::save($options);
-
-            if ($saved) {
-                $this->editLogs()->create([
-                    'changes' => $diff,
-                    'performed_by' => Auth::id(),
-                    'logged_at' => now(),
-                ]);
+            if (empty($diff)) {
+                return;
             }
 
-            return $saved;
+            $equipment->editLogs()->create([
+                'changes' => $diff,
+                'performed_by' => Auth::id(),
+                'logged_at' => now(),
+            ]);
         });
+    }
+
+    protected function specifications(): Attribute
+    {
+        return Attribute::make(
+            set: function (?string $value) {
+                $stripped = trim(html_entity_decode(strip_tags($value ?? ''), ENT_QUOTES));
+
+                return $stripped === '' ? null : $value;
+            },
+        );
     }
 
     public function parent(): BelongsTo
