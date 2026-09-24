@@ -66,51 +66,57 @@ class AccessoriesRelationManager extends RelationManager
                 TextColumn::make('eqm_is_active')
                     ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
-                    ->icon(fn (bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
-                    ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
+                    ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
+                    ->icon(fn(bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
+                    ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
             ])
             ->headerActions([
                 AssociateAction::make()
                     ->label('Allocate accessory')
                     ->modalHeading('Allocate accessory')
+                    ->authorize(fn() => Auth::user()?->can('update', $this->getOwnerRecord()) ?? false)
                     ->modalSubmitActionLabel('Allocate')
+                    ->multiple()
                     ->preloadRecordSelect()
                     ->recordSelectSearchColumns(['eqm_name', 'eqm_prc_code'])
-                    ->recordSelectOptionsQuery(fn (Builder $query): Builder => $query->accessories())
+                    ->recordSelectOptionsQuery(fn(Builder $query): Builder => $query->accessories())
                     ->before(function (AssociateAction $action, array $data) {
-                        $selectedId = $data['recordId'] ?? null;
+                        $selectedIds = array_map('strval', (array) ($data['recordId'] ?? []));
                         $ownerRecord = $this->getOwnerRecord();
 
-                        // 1. Check if the submitted record exists and passes the accessories scope
-                        $isValidAccessory = Equipment::query()
-                            ->accessories()
-                            ->where('eqm_id', $selectedId)
-                            ->exists();
+                        if (empty($selectedIds)) {
+                            return;
+                        }
 
-                        if (! $isValidAccessory) {
+                        // 1. Every submitted record must pass the accessories scope
+                        $validCount = Equipment::query()
+                            ->accessories()
+                            ->whereIn('eqm_id', $selectedIds)
+                            ->count();
+
+                        if ($validCount !== count($selectedIds)) {
                             throw ValidationException::withMessages([
-                                'recordId' => 'The selected record is not a valid accessory.',
+                                'recordId' => 'One or more selected records are not a valid accessory.',
                             ]);
                         }
 
                         // 2. Prevent self-association (equipping an asset to itself)
-                        if ((int) $selectedId === (int) $ownerRecord->getKey()) {
+                        if (in_array((string) $ownerRecord->getKey(), $selectedIds, true)) {
                             throw ValidationException::withMessages([
                                 'recordId' => 'An asset cannot be associated with itself as an accessory.',
                             ]);
                         }
 
-                        // 3. Optional: Prevent re-associating an accessory already assigned to another asset
+                        // 3. Prevent re-associating an accessory already assigned to another asset
                         $alreadyAssigned = Equipment::query()
-                            ->where('eqm_id', $selectedId)
+                            ->whereIn('eqm_id', $selectedIds)
                             ->whereNotNull('parent_id')
                             ->where('parent_id', '!=', $ownerRecord->getKey())
-                            ->exists();
+                            ->pluck('eqm_name');
 
-                        if ($alreadyAssigned) {
+                        if ($alreadyAssigned->isNotEmpty()) {
                             throw ValidationException::withMessages([
-                                'recordId' => 'This accessory is already allocated to another equipment unit.',
+                                'recordId' => 'These accessories are already allocated to another equipment unit: ' . $alreadyAssigned->implode(', ') . '.',
                             ]);
                         }
                     })
@@ -165,9 +171,9 @@ class AccessoriesRelationManager extends RelationManager
                 ]),
             ])
             ->recordUrl(
-                fn (Equipment $record): string => EquipmentResource::withConfiguration(
+                fn(Equipment $record): string => EquipmentResource::withConfiguration(
                     'accessories',
-                    fn (): string => EquipmentResource::getUrl('view', ['record' => $record]),
+                    fn(): string => EquipmentResource::getUrl('view', ['record' => $record]),
                 ),
             );
     }
@@ -196,7 +202,7 @@ class AccessoriesRelationManager extends RelationManager
         $loggedAt = now();
 
         LifecycleLog::query()->insert(array_map(
-            fn (int|string $accessoryId): array => [
+            fn(int|string $accessoryId): array => [
                 'asset_id' => $accessoryId,
                 'action_id' => $actionId,
                 'status_id' => $statusId,

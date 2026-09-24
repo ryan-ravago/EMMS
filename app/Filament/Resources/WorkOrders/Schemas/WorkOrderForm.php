@@ -6,6 +6,7 @@ use App\Models\AppUser;
 use App\Models\Equipment;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
+use Closure;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Get;
@@ -16,6 +17,25 @@ use Illuminate\Database\Eloquent\Builder;
 
 class WorkOrderForm
 {
+    protected static function resolveDepartmentId(Get $get): ?int
+    {
+        return auth()->user()->hasRole('super_admin')
+            ? $get('wo_dep_id')
+            : auth()->user()->user_dep_id;
+    }
+
+    protected static function activeTechnicians(?int $depId)
+    {
+        if (! $depId) {
+            return AppUser::whereRaw('1 = 0')->get();
+        }
+
+        return AppUser::whereHas('roles', fn($q) => $q->where('name', 'technician'))
+            ->where('user_dep_id', $depId)
+            ->where('is_active', 1)
+            ->get();
+    }
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -26,7 +46,13 @@ class WorkOrderForm
                         ->schema([
                             Select::make('wo_eqm_id')
                                 ->label('Equipment')
-                                ->relationship('equipment', 'eqm_name')
+                                ->relationship(
+                                    'equipment',
+                                    'eqm_name',
+                                    fn(Builder $query) => $query
+                                        ->equipmentAssets()
+                                        ->where('eqm_is_active', 1)
+                                )
                                 ->searchable(['eqm_name', 'eqm_prc_code'])
                                 ->getOptionLabelFromRecordUsing(function (Equipment $record): string {
                                     return "($record->eqm_prc_code) {$record->eqm_name}";
@@ -98,26 +124,25 @@ class WorkOrderForm
                             Select::make('worker_ids')
                                 ->label('Assigned Workers')
                                 ->relationship('workers', 'user_fname')
-                                ->options(function (Get $get) {
-                                    $depId = auth()->user()->hasRole('super_admin')
-                                        ? $get('wo_dep_id')
-                                        : auth()->user()->user_dep_id;
-
-                                    if (! $depId) {
-                                        return [];
-                                    }
-
-                                    return AppUser::whereHas('roles', fn($q) => $q->where('name', 'technician'))
-                                        ->where('user_dep_id', $depId)
-                                        ->get()
-                                        ->mapWithKeys(fn($user) => [
-                                            $user->user_id => "{$user->user_fname} {$user->user_lname}",
-                                        ]);
-                                })
+                                ->options(fn(Get $get) => static::activeTechnicians(static::resolveDepartmentId($get))
+                                    ->mapWithKeys(fn($user) => [
+                                        $user->user_id => "{$user->user_fname} {$user->user_lname}",
+                                    ]))
                                 ->multiple()
                                 ->required()
                                 ->native(false)
-                                ->searchable(),
+                                ->searchable()
+                                ->rules([
+                                    fn(Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get): void {
+                                        $depId = static::resolveDepartmentId($get);
+                                        $validIds = static::activeTechnicians($depId)->pluck('user_id')->all();
+                                        $invalid = array_diff((array) $value, $validIds);
+
+                                        if (! empty($invalid)) {
+                                            $fail('One or more selected workers are not active technicians for this department.');
+                                        }
+                                    },
+                                ]),
                         ]),
                 ]),
             ]);

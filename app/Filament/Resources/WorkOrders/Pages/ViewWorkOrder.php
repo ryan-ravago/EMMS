@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\WorkOrders\Pages;
 
 use App\Filament\Resources\WorkOrders\RelationManagers\LogsRelationManager;
+use Closure;
+use Filament\Schemas\Components\Utilities\Get;
 use App\Filament\Resources\WorkOrders\RelationManagers\LogUpdatesRelationManager;
 use App\Filament\Resources\WorkOrders\RelationManagers\ReportSubmissionsRelationManager;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
@@ -710,7 +712,7 @@ class ViewWorkOrder extends ViewRecord
                     }),
                 Action::make('assignWorkOrder')
                     ->label('Assign Work Order')
-                    ->visible(fn() => Auth::user()->can('assignWorkOrder', $this->record))
+                    ->authorize(fn() => Auth::user()->can('assignWorkOrder', $this->record))
                     ->icon('heroicon-o-user-plus')
                     ->color('success')
                     ->modalHeading('Assign Work Order')
@@ -720,19 +722,21 @@ class ViewWorkOrder extends ViewRecord
                     ->schema([
                         Select::make('worker_ids')
                             ->label('Assign Technicians')
-                            ->options(function () {
-                                $depId = auth()->user()->user_dep_id;
-                                if (! $depId) {
-                                    return [];
-                                }
+                            ->options(fn(Get $get) => static::activeTechnicians(static::resolveDepartmentId($get))
+                                ->mapWithKeys(fn($user) => [
+                                    $user->user_id => "{$user->user_fname} {$user->user_lname}",
+                                ]))
+                            ->rules([
+                                fn(Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get): void {
+                                    $depId = static::resolveDepartmentId($get);
+                                    $validIds = static::activeTechnicians($depId)->pluck('user_id')->all();
+                                    $invalid = array_diff((array) $value, $validIds);
 
-                                return AppUser::whereHas('roles', fn($q) => $q->where('name', 'technician'))
-                                    ->where('user_dep_id', $depId)
-                                    ->get()
-                                    ->mapWithKeys(fn($user) => [
-                                        $user->user_id => "{$user->user_fname} {$user->user_lname}",
-                                    ]);
-                            })
+                                    if (! empty($invalid)) {
+                                        $fail('One or more selected workers are not active technicians for this department.');
+                                    }
+                                },
+                            ])
                             ->multiple()
                             ->required()
                             ->native(false)
@@ -929,5 +933,24 @@ class ViewWorkOrder extends ViewRecord
                 ->color('gray')
                 ->button(),
         ];
+    }
+
+    protected static function resolveDepartmentId(Get $get): ?int
+    {
+        return auth()->user()->hasRole('super_admin')
+            ? $get('wo_dep_id')
+            : auth()->user()->user_dep_id;
+    }
+
+    protected static function activeTechnicians(?int $depId)
+    {
+        if (! $depId) {
+            return AppUser::whereRaw('1 = 0')->get();
+        }
+
+        return AppUser::whereHas('roles', fn($q) => $q->where('name', 'technician'))
+            ->where('user_dep_id', $depId)
+            ->where('is_active', 1)
+            ->get();
     }
 }

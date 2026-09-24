@@ -23,7 +23,13 @@ class RequestorWorkOrderForm
                     ->schema([
                         Select::make('wo_eqm_id')
                             ->label('Equipment')
-                            ->relationship('equipment', 'eqm_name')
+                            ->relationship(
+                                'equipment',
+                                'eqm_name',
+                                fn(Builder $query) => $query
+                                    ->equipmentAssets()
+                                    ->where('eqm_is_active', 1)
+                            )
                             ->searchable(['eqm_name', 'eqm_prc_code'])
                             ->getOptionLabelFromRecordUsing(function (Equipment $record): string {
                                 return "($record->eqm_prc_code) {$record->eqm_name}";
