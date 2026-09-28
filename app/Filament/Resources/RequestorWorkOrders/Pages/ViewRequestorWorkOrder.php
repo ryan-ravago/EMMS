@@ -171,6 +171,7 @@ class ViewRequestorWorkOrder extends ViewRecord
                         // 2. Notify manager — Update
                         $managers = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
                             ->where('user_dep_id', $record->wo_dep_id)
+                            ->where('is_active', true)
                             ->get();
 
                         foreach ($managers as $manager) {
@@ -186,7 +187,7 @@ class ViewRequestorWorkOrder extends ViewRecord
                         }
 
                         // 3. Notify creator if not the canceller
-                        if ($record->createdBy && $record->createdBy->user_email && $record->createdBy->user_id !== $canceller->user_id) {
+                        if ($record->createdBy && $record->createdBy->is_active && $record->createdBy->user_email && $record->createdBy->user_id !== $canceller->user_id) {
                             Mail::to($record->createdBy->user_email)
                                 ->queue(new WorkOrderCancellationMail(
                                     workOrder: $record,

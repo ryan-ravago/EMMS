@@ -36,6 +36,7 @@ class TechnicianForm
                         TextInput::make('user_email')
                             ->label('Email')
                             ->email()
+                            ->unique()
                             ->required(),
                         TextInput::make('user_contact_no')
                             ->label('Contact #')

@@ -41,6 +41,7 @@ class CheckDueMaintenanceCommand extends Command
                     'department',
                     fn($q) => $q->where('dep_code', 'PREV')
                 )
+                ->where('is_active', true)
                 ->get();
 
             if ($prevManagers->isEmpty()) {

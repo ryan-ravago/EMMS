@@ -71,7 +71,7 @@ class GmailWorkOrderReplySyncService
             ->whereRaw('lower(user_email) = ?', [Str::lower($senderEmail)], 'and')
             ->first();
 
-        if (! $sender || ! $workOrder->workers->contains('user_id', $sender->user_id)) {
+        if (! $sender || ! $this->senderCanUpdateWorkOrder($sender, $workOrder)) {
             return false;
         }
 
@@ -103,12 +103,35 @@ class GmailWorkOrderReplySyncService
     }
 
     /**
+     * A reply is only synced when it comes from someone who is actually
+     * party to the work order: an assigned technician, or a manager in
+     * the same department as the work order (managers only ever receive
+     * the confirmation email, not the action-required one, so they must
+     * be recognized separately from $workOrder->workers).
+     */
+    private function senderCanUpdateWorkOrder(AppUser $sender, WorkOrder $workOrder): bool
+    {
+        if ($workOrder->workers->contains('user_id', $sender->user_id)) {
+            return true;
+        }
+
+        return $sender->hasRole('manager') && $sender->user_dep_id === $workOrder->wo_dep_id;
+    }
+
+    /**
      * @param  array<int, array<string, mixed>>  $attachments
      * @return array<int, string>
      */
     private function storeAttachments(Gmail $gmail, string $messageId, WorkOrder $workOrder, array $attachments): array
     {
         $storedAttachments = [];
+        $directory = sprintf('work-order-replies/%s', $workOrder->wo_no);
+
+        // Gmail (and most mail clients) carry the previous message's
+        // attachments along into every new reply on the thread. Without
+        // deduping, each reply would re-save every attachment that was
+        // ever sent before it, snowballing with every new message.
+        $seenHashes = $this->existingAttachmentHashes($directory);
 
         foreach (array_values($attachments) as $index => $attachment) {
             $content = $this->resolveAttachmentContent($gmail, $messageId, $attachment);
@@ -117,10 +140,16 @@ class GmailWorkOrderReplySyncService
                 continue;
             }
 
-            $fileName = $this->buildAttachmentFileName($attachment, $index + 1);
+            $hash = substr(sha1($content), 0, 12);
+
+            if (in_array($hash, $seenHashes, true)) {
+                continue;
+            }
+
+            $fileName = $this->buildAttachmentFileName($attachment, $index + 1, $hash);
             $path = sprintf(
-                'work-order-replies/%s/%s/%s',
-                $workOrder->wo_no,
+                '%s/%s/%s',
+                $directory,
                 $messageId,
                 $fileName
             );
@@ -128,9 +157,36 @@ class GmailWorkOrderReplySyncService
             Storage::disk('local')->put($path, $content);
 
             $storedAttachments[] = $path;
+            $seenHashes[] = $hash;
         }
 
         return $storedAttachments;
+    }
+
+    /**
+     * Collect the content hashes already stored for this work order's
+     * replies, so a re-included attachment from earlier in the thread
+     * isn't saved (and recorded) again as if it were new.
+     *
+     * @return array<int, string>
+     */
+    private function existingAttachmentHashes(string $directory): array
+    {
+        if (! Storage::disk('local')->exists($directory)) {
+            return [];
+        }
+
+        $hashes = [];
+
+        foreach (Storage::disk('local')->allFiles($directory) as $file) {
+            $basename = pathinfo($file, PATHINFO_FILENAME);
+
+            if (preg_match('/^([0-9a-f]{12})-/', $basename, $matches)) {
+                $hashes[] = $matches[1];
+            }
+        }
+
+        return array_values(array_unique($hashes));
     }
 
     /**
@@ -159,7 +215,7 @@ class GmailWorkOrderReplySyncService
     /**
      * @param  array<string, mixed>  $attachment
      */
-    private function buildAttachmentFileName(array $attachment, int $index): string
+    private function buildAttachmentFileName(array $attachment, int $index, string $contentHash): string
     {
         $filename = basename(trim((string) ($attachment['filename'] ?? '')));
         $mimeType = strtolower((string) ($attachment['mime_type'] ?? ''));
@@ -190,7 +246,9 @@ class GmailWorkOrderReplySyncService
             };
         }
 
-        return sprintf('%02d-%s.%s', $index, $safeBaseName, $extension);
+        // The hash prefix lets existingAttachmentHashes() recognize this
+        // exact file again later without needing to re-read its contents.
+        return sprintf('%s-%02d-%s.%s', $contentHash, $index, $safeBaseName, $extension);
     }
 
     private function createClient(AppUser $mailboxUser): GoogleClient

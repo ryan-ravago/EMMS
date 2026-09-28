@@ -148,6 +148,7 @@ class ViewMaintenanceTask extends ViewRecord
 
                                             return AppUser::whereHas('roles', fn ($q) => $q->where('name', 'technician'))
                                                 ->where('user_dep_id', $depId)
+                                                ->where('is_active', true)
                                                 ->get()
                                                 ->mapWithKeys(fn ($user) => [
                                                     $user->user_id => "{$user->user_fname} {$user->user_lname}",
@@ -253,6 +254,7 @@ class ViewMaintenanceTask extends ViewRecord
                                 // Notify manager
                                 $managers = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
                                     ->where('user_dep_id', $workOrder->wo_dep_id)
+                                    ->where('is_active', true)
                                     ->get();
 
                                 foreach ($managers as $manager) {
@@ -264,7 +266,7 @@ class ViewMaintenanceTask extends ViewRecord
 
                                 // Notify each assigned technician
                                 foreach ($workOrder->workers as $worker) {
-                                    if ($worker->user_email) {
+                                    if ($worker->is_active && $worker->user_email) {
                                         Mail::to($worker->user_email)
                                             ->queue(new WorkOrderAssignedMail($workOrder, $worker));
                                     }

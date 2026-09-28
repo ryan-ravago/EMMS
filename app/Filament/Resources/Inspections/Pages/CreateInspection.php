@@ -142,7 +142,7 @@ class CreateInspection extends CreateRecord
         $conductor = $inspection->conductedBy;
 
         // 1. Notify technician (conductor) — Confirmation
-        if ($conductor?->user_email) {
+        if ($conductor?->is_active && $conductor->user_email) {
             Mail::to($conductor->user_email)
                 ->queue(new InspectionConductedMail(
                     inspection: $inspection,
@@ -155,6 +155,7 @@ class CreateInspection extends CreateRecord
         // 2. Notify managers of same department — Update
         $managers = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
             ->where('user_dep_id', $inspection->ins_dep_id)
+            ->where('is_active', true)
             ->get();
 
         foreach ($managers as $manager) {

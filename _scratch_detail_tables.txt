@@ -1,0 +1,1000 @@
+############ resources/views/emails/inspection-conducted.blade.php ############
+                            <!-- Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;margin-bottom:28px;">
+                                <tr style="background-color:#f3f4f6;">
+                                    <td colspan="2"
+                                        style="padding:10px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                        Inspection Details
+                                    </td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Inspection #</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;font-weight:600;">
+                                        {{ $inspection->ins_no }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Equipment</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;font-weight:600;">
+                                        {{ $inspection->equipment->eqm_name }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Department</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $inspection->department->dep_name }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Conducted By</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $inspection->conductedBy->user_fname }}
+                                        {{ $inspection->conductedBy->user_lname }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Inspection Date</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ \Carbon\Carbon::parse($inspection->ins_dt)->format('M d, Y | h:i A') }}</td>
+                                </tr>
+                            </table>
+
+                            @if ($hasFailedItems)
+                                <!-- Failed Items -->
+                                <table width="100%" cellpadding="0" cellspacing="0"
+                                    style="background-color:#fef2f2;border:1px solid #fecaca;border-radius:6px;overflow:hidden;margin-bottom:28px;">
+                                    <tr style="background-color:#fee2e2;">
+                                        <td colspan="2"
+                                            style="padding:10px 16px;font-size:11px;font-weight:700;color:#991b1b;text-transform:uppercase;letter-spacing:0.05em;">
+                                            Failed Items ({{ $failedItems->count() }})
+                                        </td>
+                                    </tr>
+                                    @foreach ($failedItems as $item)
+                                        <tr
+                                            style="border-top:1px solid #fecaca;{{ $loop->even ? 'background-color:#ffffff;' : '' }}">
+                                            <td style="padding:12px 16px;font-size:13px;color:#111827;">
+                                                {{ $item->insi_cli_name_for_record }}</td>
+                                            <td
+                                                style="padding:12px 16px;font-size:13px;color:#6b7280;text-align:right;">
+                                                {{ $item->insi_remarks ?: '—' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </table>
+                            @endif
+
+                            <!-- CTA Button -->
+
+############ resources/views/emails/inspection-item-disregarded.blade.php ############
+                            <!-- Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;margin-bottom:28px;">
+                                <tr style="background-color:#f3f4f6;">
+                                    <td colspan="2"
+                                        style="padding:10px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                        Inspection Details
+                                    </td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Equipment</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;font-weight:600;">
+                                        {{ $inspection->equipment->eqm_name }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Department</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $inspection->department->dep_name }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Conducted By</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $inspection->conductedBy->user_fname }}
+                                        {{ $inspection->conductedBy->user_lname }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Inspection Date</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ \Carbon\Carbon::parse($inspection->ins_dt)->format('M d, Y | h:i A') }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Failed Item</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $inspectionItem->insi_cli_name_for_record }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Disregarded By</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $manager->user_fname }} {{ $manager->user_lname }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td colspan="2" style="padding:12px 16px;">
+                                        <p
+                                            style="margin:0 0 6px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                            Reason</p>
+                                        <p
+                                            style="margin:0;font-size:13px;color:#111827;background-color:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:10px 12px;line-height:1.6;">
+                                            {{ $reason }}</p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- CTA Button -->
+
+############ resources/views/emails/maintenance/due.blade.php ############
+                            <!-- Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;margin-bottom:28px;">
+                                <tr style="background-color:#f3f4f6;">
+                                    <td colspan="2"
+                                        style="padding:10px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                        Equipment Details
+                                    </td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Equipment Name</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;font-weight:600;">
+                                        {{ $equipment->eqm_name }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Equipment Type</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $equipment->type?->eqmt_name ?? 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Model</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $equipment->equipmentModel?->eqmm_name ?? 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Maintenance Interval</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        @php
+                                            $intervals = [];
+                                            if ($equipment->eqm_pm_itrv_years) {
+                                                $intervals[] = "{$equipment->eqm_pm_itrv_years} year(s)";
+                                            }
+                                            if ($equipment->eqm_pm_itrv_months) {
+                                                $intervals[] = "{$equipment->eqm_pm_itrv_months} month(s)";
+                                            }
+                                            if ($equipment->eqm_pm_itrv_weeks) {
+                                                $intervals[] = "{$equipment->eqm_pm_itrv_weeks} week(s)";
+                                            }
+                                            if ($equipment->eqm_pm_itrv_days) {
+                                                $intervals[] = "{$equipment->eqm_pm_itrv_days} day(s)";
+                                            }
+                                        @endphp
+                                        {{ count($intervals) ? implode(', ', $intervals) : 'Not Set' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Last PM Start Date</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $equipment->eqm_pm_itrv_start_date?->format('M d, Y') ?? 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Next Due Date</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#dc2626;font-weight:600;">
+                                        {{ $equipment->eqm_next_pm_due_at?->format('M d, Y h:i A') ?? 'N/A' }}</td>
+                                </tr>
+                            </table>
+
+                            <!-- CTA Button -->
+
+############ resources/views/emails/work-orders/action-required.blade.php ############
+                            <!-- Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;margin-bottom:28px;">
+                                <tr style="background-color:#f3f4f6;">
+                                    <td colspan="2"
+                                        style="padding:10px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                        Work Order Details
+                                    </td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        WO No.</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;font-weight:600;">
+                                        {{ $workOrder->wo_no }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Equipment</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->equipment?->eqm_name ?? 'N/A' }}</td>
+                                </tr>
+                                {{-- <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Subject</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_title }}</td>
+                                </tr> --}}
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Requestor Problem Description</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_req_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Manager Problem Description</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Priority</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->priority?->prio_name }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Created By</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ trim(($workOrder->createdBy?->user_fname ?? '') . ' ' . ($workOrder->createdBy?->user_lname ?? '')) ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Date & Time Created</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_created_at ?? $workOrder->created_at ? \Illuminate\Support\Carbon::parse($workOrder->wo_created_at ?? $workOrder->created_at)->format('M d, Y h:i A') : 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Technicians</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->workers?->map(fn($worker) => trim(($worker->user_fname ?? '') . ' ' . ($worker->user_lname ?? '')))->filter()->implode(', ') ?: 'N/A' }}</td>
+                                </tr>
+                            </table>
+
+                            <!-- CTA Button -->
+
+############ resources/views/emails/work-orders/approved.blade.php ############
+                            <!-- Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;margin-bottom:28px;">
+                                <tr style="background-color:#f3f4f6;">
+                                    <td colspan="2"
+                                        style="padding:10px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                        Work Order Details
+                                    </td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        WO No.</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;font-weight:600;">
+                                        {{ $workOrder->wo_no }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Equipment</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->equipment?->eqm_name ?? 'N/A' }}</td>
+                                </tr>
+                                {{-- <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Subject</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_title }}</td>
+                                </tr> --}}
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Requestor Problem Description</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_req_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Manager Problem Description</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#16a34a;font-weight:600;">
+                                        {{ $workOrder->wo_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Priority</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->priority?->prio_name }}</td>
+                                </tr>
+
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Created By</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ trim(($workOrder->createdBy?->user_fname ?? '') . ' ' . ($workOrder->createdBy?->user_lname ?? '')) ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Date & Time Created</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_created_at ?? $workOrder->created_at ? \Illuminate\Support\Carbon::parse($workOrder->wo_created_at ?? $workOrder->created_at)->format('M d, Y h:i A') : 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Technicians</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->workers?->map(fn($worker) => trim(($worker->user_fname ?? '') . ' ' . ($worker->user_lname ?? '')))->filter()->implode(', ') ?: 'N/A' }}</td>
+                                </tr>
+                            </table>
+
+                            <!-- CTA Button -->
+
+############ resources/views/emails/work-orders/confirmation.blade.php ############
+                            <!-- Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;margin-bottom:28px;">
+                                <tr style="background-color:#f3f4f6;">
+                                    <td colspan="2"
+                                        style="padding:10px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                        Work Order Details
+                                    </td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        WO No.</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;font-weight:600;">
+                                        {{ $workOrder->wo_no }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Equipment</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->equipment?->eqm_name ?? 'N/A' }}</td>
+                                </tr>
+                                {{-- <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Subject</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_title }}</td>
+                                </tr> --}}
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Requestor Problem Description</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_req_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Manager Problem Description</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Priority</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->priority?->prio_name }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Created By</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ trim(($workOrder->createdBy?->user_fname ?? '') . ' ' . ($workOrder->createdBy?->user_lname ?? '')) ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Date & Time Created</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_created_at ?? $workOrder->wo_created_dt ? \Illuminate\Support\Carbon::parse($workOrder->wo_created_at ?? $workOrder->wo_created_dt)->format('M d, Y h:i A') : 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Technicians</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->workers?->map(fn($worker) => trim(($worker->user_fname ?? '') . ' ' . ($worker->user_lname ?? '')))->filter()->implode(', ') ?: 'N/A' }}</td>
+                                </tr>
+                            </table>
+
+                            <!-- CTA Button -->
+
+############ resources/views/emails/work-orders/rejected.blade.php ############
+                            <!-- Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;margin-bottom:28px;">
+                                <tr style="background-color:#f3f4f6;">
+                                    <td colspan="2"
+                                        style="padding:10px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                        Work Order Details
+                                    </td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        WO No.</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;font-weight:600;">
+                                        {{ $workOrder->wo_no }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Equipment</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->equipment?->eqm_name ?? 'N/A' }}</td>
+                                </tr>
+                                {{-- <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Subject</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_title }}</td>
+                                </tr> --}}
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Requestor Problem Description</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_req_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Manager Problem Description</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Priority</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->priority?->prio_name }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Created By</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ trim(($workOrder->createdBy?->user_fname ?? '') . ' ' . ($workOrder->createdBy?->user_lname ?? '')) ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Date & Time Created</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_created_at ?? $workOrder->created_at ? \Illuminate\Support\Carbon::parse($workOrder->wo_created_at ?? $workOrder->created_at)->format('M d, Y h:i A') : 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Technicians</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->workers?->map(fn($worker) => trim(($worker->user_fname ?? '') . ' ' . ($worker->user_lname ?? '')))->filter()->implode(', ') ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Status</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#dc2626;font-weight:600;">
+                                        Rejected</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td colspan="2" style="padding:12px 16px;">
+                                        <p
+                                            style="margin:0 0 6px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                            Reason for Rejection</p>
+                                        <p
+                                            style="margin:0;font-size:13px;color:#111827;background-color:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:10px 12px;line-height:1.6;">
+                                            {{ $reason }}</p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- CTA Button -->
+
+############ resources/views/emails/work-orders/work-order-approval.blade.php ############
+                            <!-- Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;margin-bottom:28px;">
+                                <tr style="background-color:#f3f4f6;">
+                                    <td colspan="2"
+                                        style="padding:10px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                        Work Order Details
+                                    </td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        WO No.</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;font-weight:600;">
+                                        {{ $workOrder->wo_no }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Equipment</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->equipment?->eqm_name ?? 'N/A' }}</td>
+                                </tr>
+                                {{-- <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Subject</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_title }}</td>
+                                </tr> --}}
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Requestor Problem Description</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_req_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Manager Problem Description</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Priority</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->priority?->prio_name }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Created By</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ trim(($workOrder->createdBy?->user_fname ?? '') . ' ' . ($workOrder->createdBy?->user_lname ?? '')) ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Date & Time Created</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_created_at ?? $workOrder->created_at ? \Illuminate\Support\Carbon::parse($workOrder->wo_created_at ?? $workOrder->created_at)->format('M d, Y h:i A') : 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Technicians</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->workers?->map(fn($worker) => trim(($worker->user_fname ?? '') . ' ' . ($worker->user_lname ?? '')))->filter()->implode(', ') ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Approved By</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $approver->user_fname }} {{ $approver->user_lname }}</td>
+                                </tr>
+                                @if ($note)
+                                    <tr style="border-top:1px solid #e5e7eb;">
+                                        <td colspan="2" style="padding:12px 16px;">
+                                            <p
+                                                style="margin:0 0 6px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                                Note</p>
+                                            <p
+                                                style="margin:0;font-size:13px;color:#111827;background-color:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:10px 12px;line-height:1.6;">
+                                                {{ $note }}</p>
+                                        </td>
+                                    </tr>
+                                @endif
+                            </table>
+
+                            <!-- CTA Button -->
+
+############ resources/views/emails/work-orders/work-order-cancellation.blade.php ############
+                            <!-- Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;margin-bottom:28px;">
+                                <tr style="background-color:#f3f4f6;">
+                                    <td colspan="2"
+                                        style="padding:10px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                        Work Order Details
+                                    </td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        WO No.</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;font-weight:600;">
+                                        {{ $workOrder->wo_no }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Equipment</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->equipment?->eqm_name ?? 'N/A' }}</td>
+                                </tr>
+                                {{-- <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Subject</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_title }}</td>
+                                </tr> --}}
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Requestor Problem Description</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_req_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Manager Problem Description</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Priority</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->priority?->prio_name }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Created By</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ trim(($workOrder->createdBy?->user_fname ?? '') . ' ' . ($workOrder->createdBy?->user_lname ?? '')) ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Date & Time Created</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_created_at ?? $workOrder->created_at ? \Illuminate\Support\Carbon::parse($workOrder->wo_created_at ?? $workOrder->created_at)->format('M d, Y h:i A') : 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Technicians</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->workers?->map(fn($worker) => trim(($worker->user_fname ?? '') . ' ' . ($worker->user_lname ?? '')))->filter()->implode(', ') ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Cancelled By</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $canceller->user_fname }} {{ $canceller->user_lname }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td colspan="2" style="padding:12px 16px;">
+                                        <p
+                                            style="margin:0 0 6px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                            Reason for Cancellation</p>
+                                        <p
+                                            style="margin:0;font-size:13px;color:#111827;background-color:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:10px 12px;line-height:1.6;">
+                                            {{ $reason }}</p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- CTA Button -->
+
+############ resources/views/emails/work-orders/work-order-completion-requested.blade.php ############
+                            <!-- Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;margin-bottom:28px;">
+                                <tr style="background-color:#f3f4f6;">
+                                    <td colspan="2"
+                                        style="padding:10px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                        Work Order Details
+                                    </td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        WO No.</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;font-weight:600;">
+                                        {{ $workOrder->wo_no }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Equipment</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->equipment?->eqm_name ?? 'N/A' }}</td>
+                                </tr>
+                                {{-- <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Subject</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_title }}</td>
+                                </tr> --}}
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Requestor Problem Description</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_req_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Manager Problem Description</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Priority</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->priority?->prio_name }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Created By</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ trim(($workOrder->createdBy?->user_fname ?? '') . ' ' . ($workOrder->createdBy?->user_lname ?? '')) ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Date & Time Created</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_created_at ?? $workOrder->created_at ? \Illuminate\Support\Carbon::parse($workOrder->wo_created_at ?? $workOrder->created_at)->format('M d, Y h:i A') : 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Technicians</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->workers?->map(fn($worker) => trim(($worker->user_fname ?? '') . ' ' . ($worker->user_lname ?? '')))->filter()->implode(', ') ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Requested By</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $requestor->user_fname }} {{ $requestor->user_lname }}</td>
+                                </tr>
+                                @if ($note)
+                                    <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Note</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $note }}</td>
+                                </tr>
+                                @endif
+                            </table>
+
+                            <!-- CTA Button -->
+
+############ resources/views/emails/work-orders/work-order-manager-cancellation-confirmation.blade.php ############
+
+############ resources/views/emails/work-orders/work-order-rejection.blade.php ############
+                            <!-- Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;margin-bottom:28px;">
+                                <tr style="background-color:#f3f4f6;">
+                                    <td colspan="2"
+                                        style="padding:10px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                        Work Order Details
+                                    </td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        WO No.</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;font-weight:600;">
+                                        {{ $workOrder->wo_no }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Equipment</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->equipment?->eqm_name ?? 'N/A' }}</td>
+                                </tr>
+                                {{-- <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Subject</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_title }}</td>
+                                </tr> --}}
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Requestor Problem Description</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_req_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Manager Problem Description</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_desc ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Priority</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->priority?->prio_name }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Created By</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ trim(($workOrder->createdBy?->user_fname ?? '') . ' ' . ($workOrder->createdBy?->user_lname ?? '')) ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Date & Time Created</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->wo_created_at ?? $workOrder->created_at ? \Illuminate\Support\Carbon::parse($workOrder->wo_created_at ?? $workOrder->created_at)->format('M d, Y h:i A') : 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Technicians</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $workOrder->workers?->map(fn($worker) => trim(($worker->user_fname ?? '') . ' ' . ($worker->user_lname ?? '')))->filter()->implode(', ') ?: 'N/A' }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;background-color:#ffffff;">
+                                    <td style="padding:10px 16px 2px;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em;">
+                                        Rejected By</td>
+                                </tr>
+                                <tr style="background-color:#ffffff;">
+                                    <td style="padding:0 16px 12px;font-size:13px;color:#111827;">
+                                        {{ $rejector->user_fname }} {{ $rejector->user_lname }}</td>
+                                </tr>
+                                <tr style="border-top:1px solid #e5e7eb;">
+                                    <td colspan="2" style="padding:12px 16px;">
+                                        <p
+                                            style="margin:0 0 6px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">
+                                            Reason for Rejection</p>
+                                        <p
+                                            style="margin:0;font-size:13px;color:#111827;background-color:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:10px 12px;line-height:1.6;">
+                                            {{ $reason }}</p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- CTA Button -->
+

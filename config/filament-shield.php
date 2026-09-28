@@ -196,6 +196,10 @@ return [
             ],
             EquipmentResource::class => [
                 'sync',
+                'allocate',
+                'deploy',
+                'setToIdle',
+                'setToMaintenance',
             ],
             WorkOrderResource::class => [
                 'approveWorkOrder',

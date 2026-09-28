@@ -60,7 +60,17 @@ class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasNam
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->is_active;
+        return (bool) $this->is_active;
+    }
+
+    /**
+     * Scope a query to only include active users.
+     * Use this everywhere a list of users is fetched for
+     * authentication, notifications, or emails.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 
     public function department(): BelongsTo

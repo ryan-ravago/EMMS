@@ -37,7 +37,7 @@ class CustomLogin extends Login
 
     public function authenticate(): ?LoginResponse
     {
-        $key = 'login-attempt:'.request()->ip();
+        $key = 'login-attempt:' . request()->ip();
 
         // 1. Check if they are locked out
         if (RateLimiter::tooManyAttempts($key, 3)) {
@@ -62,7 +62,8 @@ class CustomLogin extends Login
             $password = $data['password'];
 
             // Step 1: Verify credentials against Usr model
-            $usrUser = Usr::where('email', $email)->first();
+            $usrUser = Usr::where('email', $email)
+                ->first();
 
             if (! $usrUser || ! Hash::check($password, $usrUser->userPassword)) {
                 $currentAttempts = RateLimiter::hit($key, 60);
@@ -82,7 +83,7 @@ class CustomLogin extends Login
                 } else {
                     Notification::make()
                         ->title('Invalid Login')
-                        ->body('Email or password is incorrect. Attempts remaining: '.(3 - RateLimiter::attempts($key)))
+                        ->body('Email or password is incorrect. Attempts remaining: ' . (3 - RateLimiter::attempts($key)))
                         ->warning()
                         ->send();
                 }
@@ -95,7 +96,9 @@ class CustomLogin extends Login
             }
 
             // Step 2: Check if email exists in AppUser
-            $appUser = AppUser::where('user_email', $email)->first();
+            $appUser = AppUser::where('user_email', $email)
+                ->where('is_active', true)
+                ->first();
 
             if (! $appUser) {
                 $currentAttempts = RateLimiter::hit($key, 60);
@@ -115,7 +118,7 @@ class CustomLogin extends Login
                 } else {
                     Notification::make()
                         ->title('Invalid Login')
-                        ->body('User account not found. Attempts remaining: '.(3 - RateLimiter::attempts($key)))
+                        ->body('User account not found. Attempts remaining: ' . (3 - RateLimiter::attempts($key)))
                         ->warning()
                         ->send();
                 }
@@ -158,7 +161,7 @@ class CustomLogin extends Login
             // Re-throw validation exceptions (for invalid credentials, lockout, etc.)
             throw $e;
         } catch (\Exception $e) {
-            Log::error('Login failed: '.$e->getMessage());
+            Log::error('Login failed: ' . $e->getMessage());
             RateLimiter::hit($key, 60);
 
             Notification::make()

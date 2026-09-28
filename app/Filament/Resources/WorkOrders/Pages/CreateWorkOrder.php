@@ -84,6 +84,7 @@ class CreateWorkOrder extends CreateRecord
         // Notify managers
         $managerEmails = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
             ->where('user_dep_id', $workOrder->wo_dep_id)
+            ->where('is_active', true)
             ->whereNotNull('user_email')
             ->pluck('user_email')
             ->unique()
@@ -96,13 +97,20 @@ class CreateWorkOrder extends CreateRecord
 
         // Notify each assigned technician
         $workerEmails = $workOrder->workers
+            ->where('is_active', true)
             ->pluck('user_email')
             ->filter()
             ->unique()
             ->all();
 
         if (! empty($workerEmails)) {
-            Mail::to($workerEmails)
+            $primaryWorker = array_shift($workerEmails); // Removes 1st technician for To:
+            $ccRecipients = array_merge($managerEmails, $workerEmails);
+            $replyToEmail = env('WORK_ORDER_REPLY_TO_ADDRESS');
+
+            Mail::to($primaryWorker)
+                ->cc($ccRecipients)
+                // ->replyTo($replyToEmail, "Work Order #{$workOrder->wo_no}")
                 ->queue(new WorkOrderAssignedMail($workOrder));
         }
     }

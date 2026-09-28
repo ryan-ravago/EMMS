@@ -31,7 +31,7 @@ class CreateRequestorWorkOrder extends CreateRecord
         $workOrder = $this->record;
 
         // 1. Send confirmation email to the requestor
-        if ($workOrder->createdBy && $workOrder->createdBy->user_email) {
+        if ($workOrder->createdBy && $workOrder->createdBy->is_active && $workOrder->createdBy->user_email) {
             Mail::to($workOrder->createdBy->user_email)
                 ->queue(new WorkOrderConfirmationMail($workOrder));
         }
@@ -39,6 +39,7 @@ class CreateRequestorWorkOrder extends CreateRecord
         // 2. Notify managers of the assigned department
         $managerEmails = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
             ->where('user_dep_id', $workOrder->wo_dep_id)
+            ->where('is_active', true)
             ->whereNotNull('user_email')
             ->pluck('user_email')
             ->unique()

@@ -246,7 +246,7 @@ class ViewWorkOrder extends ViewRecord
 
                             // 2. Notify all assigned technicians (requestor + groupmates) — Update
                             foreach ($record->workers as $technician) {
-                                if ($technician->user_email) {
+                                if ($technician->is_active && $technician->user_email) {
                                     Mail::to($technician->user_email)
                                         ->queue(new WorkOrderRejectionMail(
                                             workOrder: $record,
@@ -390,7 +390,7 @@ class ViewWorkOrder extends ViewRecord
 
                             // 2. Notify all assigned technicians (requestor + groupmates) — Update
                             foreach ($record->workers as $technician) {
-                                if ($technician->user_email) {
+                                if ($technician->is_active && $technician->user_email) {
                                     Mail::to($technician->user_email)
                                         ->queue(new WorkOrderApprovalMail(
                                             workOrder: $record,
@@ -709,6 +709,7 @@ class ViewWorkOrder extends ViewRecord
 
                                 return AppUser::whereHas('roles', fn($q) => $q->where('name', 'technician'))
                                     ->where('user_dep_id', $depId)
+                                    ->where('is_active', true)
                                     ->get()
                                     ->mapWithKeys(fn($user) => [
                                         $user->user_id => "{$user->user_fname} {$user->user_lname}",
@@ -780,13 +781,14 @@ class ViewWorkOrder extends ViewRecord
                                 ->queue(new WorkOrderApprovedMail($record, $manager, 'manager'));
 
                             // 2. Notify Requestor (Update)
-                            if ($record->createdBy && $record->createdBy->user_email) {
+                            if ($record->createdBy && $record->createdBy->is_active && $record->createdBy->user_email) {
                                 Mail::to($record->createdBy->user_email)
                                     ->queue(new WorkOrderApprovedMail($record, $record->createdBy, 'requestor'));
                             }
 
                             // 3. Notify Technicians (Action Required)
                             $emails = $record->workers
+                                ->where('is_active', true)
                                 ->pluck('user_email')
                                 ->filter()
                                 ->unique()
@@ -879,7 +881,7 @@ class ViewWorkOrder extends ViewRecord
                                 ->queue(new WorkOrderRejectedMail($record, $manager, $reason, 'manager'));
 
                             // 2. Notify Requestor (Update)
-                            if ($record->createdBy && $record->createdBy->user_email) {
+                            if ($record->createdBy && $record->createdBy->is_active && $record->createdBy->user_email) {
                                 Mail::to($record->createdBy->user_email)
                                     ->queue(new WorkOrderRejectedMail($record, $record->createdBy, $reason, 'requestor'));
                             }

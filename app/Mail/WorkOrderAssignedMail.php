@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\HasWorkOrderReplyTo;
 use App\Models\AppUser;
 use App\Models\WorkOrder;
 use Illuminate\Bus\Queueable;
@@ -14,7 +15,7 @@ use Illuminate\Queue\SerializesModels;
 
 class WorkOrderAssignedMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, HasWorkOrderReplyTo;
 
     /**
      * Create a new message instance.
@@ -63,23 +64,5 @@ class WorkOrderAssignedMail extends Mailable
             ->map(fn (string $path): Attachment => Attachment::fromStorageDisk($disk, $path))
             ->values()
             ->all();
-    }
-
-    private function buildReplyToAddress(): ?string
-    {
-        $replyToAddress = config('work_orders.reply_to_address');
-
-        if (! $replyToAddress || ! str_contains($replyToAddress, '@')) {
-            return $replyToAddress;
-        }
-
-        [$localPart, $domainPart] = explode('@', $replyToAddress, 2);
-        $threadToken = trim($this->workOrder->wo_no);
-
-        if ($threadToken === '') {
-            return $replyToAddress;
-        }
-
-        return sprintf('%s+%s@%s', $localPart, $threadToken, $domainPart);
     }
 }

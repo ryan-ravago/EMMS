@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Equipment\Tables;
 
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Models\AssetType;
+use App\Models\Equipment;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -15,6 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class EquipmentTable
 {
@@ -32,12 +34,21 @@ class EquipmentTable
                     ->toggleable()
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('assetType.name')
+                    ->label('Asset Type')
+                    ->badge()
+                    ->color(fn($record): string => $record->asset_type_id == 1 ? 'primary' : 'success')
+                    ->icon(fn($record): Heroicon => $record->asset_type_id == 1 ? Heroicon::OutlinedTruck : Heroicon::OutlinedCog)
+                    ->hidden(fn($record): bool => !Auth::user()->can('update', EquipmentResource::class))
+                    ->toggleable()
+                    ->sortable()
+                    ->searchable(),
                 SelectColumn::make('asset_type_id')
                     ->label('Asset Type')
                     // ->toggleable()
                     // ->sortable()
                     // ->searchable()
-                    ->visible(fn(): bool => EquipmentResource::getConfiguration() === null)
+                    ->hidden(fn($record): bool => Auth::user()->can('update', EquipmentResource::class))
                     ->native(false)
                     ->optionsRelationship(name: 'assetType', titleAttribute: 'name')
                     ->rules(['required', 'exists:asset_types,id']),

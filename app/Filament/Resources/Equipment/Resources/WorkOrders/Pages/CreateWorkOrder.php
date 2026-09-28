@@ -84,6 +84,7 @@ class CreateWorkOrder extends CreateRecord
         // Notify manager
         $managerEmails = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
             ->where('user_dep_id', $workOrder->wo_dep_id)
+            ->where('is_active', true)
             ->whereNotNull('user_email')
             ->pluck('user_email')
             ->all();
@@ -95,6 +96,7 @@ class CreateWorkOrder extends CreateRecord
 
         // Notify each assigned technician
         $workerEmails = $workOrder->workers
+            ->where('is_active', true)
             ->pluck('user_email')
             ->filter()
             ->unique()

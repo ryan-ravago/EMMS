@@ -57,7 +57,7 @@ class LogUpdatesRelationManager extends RelationManager
                                 return collect($record->wolu_attachments)
                                     ->map(function ($file) {
                                         $url = Storage::disk('local')->temporaryUrl($file, now()->addMinutes(30));
-                                        $name = basename($file);
+                                        $name = preg_replace('/^[0-9a-f]{12}-/', '', basename($file));
 
                                         return "
                                             <div class='flex items-center justify-between gap-3 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 mb-2'>

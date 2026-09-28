@@ -164,7 +164,7 @@ class RequestorWorkOrdersRelationManager extends RelationManager
                         ]);
 
                         // 1. Send confirmation email to the requestor
-                        if ($record->createdBy && $record->createdBy->user_email) {
+                        if ($record->createdBy && $record->createdBy->is_active && $record->createdBy->user_email) {
                             Mail::to($record->createdBy->user_email)
                                 ->queue(new WorkOrderConfirmationMail($record));
                         }
@@ -172,6 +172,7 @@ class RequestorWorkOrdersRelationManager extends RelationManager
                         // 2. Notify managers of the assigned department
                         $managers = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
                             ->where('user_dep_id', $record->wo_dep_id)
+                            ->where('is_active', true)
                             ->get();
 
                         foreach ($managers as $manager) {

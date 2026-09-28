@@ -152,6 +152,7 @@ class ViewTechnicianWorkOrder extends ViewRecord
                         ->options(function (Get $get) {
                             return AppUser::whereHas('roles', fn ($q) => $q->where('name', 'technician'))
                                 ->where('user_dep_id', auth()->user()->user_dep_id)
+                                ->where('is_active', true)
                                 ->get()
                                 ->mapWithKeys(fn ($user) => [
                                     $user->user_id => "{$user->user_fname} {$user->user_lname}",
@@ -271,6 +272,7 @@ class ViewTechnicianWorkOrder extends ViewRecord
                         // 2. Notify managers of the same department — Action Required
                         $managers = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
                             ->where('user_dep_id', $requestor->user_dep_id)
+                            ->where('is_active', true)
                             ->get();
 
                         foreach ($managers as $manager) {
@@ -292,7 +294,7 @@ class ViewTechnicianWorkOrder extends ViewRecord
                         // 3. Notify groupmate technicians — Update
                         $groupmates = $record->workers->where('user_id', '!=', $requestor->user_id);
                         foreach ($groupmates as $technician) {
-                            if ($technician->user_email) {
+                            if ($technician->is_active && $technician->user_email) {
                                 Mail::to($technician->user_email)
                                     ->queue((new WorkOrderCompletionRequestedMail($record, $requestor, 'technician', $note))
                                         ->with(array_merge($sharedData, [

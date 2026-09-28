@@ -60,6 +60,7 @@ class OverdueMaintenanceNotificationService
         $recipients = AppUser::role('manager')
             ->whereHas('department', fn ($query) => $query->where('is_maintenance', 1))
             ->whereIn('user_dep_id', $depIds)
+            ->where('is_active', true)
             ->whereNotNull('user_email')
             ->select('user_email', 'user_dep_id')
             ->get()
