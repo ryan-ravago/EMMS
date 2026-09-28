@@ -35,6 +35,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Enums\Width;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -722,6 +723,13 @@ class ViewWorkOrder extends ViewRecord
                     ->schema([
                         Select::make('worker_ids')
                             ->label('Assign Technicians')
+                            ->relationship(
+                                name: 'workers',
+                                titleAttribute: 'user_fname',
+                                modifyQueryUsing: fn(Builder $query, Get $get) => $query
+                                    ->where('is_active', true)
+                                    ->where('user_dep_id', static::resolveDepartmentId($get))
+                            )
                             ->options(fn(Get $get) => static::activeTechnicians(static::resolveDepartmentId($get))
                                 ->mapWithKeys(fn($user) => [
                                     $user->user_id => "{$user->user_fname} {$user->user_lname}",
@@ -800,6 +808,15 @@ class ViewWorkOrder extends ViewRecord
                             $record->load(['workers', 'createdBy', 'priority']);
                             $manager = auth()->user();
 
+                            // Notify managers
+                            $managerEmails = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
+                                ->where('user_dep_id', $record->wo_dep_id)
+                                ->where('is_active', true)
+                                ->whereNotNull('user_email')
+                                ->pluck('user_email')
+                                ->unique()
+                                ->all();
+
                             // 1. Notify Manager (Confirmation)
                             if ($manager?->is_active && $manager->user_email) {
                                 Mail::to($manager->user_email)
@@ -820,9 +837,15 @@ class ViewWorkOrder extends ViewRecord
                                 ->unique()
                                 ->all();
 
-                            if (! empty($emails)) {
-                                Mail::to($emails)
-                                    ->queue(new WorkOrderAssignedMail($record, null));
+                            if (! empty($workerEmails)) {
+                                $primaryWorker = array_shift($workerEmails); // Removes 1st technician for To:
+                                $ccRecipients = array_merge($managerEmails, $workerEmails);
+                                $replyToEmail = env('WORK_ORDER_REPLY_TO_ADDRESS');
+
+                                Mail::to($primaryWorker)
+                                    ->cc($ccRecipients)
+                                    // ->replyTo($replyToEmail, "Work Order #{$workOrder->wo_no}")
+                                    ->queue(new WorkOrderAssignedMail($record));
                             }
 
                             Notification::make()

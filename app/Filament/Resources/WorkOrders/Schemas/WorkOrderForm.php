@@ -123,7 +123,13 @@ class WorkOrderForm
                         ->schema([
                             Select::make('worker_ids')
                                 ->label('Assigned Workers')
-                                ->relationship('workers', 'user_fname')
+                                ->relationship(
+                                    name: 'workers',
+                                    titleAttribute: 'user_fname',
+                                    modifyQueryUsing: fn(Builder $query, Get $get) => $query
+                                        ->where('is_active', true)
+                                        ->where('user_dep_id', static::resolveDepartmentId($get))
+                                )
                                 ->options(fn(Get $get) => static::activeTechnicians(static::resolveDepartmentId($get))
                                     ->mapWithKeys(fn($user) => [
                                         $user->user_id => "{$user->user_fname} {$user->user_lname}",
