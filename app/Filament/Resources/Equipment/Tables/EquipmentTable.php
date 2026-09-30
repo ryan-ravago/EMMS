@@ -39,7 +39,7 @@ class EquipmentTable
                     ->badge()
                     ->color(fn($record): string => $record->asset_type_id == 1 ? 'primary' : 'success')
                     ->icon(fn($record): Heroicon => $record->asset_type_id == 1 ? Heroicon::OutlinedTruck : Heroicon::OutlinedCog)
-                    ->hidden(fn($record): bool => !Auth::user()->can('update', EquipmentResource::class))
+                    ->visible(fn(): bool => !Auth::user()->can('Update:EquipmentResource'))
                     ->toggleable()
                     ->sortable()
                     ->searchable(),
@@ -48,7 +48,7 @@ class EquipmentTable
                     // ->toggleable()
                     // ->sortable()
                     // ->searchable()
-                    ->hidden(fn($record): bool => Auth::user()->can('update', EquipmentResource::class))
+                    ->visible(fn(): bool => Auth::user()->can('Update:EquipmentResource'))
                     ->native(false)
                     ->optionsRelationship(name: 'assetType', titleAttribute: 'name')
                     ->rules(['required', 'exists:asset_types,id']),

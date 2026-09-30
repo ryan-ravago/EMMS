@@ -234,7 +234,9 @@ return [
             ],
         ],
         'exclude' => [
-            //
+            \App\Filament\Resources\Models\Resources\Equipment\EquipmentResource::class,
+            \App\Filament\Resources\Equipment\Resources\Insps\InspsResource::class,
+            \App\Filament\Resources\Equipment\Resources\WorkOrders\WorkOrderResource::class,
         ],
     ],
 
