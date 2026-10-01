@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AssetTag extends Model
 {
@@ -19,6 +20,11 @@ class AssetTag extends Model
     ];
 
     public $timestamps = false;
+
+    public function logs(): HasMany
+    {
+        return $this->hasMany(AssetTagLog::class, 'tag_id', 'tag_id');
+    }
 
     public function asset(): BelongsTo
     {

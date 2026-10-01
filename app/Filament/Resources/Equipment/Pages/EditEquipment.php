@@ -9,6 +9,16 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditEquipment extends EditRecord
 {
+    /**
+     * @return array<string, string>
+     */
+    public function getListeners(): array
+    {
+        return array_merge(parent::getListeners(), [
+            'equipment-tags-updated' => '$refresh',
+        ]);
+    }
+
     protected static string $resource = EquipmentResource::class;
 
     protected ?array $originalAttributes = null;

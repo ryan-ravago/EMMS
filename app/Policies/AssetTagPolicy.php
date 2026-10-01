@@ -11,6 +11,11 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 class AssetTagPolicy
 {
     use HandlesAuthorization;
+
+    public function before(AuthUser $authUser): ?bool
+    {
+        return $authUser->hasRole('super_admin') ? true : null;
+    }
     
     public function viewAny(AuthUser $authUser): bool
     {

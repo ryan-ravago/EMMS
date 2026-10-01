@@ -95,6 +95,21 @@ class Equipment extends Model
         return $this->hasMany(AssetTag::class, 'asset_parent_id', 'eqm_id');
     }
 
+    /**
+     * Logs of every tag attached to this equipment.
+     */
+    public function tagLogs(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            AssetTagLog::class,
+            AssetTag::class,
+            'asset_parent_id', // asset_tags.asset_parent_id -> equipment
+            'tag_id',          // asset_tag_logs.tag_id -> asset_tags
+            'eqm_id',
+            'tag_id',
+        );
+    }
+
     public function editLogs(): HasMany
     {
         return $this->hasMany(AssetEditLog::class, 'asset_id', 'eqm_id');

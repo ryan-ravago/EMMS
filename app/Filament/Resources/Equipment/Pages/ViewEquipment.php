@@ -18,6 +18,16 @@ use Illuminate\Support\Facades\DB;
 
 class ViewEquipment extends ViewRecord
 {
+    /**
+     * @return array<string, string>
+     */
+    public function getListeners(): array
+    {
+        return array_merge(parent::getListeners(), [
+            'equipment-tags-updated' => '$refresh',
+        ]);
+    }
+
     protected static string $resource = EquipmentResource::class;
 
     public function getSubheading(): ?string

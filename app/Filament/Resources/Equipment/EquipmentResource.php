@@ -15,6 +15,7 @@ use App\Filament\Resources\Equipment\RelationManagers\InspsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\LifecycleLogsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\MaintenanceTasksRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\RequestorWorkOrdersRelationManager;
+use App\Filament\Resources\Equipment\RelationManagers\TagLogsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\WorkOrdersRelationManager;
 use App\Filament\Resources\Equipment\Schemas\EquipmentForm;
@@ -145,6 +146,7 @@ class EquipmentResource extends Resource
         $relations = [
             AccessoriesRelationManager::class,
             TagsRelationManager::class,
+            TagLogsRelationManager::class,
             LifecycleLogsRelationManager::class,
             WorkOrdersRelationManager::class,
             MaintenanceTasksRelationManager::class,

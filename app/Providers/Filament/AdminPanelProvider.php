@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Helper\CustomLogin;
 use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Filament\Resources\Equipment\Resources\AssetTags\AssetTagResource;
 use App\Filament\Resources\Equipment\Resources\WorkOrders\WorkOrderResource;
 use App\Filament\Widgets\DashboardStatsOverview;
 use App\Http\Middleware\EnsureUserStillHasRole;
@@ -165,6 +166,10 @@ class AdminPanelProvider extends PanelProvider
                     ->slug('work-orders'),
                 WorkOrderResource::make('accessories')
                     ->slug('work-orders'),
+                AssetTagResource::make('equipment')
+                    ->slug('tags'),
+                AssetTagResource::make('accessories')
+                    ->slug('tags'),
             ])
             // ->navigationGroups([
             //     NavigationGroup::make()
