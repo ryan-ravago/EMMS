@@ -14,6 +14,13 @@ return new class extends Migration
         Schema::create('asset_tags', function (Blueprint $table) {
             $table->id();
             $table->string('tag')->unique();
+
+            $table->unsignedBigInteger('asset_parent_id')->nullable();
+
+            $table->foreign('asset_parent_id')
+                ->references('eqm_id')
+                ->on('equipment_units')
+                ->restrictOnDelete();
         });
     }
 
