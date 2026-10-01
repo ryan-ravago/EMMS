@@ -11,6 +11,7 @@ use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class AssetTagsTable
 {
@@ -32,17 +33,19 @@ class AssetTagsTable
             ->recordActions([
                 ViewAction::make(),
                 DeleteAction::make()
-                    ->visible(fn (AssetTag $record): bool => $record->logs_count === 0)
+                    ->authorize(fn(AssetTag $record) => Auth::user()?->can('update', $record) ?? false)
+                    ->visible(fn(AssetTag $record): bool => $record->logs_count === 0)
                     ->modalDescription('Only tags without logs can be deleted.')
-                    ->after(fn ($livewire) => $livewire->dispatch('equipment-tags-updated')),
+                    ->after(fn($livewire) => $livewire->dispatch('equipment-tags-updated')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
+                        ->authorize(fn() => Auth::user()?->can('update', AssetTag::class) ?? false)
                         ->modalDescription('Only tags without logs can be deleted.')
-                        ->after(fn ($livewire) => $livewire->dispatch('equipment-tags-updated'))
+                        ->after(fn($livewire) => $livewire->dispatch('equipment-tags-updated'))
                         ->before(function (DeleteBulkAction $action, Collection $records): void {
-                            $withLogs = $records->filter(fn (AssetTag $tag): bool => $tag->logs_count > 0);
+                            $withLogs = $records->filter(fn(AssetTag $tag): bool => $tag->logs_count > 0);
 
                             if ($withLogs->isNotEmpty()) {
                                 Notification::make()
