@@ -90,6 +90,11 @@ class Equipment extends Model
         return $this->belongsTo(Location::class, 'location_id');
     }
 
+    public function tags(): HasMany
+    {
+        return $this->hasMany(AssetTag::class, 'asset_parent_id', 'eqm_id');
+    }
+
     public function editLogs(): HasMany
     {
         return $this->hasMany(AssetEditLog::class, 'asset_id', 'eqm_id');
