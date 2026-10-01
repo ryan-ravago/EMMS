@@ -11,6 +11,7 @@
     "require": {
         "php": "^8.2",
         "al-saloul/filament-image-gallery": "^3.0",
+        "alareqi/filament-tree": "^1.0",
         "barryvdh/laravel-dompdf": "^3.1",
         "bezhansalleh/filament-shield": "^4.2",
         "codewithdennis/filament-select-tree": "^4.1",

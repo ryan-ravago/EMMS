@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Locations\Tables;
 
+use Alareqi\FilamentTree\Columns\TreeColumn;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -15,12 +16,16 @@ class LocationsTable
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                TreeColumn::make('name')
                     ->label('Name')
                     ->searchable(),
-                TextColumn::make('full_path')
-                    ->label('Full Path'),
+                // TreeColumn::make('full_path')
+                //     ->label('Full Path'),
             ])
+            ->tree(
+                parentColumn: 'parent_id',
+                treeColumn: 'name',
+            )
             ->filters([
                 //
             ])
