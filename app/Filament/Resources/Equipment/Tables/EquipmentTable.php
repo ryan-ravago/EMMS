@@ -27,8 +27,13 @@ class EquipmentTable
                 TextColumn::make('eqm_prc_code')
                     ->label('Asset Code')
                     ->toggleable()
+                    ->copyable()
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->copyable()
+                    ->copyMessage('Asset code copied')
+                    ->copyMessageDuration(1500)
+                    ->disabledClick(),
                 TextColumn::make('eqm_name')
                     ->label('Name')
                     ->toggleable()
