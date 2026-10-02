@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\AppUser;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Equipment;
 use App\Observers\EquipmentObserver;
+use Filament\Tables\Table;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,6 +30,23 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Equipment::observe(EquipmentObserver::class);
+
+        // Filament's default page options include 'all', which renders every row
+        // and freezes the browser on big tables. Cap it app-wide (tables and
+        // relation managers); a table can still override with ->paginated().
+        Table::configureUsing(
+            fn(Table $table) => $table
+                ->paginated([10, 25, 50, 100])
+                ->defaultPaginationPageOption(25)
+        );
+
+        // Log (not throw) lazy-loaded relations so N+1 spots show up in storage/logs.
+        Model::preventLazyLoading(! app()->isProduction());
+        Model::handleLazyLoadingViolationUsing(
+            fn(Model $model, string $relation) => logger()->warning(
+                'N+1: lazy loading [' . $relation . '] on [' . $model::class . ']'
+            )
+        );
         // URL::forceScheme('https');
 
         // RateLimiter::for('filament', function (Request $request) {

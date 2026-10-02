@@ -35,7 +35,7 @@ class InspectionResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
-            ->with(['department', 'equipment', 'conductedBy', 'submittedBy', 'inspectionItems']);
+            ->with(['department', 'equipment', 'conductedBy', 'submittedBy']);
 
         if (auth()->user()->hasRole('super_admin')) {
             return $query;

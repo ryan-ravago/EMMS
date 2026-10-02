@@ -222,8 +222,8 @@ class RequestorWorkOrdersRelationManager extends RelationManager
                     ])
                     ->query(function (Builder $query, array $data) {
                         return $query
-                            ->when($data['from'], fn($q) => $q->whereDate('wo_created_dt', '>=', $data['from']))
-                            ->when($data['until'], fn($q) => $q->whereDate('wo_created_dt', '<=', $data['until']));
+                            ->when($data['from'], fn($q) => $q->where('wo_created_dt', '>=', \Carbon\Carbon::parse($data['from'])->startOfDay()))
+                            ->when($data['until'], fn($q) => $q->where('wo_created_dt', '<=', \Carbon\Carbon::parse($data['until'])->endOfDay()));
                     }),
             ])
             ->recordActions([

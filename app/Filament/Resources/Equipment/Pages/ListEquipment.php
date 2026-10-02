@@ -122,18 +122,39 @@ class ListEquipment extends ListRecords
         ];
     }
 
+    /** @var array{total:int, active:int, inactive:int}|null */
+    protected ?array $tabCounts = null;
+
+    /** One query for all three tab badges instead of three. */
+    protected function tabCounts(): array
+    {
+        if ($this->tabCounts === null) {
+            $row = Equipment::query()
+                ->selectRaw('COUNT(*) as total, SUM(eqm_is_active = 1) as active, SUM(eqm_is_active = 0) as inactive')
+                ->first();
+
+            $this->tabCounts = [
+                'total' => (int) $row->total,
+                'active' => (int) $row->active,
+                'inactive' => (int) $row->inactive,
+            ];
+        }
+
+        return $this->tabCounts;
+    }
+
     public function getTabs(): array
     {
         return [
             'all' => Tab::make('All')
-                ->badge(fn() => Equipment::count()),
+                ->badge(fn() => $this->tabCounts()['total']),
 
             'active' => Tab::make('Active')
-                ->badge(fn() => Equipment::where('eqm_is_active', 1)->count())
+                ->badge(fn() => $this->tabCounts()['active'])
                 ->modifyQueryUsing(fn(Builder $query) => $query->where('eqm_is_active', 1)),
 
             'inactive' => Tab::make('Inactive')
-                ->badge(fn() => Equipment::where('eqm_is_active', 0)->count())
+                ->badge(fn() => $this->tabCounts()['inactive'])
                 ->modifyQueryUsing(fn(Builder $query) => $query->where('eqm_is_active', 0)),
         ];
     }

@@ -25,6 +25,8 @@ class WorkOrdersTable
     {
         return $table
             ->modifyQueryUsing(function (Builder $query): Builder {
+                $query->with(['status', 'equipment', 'department', 'priority', 'workers']);
+
                 $user = auth()->user();
 
                 if ($user === null) {
@@ -98,8 +100,7 @@ class WorkOrdersTable
                 SelectFilter::make('eqm_id')
                     ->label('Equipment')
                     ->relationship('equipment', 'eqm_name')
-                    ->searchable()
-                    ->preload(),
+                    ->searchable(),
                 SelectFilter::make('wo_prio_id')
                     ->label('Priority')
                     ->relationship(
@@ -157,8 +158,8 @@ class WorkOrdersTable
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['from'] ?? null, fn ($q, $date): Builder => $q->whereDate('wo_created_dt', '>=', $date))
-                            ->when($data['until'] ?? null, fn ($q, $date): Builder => $q->whereDate('wo_created_dt', '<=', $date));
+                            ->when($data['from'] ?? null, fn ($q, $date): Builder => $q->where('wo_created_dt', '>=', \Carbon\Carbon::parse($date)->startOfDay()))
+                            ->when($data['until'] ?? null, fn ($q, $date): Builder => $q->where('wo_created_dt', '<=', \Carbon\Carbon::parse($date)->endOfDay()));
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];

@@ -20,14 +20,28 @@ use Illuminate\Support\Facades\Auth;
 
 class EquipmentTable
 {
+    /** @var array<int, string>|null */
+    private static ?array $assetTypeOptions = null;
+
+    /**
+     * Loaded once per request. SelectColumn resolves its options for every row,
+     * so a closure that queries directly would run N queries.
+     */
+    private static function assetTypeOptions(): array
+    {
+        return self::$assetTypeOptions ??= AssetType::query()->orderBy('name')->pluck('name', 'id')->all();
+    }
+
     public static function configure(Table $table): Table
     {
         return $table
+            ->extremePaginationLinks()
+            ->paginated([10, 25, 50, 100])
+            ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('eqm_prc_code')
                     ->label('Asset Code')
                     ->toggleable()
-                    ->copyable()
                     ->sortable()
                     ->searchable()
                     ->copyable()
@@ -55,7 +69,7 @@ class EquipmentTable
                     // ->searchable()
                     ->visible(fn(): bool => Auth::user()->can('Update:EquipmentResource'))
                     ->native(false)
-                    ->optionsRelationship(name: 'assetType', titleAttribute: 'name')
+                    ->options(fn(): array => self::assetTypeOptions())
                     ->rules(['required', 'exists:asset_types,id']),
                 // ->afterStateUpdated(function (mixed $state, Set $set): void {
                 //     if ((int) $state !== (int) AssetType::accessoryId()) {

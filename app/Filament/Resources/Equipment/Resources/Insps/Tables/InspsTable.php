@@ -16,6 +16,8 @@ class InspsTable
     {
         return $table
             ->modifyQueryUsing(function (Builder $query): Builder {
+                $query->with('equipment');
+
                 $user = auth()->user();
 
                 if ($user === null) {
