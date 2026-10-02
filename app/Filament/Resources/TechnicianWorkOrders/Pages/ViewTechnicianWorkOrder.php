@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\TechnicianWorkOrders\Pages;
 
+use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\TechnicianWorkOrders\RelationManagers\LogsRelationManager;
 use App\Filament\Resources\TechnicianWorkOrders\RelationManagers\LogUpdatesRelationManager;
 use App\Filament\Resources\TechnicianWorkOrders\RelationManagers\ReportSubmissionsRelationManager;
@@ -30,6 +31,13 @@ use Illuminate\Support\Facades\Mail;
 
 class ViewTechnicianWorkOrder extends ViewRecord
 {
+    use HasRecordNavigation;
+
+    protected function getRecordNavigationOrder(): array
+    {
+        return ['wo_created_dt', 'desc'];
+    }
+
     protected static string $resource = TechnicianWorkOrderResource::class;
 
     public function hasCombinedRelationManagerTabsWithContent(): bool

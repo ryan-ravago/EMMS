@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Equipment;
 use App\Observers\EquipmentObserver;
+use App\Filament\Support\ModalRecordNavigation;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Table;
 
 class AppServiceProvider extends ServiceProvider
@@ -39,6 +41,9 @@ class AppServiceProvider extends ServiceProvider
                 ->paginated([10, 25, 50, 100])
                 ->defaultPaginationPageOption(25)
         );
+
+        // Previous / Next buttons in every table "View" modal.
+        ViewAction::configureUsing(fn(ViewAction $action) => ModalRecordNavigation::configure($action));
 
         // Log (not throw) lazy-loaded relations so N+1 spots show up in storage/logs.
         Model::preventLazyLoading(! app()->isProduction());

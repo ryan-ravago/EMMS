@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RequestorWorkOrders\Pages;
 
+use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\RequestorWorkOrders\RelationManagers\LogsRelationManager;
 use App\Filament\Resources\RequestorWorkOrders\RequestorWorkOrderResource;
 use App\Mail\WorkOrderCancellationMail;
@@ -24,6 +25,13 @@ use Illuminate\Support\Facades\Mail;
 
 class ViewRequestorWorkOrder extends ViewRecord
 {
+    use HasRecordNavigation;
+
+    protected function getRecordNavigationOrder(): array
+    {
+        return ['wo_created_dt', 'desc'];
+    }
+
     protected static string $resource = RequestorWorkOrderResource::class;
 
     // public function hasCombinedRelationManagerTabsWithContent(): bool

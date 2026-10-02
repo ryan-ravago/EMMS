@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Equipment\Pages;
 
+use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Models\Action as ModelsAction;
 use App\Models\Equipment;
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\DB;
 
 class ViewEquipment extends ViewRecord
 {
+    use HasRecordNavigation;
+
     /**
      * @return array<string, string>
      */

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\EquipmentTypes\Pages;
 
+use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\EquipmentTypes\EquipmentTypeResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -9,6 +10,8 @@ use Filament\Resources\Pages\ViewRecord;
 
 class ViewEquipmentType extends ViewRecord
 {
+    use HasRecordNavigation;
+
     protected static string $resource = EquipmentTypeResource::class;
 
     protected function getHeaderActions(): array

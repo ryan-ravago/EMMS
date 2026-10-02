@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources\InspItems\Pages;
 
+use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\InspItems\InspItemResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewInspItem extends ViewRecord
 {
+    use HasRecordNavigation;
+
     protected static string $resource = InspItemResource::class;
 
     protected function getHeaderActions(): array

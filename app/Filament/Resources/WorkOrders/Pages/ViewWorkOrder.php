@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\WorkOrders\Pages;
 
+use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\WorkOrders\RelationManagers\LogsRelationManager;
 use Closure;
 use Filament\Schemas\Components\Utilities\Get;
@@ -42,6 +43,13 @@ use Illuminate\Support\Facades\Mail;
 
 class ViewWorkOrder extends ViewRecord
 {
+    use HasRecordNavigation;
+
+    protected function getRecordNavigationOrder(): array
+    {
+        return ['wo_created_dt', 'desc'];
+    }
+
     protected static string $resource = WorkOrderResource::class;
 
     // public function hasCombinedRelationManagerTabsWithContent(): bool

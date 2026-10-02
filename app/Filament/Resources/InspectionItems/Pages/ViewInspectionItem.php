@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\InspectionItems\Pages;
 
+use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\InspectionItems\InspectionItemResource;
 use App\Mail\InspectionItemDisregardedMail;
 use App\Mail\WorkOrderAssignedMail;
@@ -32,6 +33,13 @@ use Illuminate\Support\Facades\Mail;
 
 class ViewInspectionItem extends ViewRecord
 {
+    use HasRecordNavigation;
+
+    protected function getRecordNavigationOrder(): array
+    {
+        return [$this->getRecord()->getKeyName(), 'desc'];
+    }
+
     protected static string $resource = InspectionItemResource::class;
 
     protected function getHeaderActions(): array

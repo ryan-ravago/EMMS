@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Equipment\Resources\WorkOrders\Pages;
 
+use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\Equipment\Resources\WorkOrders\WorkOrderResource;
 use App\Mail\WorkOrderApprovalMail;
 use App\Mail\WorkOrderApprovedMail;
@@ -36,6 +37,13 @@ use Illuminate\Support\Facades\Mail;
 
 class ViewWorkOrder extends ViewRecord
 {
+    use HasRecordNavigation;
+
+    protected function getRecordNavigationOrder(): array
+    {
+        return ['wo_created_dt', 'desc'];
+    }
+
     protected static string $resource = WorkOrderResource::class;
 
     protected function getHeaderActions(): array

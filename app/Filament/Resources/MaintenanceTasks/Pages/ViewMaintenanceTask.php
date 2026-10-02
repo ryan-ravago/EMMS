@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MaintenanceTasks\Pages;
 
+use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
 use App\Mail\WorkOrderAssignedMail;
 use App\Mail\WorkOrderConfirmationMail;
@@ -37,6 +38,13 @@ use Throwable;
 
 class ViewMaintenanceTask extends ViewRecord
 {
+    use HasRecordNavigation;
+
+    protected function getRecordNavigationOrder(): array
+    {
+        return ['mt_dt', 'desc'];
+    }
+
     protected static string $resource = MaintenanceTaskResource::class;
 
     protected function getHeaderActions(): array

@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources\Departments\Pages;
 
+use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\Departments\DepartmentResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewDepartment extends ViewRecord
 {
+    use HasRecordNavigation;
+
     protected static string $resource = DepartmentResource::class;
 
     protected function getHeaderActions(): array

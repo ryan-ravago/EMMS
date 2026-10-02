@@ -2,12 +2,20 @@
 
 namespace App\Filament\Resources\Models\Resources\Equipment\Pages;
 
+use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\Models\Resources\Equipment\EquipmentResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewEquipment extends ViewRecord
 {
+    use HasRecordNavigation;
+
+    protected function getRecordNavigationOrder(): array
+    {
+        return ['eqm_name', 'asc'];
+    }
+
     protected static string $resource = EquipmentResource::class;
 
     protected function getHeaderActions(): array
