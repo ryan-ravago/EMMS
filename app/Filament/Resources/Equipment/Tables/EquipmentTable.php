@@ -96,7 +96,7 @@ class EquipmentTable
                     ->searchable()
                     ->sortable()
             ])
-            ->defaultSort('eqm_name', 'asc')
+            // ->defaultSort('eqm_name', 'asc')
             ->filters([
                 SelectFilter::make('eqm_is_active')
                     ->label('Status')
