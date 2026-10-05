@@ -4,12 +4,14 @@ namespace App\Filament\Helper;
 
 use App\Models\Usr;
 use Closure;
+use Filament\Actions\Action;
 use Filament\Auth\Pages\EditProfile;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Js;
 
 /**
  * Filament's profile page reduced to a password form. The password is not on AppUser:
@@ -46,6 +48,16 @@ class ChangePassword extends EditProfile
                     $fail('The current password is incorrect.');
                 }
             });
+    }
+
+    // Full page load back to home: this page uses the simple layout, and an SPA/history.back()
+    // jump to the main layout leaves the old form on screen.
+    protected function getCancelFormAction(): Action
+    {
+        return Action::make('back')
+            ->label(__('filament-panels::auth/pages/edit-profile.actions.cancel.label'))
+            ->alpineClickHandler('window.location.href = ' . Js::from(filament()->getUrl()))
+            ->color('gray');
     }
 
     protected function handleRecordUpdate(Model $record, array $data): Model

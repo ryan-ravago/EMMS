@@ -50,7 +50,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('')
             ->spa()
             ->passwordReset()
-            ->profile(ChangePassword::class, isSimple: false)
+            ->profile(ChangePassword::class)
             ->globalSearch(position: GlobalSearchPosition::Sidebar)
             // ->spa(hasPrefetching: true)
             ->renderHook(
