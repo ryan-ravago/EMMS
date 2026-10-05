@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Equipment;
 use App\Observers\EquipmentObserver;
+use App\Support\Activity\ActivityLogging;
 use App\Filament\Support\ModalRecordNavigation;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Table;
@@ -32,6 +33,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Equipment::observe(EquipmentObserver::class);
+
+        // Readable activity log: record names, triggering action, bulk batches.
+        ActivityLogging::register();
 
         // Filament's default page options include 'all', which renders every row
         // and freezes the browser on big tables. Cap it app-wide (tables and

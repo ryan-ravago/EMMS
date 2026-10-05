@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Concerns\LogsChanges;
 
 class EquipmentCategory extends Model
 {
+    use LogsChanges;
+
     protected $table = 'equipment_categories';
 
     protected $primaryKey = 'eqmc_id';

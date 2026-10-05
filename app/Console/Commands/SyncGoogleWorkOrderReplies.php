@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\AppUser;
+use App\Support\Activity\ActivityLogging;
 use App\Services\Google\GmailWorkOrderReplySyncService;
 use Illuminate\Console\Command;
 
@@ -28,6 +29,11 @@ class SyncGoogleWorkOrderReplies extends Command
 
         try {
             $processed = $service->syncMailbox($mailboxUser);
+
+            // Runs every minute: only record runs that actually did something.
+            if ($processed > 0) {
+                ActivityLogging::scheduled('Gmail reply sync', "Gmail reply sync: processed {$processed} reply message(s) into work order updates", ['processed' => $processed]);
+            }
 
             $this->info("Processed {$processed} Gmail reply message(s).");
 

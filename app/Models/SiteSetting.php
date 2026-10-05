@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\LogsChanges;
 
 class SiteSetting extends Model
 {
+    use LogsChanges;
+
     protected $fillable = [
         'site_name',
         'site_logo',

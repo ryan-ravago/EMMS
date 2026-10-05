@@ -124,6 +124,11 @@ class SapSyncManager extends Page
                                     'last_equipment_sync' => now(),
                                 ]);
 
+                            activity('Sync')
+                                ->event('synced')
+                                ->withProperties(['synced' => count($data), 'deactivated' => $deactivated])
+                                ->log('Manual SAP equipment sync: ' . count($data) . " record(s) synced, {$deactivated} deactivated");
+
                             Notification::make()
                                 ->title('SAP Sync Complete')
                                 ->body("Synced: " . count($data) . " records. Deactivated: {$deactivated} records.")

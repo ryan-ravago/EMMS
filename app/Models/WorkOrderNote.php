@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\LogsChanges;
 
 class WorkOrderNote extends Model
 {
+    use LogsChanges;
+
     protected $table = 'work_order_notes';
 
     protected $primaryKey = 'won_id';

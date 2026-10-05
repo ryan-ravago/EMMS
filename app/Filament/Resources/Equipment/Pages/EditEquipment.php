@@ -95,6 +95,7 @@ class EditEquipment extends EditRecord
 
         activity()
             ->performedOn($this->record)
+            ->event('updated')
             ->withProperties($diff->toArray())
             ->log('Equipment updated');
     }

@@ -6,9 +6,12 @@ use Database\Factories\AssetTypeFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Concerns\LogsChanges;
 
 class AssetType extends Model
 {
+    use LogsChanges;
+
     /** @use HasFactory<AssetTypeFactory> */
     use HasFactory;
 

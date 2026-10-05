@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\AppSetting;
 use App\Models\Equipment;
 use App\Models\OPRC;
+use App\Support\Activity\ActivityLogging;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -32,6 +33,8 @@ class SyncEquipmentFromSap implements ShouldQueue
                 ->keyBy('PrcCode');
 
             if ($sapRecords->isEmpty()) {
+                ActivityLogging::scheduled('SAP equipment sync', 'SAP equipment sync ran but SAP returned no records');
+
                 Notification::make()
                     ->title('No Records Found')
                     ->body('SAP returned no records to sync.')
@@ -78,6 +81,12 @@ class SyncEquipmentFromSap implements ShouldQueue
                 ->update([
                     'last_equipment_sync' => now(),
                 ]);
+
+            ActivityLogging::scheduled(
+                'SAP equipment sync',
+                "SAP equipment sync: {$synced} record(s) synced, {$deactivated} deactivated",
+                ['synced' => $synced, 'deactivated' => $deactivated],
+            );
 
             Notification::make()
                 ->title('SAP Sync Complete')

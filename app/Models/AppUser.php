@@ -11,9 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\Concerns\LogsChanges;
 
 class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasName
 {
+    use LogsChanges;
+
     use HasRoles, HasApiTokens;
 
     protected $table = 'app_users';
@@ -36,6 +39,18 @@ class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasNam
     ];
 
     public $timestamps = false;
+
+    /** Never written to the activity log (secrets / refreshed on every login). */
+    protected array $activityExclude = [
+        'google_access_token',
+        'google_refresh_token',
+        'google_token_expires_at',
+    ];
+
+    public function activityLabel(): string
+    {
+        return trim("{$this->user_fname} {$this->user_lname}") ?: (string) $this->user_email;
+    }
 
     protected function casts(): array
     {

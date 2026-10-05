@@ -3,10 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\LogsChanges;
 
 class AppSetting extends Model
 {
+    use LogsChanges;
+
     protected $fillable = ['key', 'value'];
+
+    public function activityLabel(): string
+    {
+        return (string) $this->key;
+    }
 
     public static function get(string $key, mixed $default = null): mixed
     {

@@ -17,6 +17,11 @@ class WorkOrder extends Model
 
     protected $primaryKey = 'wo_id';
 
+    public function activityLabel(): string
+    {
+        return trim("{$this->wo_no} — {$this->wo_title}", ' —') ?: '#'.$this->getKey();
+    }
+
     public $timestamps = false;
 
     protected $fillable = [

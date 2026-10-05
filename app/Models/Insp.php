@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Concerns\LogsChanges;
 
 class Insp extends Model
 {
+    use LogsChanges;
+
     protected $table = 'insps';
 
     protected $primaryKey = 'insp_id';
@@ -17,6 +20,9 @@ class Insp extends Model
     protected $keyType = 'string';
 
     public $timestamps = false;
+
+    /** Too large to be useful in the activity log. */
+    protected array $activityExclude = ['checklist_temp_items'];
 
     protected $fillable = [
         'insp_id',

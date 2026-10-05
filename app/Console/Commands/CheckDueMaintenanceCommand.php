@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Mail\MaintenanceDueMail;
 use App\Models\AppUser;
 use App\Models\Equipment;
+use App\Support\Activity\ActivityLogging;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -47,6 +48,7 @@ class CheckDueMaintenanceCommand extends Command
             if ($prevManagers->isEmpty()) {
                 $this->warn('❌ No managers found in PREV department');
                 Log::warning('CheckDueMaintenanceCommand: No managers found in PREV department');
+                ActivityLogging::scheduled('Maintenance due check', 'Maintenance due check could not run: no active PREV department managers found');
                 return self::FAILURE;
             }
 
@@ -68,6 +70,7 @@ class CheckDueMaintenanceCommand extends Command
             if ($dueEquipment->isEmpty()) {
                 $this->info('ℹ️ No equipment due for maintenance');
                 Log::info('CheckDueMaintenanceCommand: No equipment due for maintenance');
+                ActivityLogging::scheduled('Maintenance due check', 'Maintenance due check: no equipment due for maintenance', ['notified' => 0]);
                 return self::SUCCESS;
             }
 
@@ -86,13 +89,16 @@ class CheckDueMaintenanceCommand extends Command
             }
 
             // Send ONE email to all managers
-            $dueEquipment->each(function ($equipment) use ($managerEmails) {
+            $notified = 0;
+
+            $dueEquipment->each(function ($equipment) use ($managerEmails, &$notified) {
                 try {
                     Mail::to($managerEmails)
                         ->queue(new MaintenanceDueMail($equipment));
 
                     // Mark as notified
                     $equipment->update(['eqm_last_pm_notified_at' => now()->toDateString()]);
+                    $notified++;
                     $this->info("✓ Notified ({$managerEmails[0]}) for: {$equipment->eqm_name}");
                     Log::info("CheckDueMaintenanceCommand: Notified managers for {$equipment->eqm_name}");
                 } catch (\Exception $e) {
@@ -105,9 +111,15 @@ class CheckDueMaintenanceCommand extends Command
 
             $this->info('✓ Maintenance check completed successfully');
             Log::info('CheckDueMaintenanceCommand: Completed successfully');
+            ActivityLogging::scheduled(
+                'Maintenance due check',
+                "Maintenance due check: notified managers about {$notified} of {$dueEquipment->count()} equipment due for maintenance",
+                ['notified' => $notified, 'due' => $dueEquipment->count()],
+            );
             return self::SUCCESS;
         } catch (\Exception $e) {
             $this->error('✗ Command failed: ' . $e->getMessage());
+            ActivityLogging::scheduled('Maintenance due check', 'Maintenance due check failed: ' . $e->getMessage());
             Log::error('CheckDueMaintenanceCommand: Command failed', [
                 'error' => $e->getMessage(),
                 'file' => $e->getFile(),
