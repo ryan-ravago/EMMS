@@ -82,6 +82,11 @@ class AppServiceProvider extends ServiceProvider
             return $this->loginLimit($request);
         });
 
+        // Backs `$middleware->throttleApi()` in bootstrap/app.php (used by the RFID log API).
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(120)->by('api:' . $this->rateLimitKey($request));
+        });
+
         RateLimiter::for('google-auth', function (Request $request) {
             return Limit::perMinute(5)->by($request->ip());
         });

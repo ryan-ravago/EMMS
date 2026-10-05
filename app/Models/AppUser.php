@@ -9,11 +9,12 @@ use Filament\Panel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasName
 {
-    use HasRoles;
+    use HasRoles, HasApiTokens;
 
     protected $table = 'app_users';
 
@@ -97,6 +98,6 @@ class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasNam
 
     public function getFilamentAvatarUrl(): ?string
     {
-        return $this->user_avatar ?: 'https://ui-avatars.com/api/?name='.urlencode($this->user_fname.' '.$this->user_lname).'&color=FFFFFF&background=03449d';
+        return $this->user_avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user_fname . ' ' . $this->user_lname) . '&color=FFFFFF&background=03449d';
     }
 }
