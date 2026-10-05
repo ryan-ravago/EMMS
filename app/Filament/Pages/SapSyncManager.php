@@ -6,6 +6,7 @@ use App\Jobs\SyncEquipmentFromSap;
 use App\Models\AppSetting;
 use App\Models\Equipment;
 use App\Models\OPRC;
+use App\Support\Activity\ActivityLogging;
 use BackedEnum;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Action;
@@ -16,7 +17,9 @@ use UnitEnum;
 use Filament\Forms\Components\TimePicker;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Spatie\Activitylog\Models\Activity;
 
 class SapSyncManager extends Page
 {
@@ -53,13 +56,42 @@ class SapSyncManager extends Page
     {
         $data = $this->form->getState();
 
-        AppSetting::set('sap_sync_time', $data['value']);
+        $oldTime = $this->formatTime(AppSetting::where('key', 'sap_sync_time')->value('value'));
+        $newTime = $this->formatTime($data['value']);
+
+        // The automatic model row would only say "Updated App Setting"; the row below says what it means.
+        activity()->withoutLogs(fn () => AppSetting::set('sap_sync_time', $data['value']));
+
+        if ($oldTime !== $newTime) {
+            activity('Sync')
+                ->event('schedule_changed')
+                ->withProperties(['task' => 'SAP equipment sync', 'from' => $oldTime, 'to' => $newTime])
+                ->log($oldTime
+                    ? "SAP daily sync schedule changed from {$oldTime} to {$newTime}"
+                    : "SAP daily sync schedule set to {$newTime}");
+        }
 
         Notification::make()
             ->title('Schedule Updated')
             ->body('SAP sync will now run daily at ' . Carbon::parse($data['value'])->format('g:ia'))
             ->success()
             ->send();
+    }
+
+    /** Latest sync runs (manual and scheduled) and schedule changes, newest first. */
+    public function getRecentSyncs(): Collection
+    {
+        return Activity::query()
+            ->with('causer')
+            ->where('properties->task', 'SAP equipment sync')
+            ->latest()
+            ->limit(10)
+            ->get();
+    }
+
+    private function formatTime(?string $time): ?string
+    {
+        return $time ? Carbon::parse($time)->format('g:i A') : null;
     }
 
     protected function getHeaderActions(): array
@@ -76,8 +108,10 @@ class SapSyncManager extends Page
                 ->closeModalByClickingAway(false)        // 👈 can't close by clicking outside
                 ->closeModalByEscaping(false)            // 👈 can't close by pressing Escape
                 ->action(function () {
+                    $startedAt = microtime(true);
+
                     try {
-                        DB::transaction(function () {
+                        DB::transaction(function () use ($startedAt) {
                             $sapRecords = OPRC::select([
                                 'PrcCode',
                                 'PrcName',
@@ -85,6 +119,8 @@ class SapSyncManager extends Page
                             ])->get();
 
                             if ($sapRecords->isEmpty()) {
+                                ActivityLogging::sapSync('Manual', 'no_records', startedAt: $startedAt);
+
                                 Notification::make()
                                     ->title('No Records Found')
                                     ->body('SAP returned no records to sync.')
@@ -124,10 +160,7 @@ class SapSyncManager extends Page
                                     'last_equipment_sync' => now(),
                                 ]);
 
-                            activity('Sync')
-                                ->event('synced')
-                                ->withProperties(['synced' => count($data), 'deactivated' => $deactivated])
-                                ->log('Manual SAP equipment sync: ' . count($data) . " record(s) synced, {$deactivated} deactivated");
+                            ActivityLogging::sapSync('Manual', 'success', ['synced' => count($data), 'deactivated' => $deactivated], startedAt: $startedAt);
 
                             Notification::make()
                                 ->title('SAP Sync Complete')
@@ -136,6 +169,8 @@ class SapSyncManager extends Page
                                 ->send();
                         });
                     } catch (\Illuminate\Database\QueryException $e) {
+                        ActivityLogging::sapSync('Manual', 'failed', error: $e->getMessage(), startedAt: $startedAt);
+
                         $previous = $e->getPrevious();
 
                         if ($previous instanceof \PDOException) {
@@ -152,6 +187,8 @@ class SapSyncManager extends Page
                                 ->send();
                         }
                     } catch (\Exception $e) {
+                        ActivityLogging::sapSync('Manual', 'failed', error: $e->getMessage(), startedAt: $startedAt);
+
                         Notification::make()
                             ->title('Sync Failed')
                             ->body('Unexpected error: ' . $e->getMessage())

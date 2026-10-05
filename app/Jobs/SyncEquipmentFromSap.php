@@ -22,7 +22,9 @@ class SyncEquipmentFromSap implements ShouldQueue
 
     public function handle(): void
     {
-        DB::transaction(function () {
+        $startedAt = microtime(true);
+
+        DB::transaction(function () use ($startedAt) {
             $sapRecords = OPRC::select([
                 'PrcCode',
                 'PrcName',
@@ -33,7 +35,7 @@ class SyncEquipmentFromSap implements ShouldQueue
                 ->keyBy('PrcCode');
 
             if ($sapRecords->isEmpty()) {
-                ActivityLogging::scheduled('SAP equipment sync', 'SAP equipment sync ran but SAP returned no records');
+                ActivityLogging::sapSync('Scheduled', 'no_records', startedAt: $startedAt);
 
                 Notification::make()
                     ->title('No Records Found')
@@ -82,11 +84,7 @@ class SyncEquipmentFromSap implements ShouldQueue
                     'last_equipment_sync' => now(),
                 ]);
 
-            ActivityLogging::scheduled(
-                'SAP equipment sync',
-                "SAP equipment sync: {$synced} record(s) synced, {$deactivated} deactivated",
-                ['synced' => $synced, 'deactivated' => $deactivated],
-            );
+            ActivityLogging::sapSync('Scheduled', 'success', ['synced' => $synced, 'deactivated' => $deactivated], startedAt: $startedAt);
 
             Notification::make()
                 ->title('SAP Sync Complete')
@@ -99,5 +97,7 @@ class SyncEquipmentFromSap implements ShouldQueue
     public function failed(\Throwable $e): void
     {
         Log::error('SAP Sync Job failed: '.$e->getMessage());
+
+        ActivityLogging::sapSync('Scheduled', 'failed', error: "after {$this->tries} attempts: ".$e->getMessage());
     }
 }

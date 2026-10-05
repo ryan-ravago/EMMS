@@ -67,7 +67,9 @@ class ActivityLogPage extends Page implements HasTable
                     ->label('Action')
                     ->state(fn (Activity $record): string => ActivityLabels::eventLabel($record->event))
                     ->badge()
-                    ->color(fn (Activity $record): string => self::eventColor($record->event)),
+                    ->color(fn (Activity $record): string => $record->getExtraProperty('status') === 'failed'
+                        ? 'danger'
+                        : self::eventColor($record->event)),
 
                 TextColumn::make('subject_type')
                     ->label('Record')
@@ -201,6 +203,8 @@ class ActivityLogPage extends Page implements HasTable
             'deleted', 'cancel', 'reject', 'drg' => 'danger',
             'snz' => 'warning',
             'scheduled', 'synced' => 'primary',
+            'sync_failed' => 'danger',
+            'schedule_changed' => 'info',
             default => 'gray',
         };
     }

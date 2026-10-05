@@ -7,6 +7,7 @@ use App\Console\Commands\SyncGoogleWorkOrderReplies;
 use App\Jobs\ProcessDueDateChecks;
 use App\Jobs\SyncEquipmentFromSap;
 use App\Models\AppSetting;
+use App\Support\Activity\ActivityLogging;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +24,10 @@ if (! app()->runningUnitTests() && Schema::hasTable((new AppSetting)->getTable()
     if ($syncTime) {
         Schedule::job(new SyncEquipmentFromSap)
             ->dailyAt($syncTime)
-            ->withoutOverlapping();
+            ->withoutOverlapping()
+            // Logged when the schedule fires, so a day with a start row but no result row
+            // means the queue worker never picked the job up.
+            ->before(fn () => ActivityLogging::sapSync('Scheduled', 'queued'));
     }
 }
 

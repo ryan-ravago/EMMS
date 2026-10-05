@@ -6,6 +6,7 @@ use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Models\AppSetting;
 use App\Models\Equipment;
 use App\Models\OPRC;
+use App\Support\Activity\ActivityLogging;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -38,8 +39,10 @@ class ListEquipment extends ListRecords
                 ->closeModalByClickingAway(false)        // 👈 can't close by clicking outside
                 ->closeModalByEscaping(false)            // 👈 can't close by pressing Escape
                 ->action(function () {
+                    $startedAt = microtime(true);
+
                     try {
-                        DB::transaction(function () {
+                        DB::transaction(function () use ($startedAt) {
                             $sapRecords = OPRC::select([
                                 'PrcCode',
                                 'PrcName',
@@ -47,6 +50,8 @@ class ListEquipment extends ListRecords
                             ])->get();
 
                             if ($sapRecords->isEmpty()) {
+                                ActivityLogging::sapSync('Manual', 'no_records', startedAt: $startedAt);
+
                                 Notification::make()
                                     ->title('No Records Found')
                                     ->body('SAP returned no records to sync.')
@@ -87,6 +92,8 @@ class ListEquipment extends ListRecords
                                     'last_equipment_sync' => now(),
                                 ]);
 
+                            ActivityLogging::sapSync('Manual', 'success', ['synced' => count($data), 'deactivated' => $deactivated], startedAt: $startedAt);
+
                             Notification::make()
                                 ->title('SAP Sync Complete')
                                 ->body('Synced: ' . count($data) . " records. Deactivated: {$deactivated} records.")
@@ -94,6 +101,8 @@ class ListEquipment extends ListRecords
                                 ->send();
                         });
                     } catch (QueryException $e) {
+                        ActivityLogging::sapSync('Manual', 'failed', error: $e->getMessage(), startedAt: $startedAt);
+
                         $previous = $e->getPrevious();
                         Log::error($e->getMessage());
 
@@ -111,6 +120,8 @@ class ListEquipment extends ListRecords
                                 ->send();
                         }
                     } catch (\Exception $e) {
+                        ActivityLogging::sapSync('Manual', 'failed', error: $e->getMessage(), startedAt: $startedAt);
+
                         Notification::make()
                             ->title('Sync Failed')
                             ->body('Unexpected error: ' . $e->getMessage())

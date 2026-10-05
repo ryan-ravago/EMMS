@@ -106,6 +106,52 @@ class ActivityLogging
         }
     }
 
+    /**
+     * One row per SAP equipment sync run, whoever started it: the daily schedule or a person
+     * pressing "Sync from SAP". Manual runs are credited to the logged-in user.
+     *
+     * @param  'Manual'|'Scheduled'  $trigger
+     * @param  'queued'|'success'|'no_records'|'failed'  $status
+     * @param  array{synced?: int, deactivated?: int}  $counts
+     */
+    public static function sapSync(string $trigger, string $status, array $counts = [], ?string $error = null, ?float $startedAt = null): void
+    {
+        $duration = $startedAt !== null ? round(microtime(true) - $startedAt, 1) : null;
+        $took = $duration !== null ? " in {$duration}s" : '';
+
+        $result = match ($status) {
+            'queued' => 'started by the daily schedule',
+            'success' => ($counts['synced'] ?? 0).' synced, '.($counts['deactivated'] ?? 0).' deactivated'.$took,
+            'no_records' => 'SAP returned no records'.$took,
+            default => 'failed'.$took.($error ? ' — '.Str::limit($error, 300) : ''),
+        };
+
+        $summary = "SAP equipment sync ({$trigger}): {$result}";
+
+        $properties = [
+            'trigger' => $trigger,
+            'status' => $status,
+            ...$counts,
+            ...($duration !== null ? ['duration_seconds' => $duration] : []),
+            ...($error ? ['error' => Str::limit($error, 500)] : []),
+        ];
+
+        if ($trigger === 'Scheduled') {
+            self::scheduled('SAP equipment sync', $summary, $properties);
+
+            return;
+        }
+
+        try {
+            activity('Sync')
+                ->event($status === 'failed' ? 'sync_failed' : 'synced')
+                ->withProperties(['task' => 'SAP equipment sync', ...$properties])
+                ->log($summary);
+        } catch (Throwable $e) {
+            report($e);
+        }
+    }
+
     private static function enrich(Activity $activity): void
     {
         try {
