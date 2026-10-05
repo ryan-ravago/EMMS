@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Helper\ChangePassword;
 use App\Filament\Helper\CustomLogin;
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Filament\Resources\Equipment\Resources\AssetTags\AssetTagResource;
@@ -49,6 +50,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('')
             ->spa()
             ->passwordReset()
+            ->profile(ChangePassword::class)
             ->globalSearch(position: GlobalSearchPosition::Sidebar)
             // ->spa(hasPrefetching: true)
             ->renderHook(
