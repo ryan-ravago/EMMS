@@ -206,6 +206,55 @@ class ActivityLabels
         return $text;
     }
 
+    public static function userName(Activity $activity): string
+    {
+        if ($activity->causer) {
+            return trim("{$activity->causer->user_fname} {$activity->causer->user_lname}");
+        }
+
+        return $activity->event === 'scheduled' ? 'Scheduled task' : 'System';
+    }
+
+    public static function recordName(Activity $activity): ?string
+    {
+        if (! $activity->subject_type) {
+            return null;
+        }
+
+        return $activity->getExtraProperty('subject_label') ?: '#'.$activity->subject_id;
+    }
+
+    /** Everything the activity details modal shows, prepared here so the view stays plain markup. */
+    public static function details(Activity $activity): array
+    {
+        $properties = self::properties($activity);
+
+        // Whatever is left after the parts that have their own section.
+        $extra = $properties
+            ->except(['attributes', 'old', 'subject_label', 'via', 'bulk', 'action_id'])
+            ->reject(fn ($value) => is_array($value) && array_key_exists('old', $value) && array_key_exists('new', $value))
+            ->mapWithKeys(fn ($value, $key): array => [Str::headline((string) $key) => self::formatValue($value, (string) $key)])
+            ->all();
+
+        $batch = $activity->batch_uuid
+            ? Activity::query()->where('batch_uuid', $activity->batch_uuid)
+            : null;
+
+        return [
+            'when' => $activity->created_at->format('M d, Y h:i:s A').' ('.$activity->created_at->diffForHumans().')',
+            'user' => self::userName($activity),
+            'actionLabel' => self::eventLabel($activity->event),
+            'recordName' => self::recordName($activity),
+            'recordType' => $activity->subject_type ? self::typeName($activity->subject_type) : null,
+            'via' => $activity->getExtraProperty('via'),
+            'description' => $activity->description,
+            'changes' => self::changes($activity),
+            'extra' => $extra,
+            'batchTotal' => $batch?->count() ?? 0,
+            'batchItems' => $batch ? (clone $batch)->orderBy('id')->limit(50)->pluck('description')->all() : [],
+        ];
+    }
+
     public static function properties(Activity $activity): Collection
     {
         $properties = $activity->properties;

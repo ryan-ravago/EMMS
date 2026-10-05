@@ -6,6 +6,7 @@ use App\Jobs\SyncEquipmentFromSap;
 use App\Models\AppSetting;
 use App\Models\Equipment;
 use App\Models\OPRC;
+use App\Support\Activity\ActivityLabels;
 use App\Support\Activity\ActivityLogging;
 use BackedEnum;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
@@ -17,13 +18,16 @@ use UnitEnum;
 use Filament\Forms\Components\TimePicker;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
 
-class SapSyncManager extends Page
+class SapSyncManager extends Page implements HasTable
 {
-    use HasPageShield, InteractsWithForms;
+    use HasPageShield, InteractsWithForms, InteractsWithTable;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-path';
     protected static ?string $navigationLabel = 'SAP Sync Manager';
@@ -78,15 +82,81 @@ class SapSyncManager extends Page
             ->send();
     }
 
-    /** Latest sync runs (manual and scheduled) and schedule changes, newest first. */
-    public function getRecentSyncs(): Collection
+    /** Sync runs (manual and scheduled) and schedule changes, latest first. */
+    public function table(Table $table): Table
     {
-        return Activity::query()
-            ->with('causer')
-            ->where('properties->task', 'SAP equipment sync')
-            ->latest()
-            ->limit(10)
-            ->get();
+        return $table
+            ->heading('Recent Syncs')
+            ->description('Manual and scheduled runs, and changes to the daily schedule. Full history is in the Activity Log.')
+            ->query(
+                Activity::query()
+                    ->with('causer')
+                    ->where('properties->task', 'SAP equipment sync')
+            )
+            ->columns([
+                TextColumn::make('created_at')
+                    ->label('When')
+                    ->dateTime('M d, Y h:i A')
+                    ->description(fn (Activity $record): string => $record->created_at->diffForHumans())
+                    ->sortable(),
+
+                TextColumn::make('trigger')
+                    ->label('Trigger')
+                    ->state(fn (Activity $record): string => $record->event === 'schedule_changed'
+                        ? 'Schedule'
+                        : (string) $record->getExtraProperty('trigger', '—'))
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Manual' => 'info',
+                        'Scheduled', 'Schedule' => 'primary',
+                        default => 'gray',
+                    }),
+
+                TextColumn::make('causer_id')
+                    ->label('By')
+                    ->state(fn (Activity $record): string => $record->causer
+                        ? trim("{$record->causer->user_fname} {$record->causer->user_lname}")
+                        : 'Schedule'),
+
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->state(fn (Activity $record): string => match (true) {
+                        $record->event === 'schedule_changed' => 'Changed',
+                        default => match ($record->getExtraProperty('status')) {
+                            'success' => 'Success',
+                            'no_records' => 'No records',
+                            'failed' => 'Failed',
+                            'queued' => 'Started',
+                            default => '—',
+                        },
+                    })
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Success' => 'success',
+                        'Failed' => 'danger',
+                        'No records' => 'warning',
+                        'Changed' => 'info',
+                        default => 'gray',
+                    }),
+
+                TextColumn::make('description')
+                    ->label('Result')
+                    ->wrap(),
+            ])
+            ->recordActions([
+                Action::make('details')
+                    ->label('Details')
+                    ->icon('heroicon-o-eye')
+                    ->slideOver()
+                    ->modalHeading('Sync details')
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Close')
+                    ->modalContent(fn (Activity $record) => view('filament.pages.activity-log-details', ActivityLabels::details($record))),
+            ])
+            ->recordAction('details')
+            ->defaultSort('created_at', 'desc')
+            ->defaultPaginationPageOption(10)
+            ->paginated([10, 25, 50]);
     }
 
     private function formatTime(?string $time): ?string

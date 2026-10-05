@@ -19,7 +19,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
 use UnitEnum;
 
@@ -54,7 +53,7 @@ class ActivityLogPage extends Page implements HasTable
 
                 TextColumn::make('causer_id')
                     ->label('User')
-                    ->state(fn (Activity $record): string => self::userName($record))
+                    ->state(fn (Activity $record): string => ActivityLabels::userName($record))
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereIn(
                         'causer_id',
                         AppUser::query()
@@ -73,7 +72,7 @@ class ActivityLogPage extends Page implements HasTable
 
                 TextColumn::make('subject_type')
                     ->label('Record')
-                    ->state(fn (Activity $record): ?string => self::recordName($record))
+                    ->state(fn (Activity $record): ?string => ActivityLabels::recordName($record))
                     ->placeholder('—')
                     ->description(fn (Activity $record): ?string => $record->subject_type
                         ? ActivityLabels::typeName($record->subject_type)
@@ -169,30 +168,12 @@ class ActivityLogPage extends Page implements HasTable
                     ->modalHeading('Activity details')
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Close')
-                    ->modalContent(fn (Activity $record) => view('filament.pages.activity-log-details', self::detailsFor($record))),
+                    ->modalContent(fn (Activity $record) => view('filament.pages.activity-log-details', ActivityLabels::details($record))),
             ])
             ->recordAction('details')
             ->defaultSort('created_at', 'desc')
             ->paginated([10, 25, 50])
             ->poll('60s');
-    }
-
-    private static function userName(Activity $record): string
-    {
-        if ($record->causer) {
-            return trim("{$record->causer->user_fname} {$record->causer->user_lname}");
-        }
-
-        return $record->event === 'scheduled' ? 'Scheduled task' : 'System';
-    }
-
-    private static function recordName(Activity $record): ?string
-    {
-        if (! $record->subject_type) {
-            return null;
-        }
-
-        return $record->getExtraProperty('subject_label') ?: '#'.$record->subject_id;
     }
 
     private static function eventColor(?string $event): string
@@ -207,36 +188,5 @@ class ActivityLogPage extends Page implements HasTable
             'schedule_changed' => 'info',
             default => 'gray',
         };
-    }
-
-    /** Everything the details modal shows, prepared here so the view stays plain markup. */
-    private static function detailsFor(Activity $record): array
-    {
-        $properties = ActivityLabels::properties($record);
-
-        // Whatever is left after the parts that have their own section.
-        $extra = $properties
-            ->except(['attributes', 'old', 'subject_label', 'via', 'bulk', 'action_id'])
-            ->reject(fn ($value) => is_array($value) && array_key_exists('old', $value) && array_key_exists('new', $value))
-            ->mapWithKeys(fn ($value, $key): array => [Str::headline((string) $key) => ActivityLabels::formatValue($value, (string) $key)])
-            ->all();
-
-        $batch = $record->batch_uuid
-            ? Activity::query()->where('batch_uuid', $record->batch_uuid)
-            : null;
-
-        return [
-            'when' => $record->created_at->format('M d, Y h:i:s A').' ('.$record->created_at->diffForHumans().')',
-            'user' => self::userName($record),
-            'actionLabel' => ActivityLabels::eventLabel($record->event),
-            'recordName' => self::recordName($record),
-            'recordType' => $record->subject_type ? ActivityLabels::typeName($record->subject_type) : null,
-            'via' => $record->getExtraProperty('via'),
-            'description' => $record->description,
-            'changes' => ActivityLabels::changes($record),
-            'extra' => $extra,
-            'batchTotal' => $batch?->count() ?? 0,
-            'batchItems' => $batch ? (clone $batch)->orderBy('id')->limit(50)->pluck('description')->all() : [],
-        ];
     }
 }
