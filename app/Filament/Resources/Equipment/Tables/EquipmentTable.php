@@ -58,6 +58,7 @@ class EquipmentTable
                     ->badge()
                     ->color(fn($record): string => $record->asset_type_id == 1 ? 'primary' : 'success')
                     ->icon(fn($record): Heroicon => $record->asset_type_id == 1 ? Heroicon::OutlinedTruck : Heroicon::OutlinedCog)
+                    ->placeholder('—')
                     ->visible(fn(): bool => !Auth::user()->can('Update:EquipmentResource'))
                     ->toggleable()
                     ->sortable()
@@ -70,7 +71,7 @@ class EquipmentTable
                     ->visible(fn(): bool => Auth::user()->can('Update:EquipmentResource'))
                     ->native(false)
                     ->options(fn(): array => self::assetTypeOptions())
-                    ->rules(['required', 'exists:asset_types,id']),
+                    ->rules(['nullable', 'exists:asset_types,id']),
                 // ->afterStateUpdated(function (mixed $state, Set $set): void {
                 //     if ((int) $state !== (int) AssetType::accessoryId()) {
                 //         $set('parent_id', null);

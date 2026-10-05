@@ -188,8 +188,7 @@ class EquipmentForm
                                         if ((int) $state !== (int) AssetType::equipmentId()) {
                                             $clearAllPM($set);
                                         }
-                                    })
-                                    ->required(),
+                                    }),
                                 // Select::make('parent_id')
                                 //     ->label('Allocated to')
                                 //     ->relationship(
