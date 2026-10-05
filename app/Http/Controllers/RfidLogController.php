@@ -19,7 +19,7 @@ class RfidLogController extends Controller
         $logs = collect(Validator::validate(
             ['logs' => $request->json()->all()],
             [
-                'logs' => ['required', 'array', 'min:1', 'max:500'],
+                'logs' => ['required', 'array', 'list', 'min:1', 'max:500'],
                 'logs.*.Tag' => ['required', 'string', 'max:255'],
                 'logs.*.Status' => ['required', 'string', 'regex:/^(in|out)$/i'],
                 'logs.*.Timestamp' => ['required', 'date_format:Y-m-d H:i:s'],
@@ -31,25 +31,54 @@ class RfidLogController extends Controller
             ->pluck('tag_id')
             ->mapWithKeys(fn (string $tag) => [strtolower($tag) => $tag]);
 
-        [$known, $unknown] = $logs->partition(
-            fn (array $log) => $knownTags->has(strtolower($log['Tag']))
-        );
+        // Logs already stored for this yard; also fed with the rows of this batch to catch repeats inside it.
+        $seen = AssetTagLog::where('yard_id', $yard)
+            ->whereIn('tag_id', $knownTags->values())
+            ->whereIn('detected_at', $logs->pluck('Timestamp')->unique())
+            ->toBase()
+            ->get(['tag_id', 'detected_at', 'status'])
+            ->mapWithKeys(fn (object $row) => [$this->logKey($row->tag_id, $row->detected_at, $row->status) => true])
+            ->all();
 
-        // rssi and created_at are intentionally left out (NULL); received_at is the DB default.
-        $inserted = AssetTagLog::insertOrIgnore(
-            $known->map(fn (array $log) => [
+        $rows = [];
+        $notInserted = [];
+
+        foreach ($logs as $index => $log) {
+            $tag = $knownTags->get(strtolower($log['Tag']));
+            $key = $tag ? $this->logKey($tag, $log['Timestamp'], $log['Status']) : null;
+
+            $reason = match (true) {
+                $tag === null => 'unknown_tag',
+                isset($seen[$key]) => 'duplicate',
+                default => null,
+            };
+
+            if ($reason) {
+                $notInserted[] = ['index' => $index, ...$log, 'reason' => $reason];
+
+                continue;
+            }
+
+            $seen[$key] = true;
+
+            // rssi and created_at are intentionally left out (NULL); received_at is the DB default.
+            $rows[] = [
                 'detected_at' => $log['Timestamp'],
-                'tag_id' => $knownTags[strtolower($log['Tag'])],
+                'tag_id' => $tag,
                 'yard_id' => $yard,
                 'status' => strtoupper($log['Status']),
-            ])->all()
-        );
+            ];
+        }
 
         return response()->json([
             'received' => $logs->count(),
-            'inserted' => $inserted,
-            'duplicates' => $known->count() - $inserted,
-            'unknown_tags' => $unknown->pluck('Tag')->unique()->values(),
+            'inserted' => AssetTagLog::insertOrIgnore($rows),
+            'not_inserted' => $notInserted,
         ]);
+    }
+
+    private function logKey(string $tag, string $detectedAt, string $status): string
+    {
+        return strtolower($tag).'|'.$detectedAt.'|'.strtoupper($status);
     }
 }
