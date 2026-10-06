@@ -10,11 +10,14 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Pulse\Facades\Pulse;
 use App\Models\Equipment;
 use App\Observers\EquipmentObserver;
 use App\Support\Activity\ActivityLogging;
 use App\Filament\Support\ModalRecordNavigation;
+use App\Filament\Support\FileUploadDefaults;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Table;
 
 class AppServiceProvider extends ServiceProvider
@@ -48,6 +51,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Previous / Next buttons in every table "View" modal.
         ViewAction::configureUsing(fn(ViewAction $action) => ModalRecordNavigation::configure($action));
+
+        // Every form upload refuses videos and optimizes images before the path reaches the database.
+        FileUpload::configureUsing(fn(FileUpload $upload) => FileUploadDefaults::configure($upload));
 
         // Log (not throw) lazy-loaded relations so N+1 spots show up in storage/logs.
         Model::preventLazyLoading(! app()->isProduction());
@@ -114,6 +120,14 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('viewPulse', function (AppUser $user) {
             return $user->hasRole('super_admin');
         });
+
+        // Pulse's default resolver reads `name` / `email`, which AppUser doesn't have
+        // (it uses user_fname / user_lname / user_email), so cards only showed "ID: 12".
+        Pulse::user(fn (AppUser $user) => [
+            'name' => $user->full_name ?: $user->user_email,
+            'extra' => $user->user_email,
+            'avatar' => $user->getFilamentAvatarUrl(),
+        ]);
     }
 
     private function generalFilamentLimit(Request $request): Limit

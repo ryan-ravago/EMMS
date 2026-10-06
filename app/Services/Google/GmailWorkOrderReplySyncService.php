@@ -5,11 +5,14 @@ namespace App\Services\Google;
 use App\Models\AppUser;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderLogUpdate;
+use App\Support\Media\ImageOptimizer;
+use finfo;
 use Google\Client as GoogleClient;
 use Google\Service\Gmail;
 use Google\Service\Gmail\ModifyMessageRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -18,6 +21,7 @@ class GmailWorkOrderReplySyncService
 {
     public function __construct(
         private readonly GmailReplyParser $parser,
+        private readonly ImageOptimizer $optimizer,
     ) {}
 
     public function syncMailbox(AppUser $mailboxUser): int
@@ -140,6 +144,15 @@ class GmailWorkOrderReplySyncService
                 continue;
             }
 
+            if (str_starts_with((string) (new finfo(FILEINFO_MIME_TYPE))->buffer($content), 'video/')) {
+                Log::info('Skipped a Gmail video attachment: videos are not accepted.', [
+                    'message_id' => $messageId,
+                    'file' => $attachment['filename'] ?? null,
+                ]);
+
+                continue;
+            }
+
             $hash = substr(sha1($content), 0, 12);
 
             if (in_array($hash, $seenHashes, true)) {
@@ -154,7 +167,8 @@ class GmailWorkOrderReplySyncService
                 $fileName
             );
 
-            Storage::disk('local')->put($path, $content);
+            // Optimized only after hashing, so repeats are still matched on the original bytes.
+            Storage::disk('local')->put($path, $this->optimizer->optimizeContents($content));
 
             $storedAttachments[] = $path;
             $seenHashes[] = $hash;

@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Filament\Resources\RequestorWorkOrders\RequestorWorkOrderResource;
 use App\Filament\Resources\TechnicianWorkOrders\TechnicianWorkOrderResource;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
+use App\Filament\Support\LinkedHeading;
 use App\Models\WorkOrder;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Auth;
@@ -31,7 +32,7 @@ class WorkOrderTrendChart extends ChartWidget
             default => WorkOrderResource::getUrl(),
         };
 
-        return new HtmlString('<a href="'.$url.'" class="hover:underline transition">Work Order Trends</a>');
+        return new LinkedHeading('Work Order Trends', $url);
     }
 
     protected function getData(): array

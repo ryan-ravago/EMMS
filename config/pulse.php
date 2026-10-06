@@ -199,7 +199,7 @@ return [
             'sample_rate' => env('PULSE_SLOW_QUERIES_SAMPLE_RATE', 1),
             'threshold' => env('PULSE_SLOW_QUERIES_THRESHOLD', 1000),
             'location' => env('PULSE_SLOW_QUERIES_LOCATION', true),
-            'max_query_length' => env('PULSE_SLOW_QUERIES_MAX_QUERY_LENGTH'),
+            'max_query_length' => env('PULSE_SLOW_QUERIES_MAX_QUERY_LENGTH', 1_000),
             'ignore' => [
                 '/(["`])pulse_[\w]+?\1/', // Pulse tables...
                 '/(["`])telescope_[\w]+?\1/', // Telescope tables...
@@ -230,6 +230,7 @@ return [
             'ignore' => [
                 '#^/'.env('PULSE_PATH', 'pulse').'$#', // Pulse dashboard...
                 '#^/telescope#', // Telescope dashboard...
+                '#^/v1/#', // RFID log API (Sanctum token traffic, not people)...
             ],
         ],
     ],

@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Filament\Support\LinkedHeading;
 use App\Models\Equipment;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\HtmlString;
@@ -13,7 +14,7 @@ class EquipmentStatusChart extends ChartWidget
 
     public function getHeading(): string|HtmlString|null
     {
-        return new HtmlString('<a href="'.EquipmentResource::getUrl().'" class="hover:underline transition">Asset Status Distribution</a>');
+        return new LinkedHeading('Asset Status Distribution', EquipmentResource::getUrl());
     }
 
     protected function getData(): array
