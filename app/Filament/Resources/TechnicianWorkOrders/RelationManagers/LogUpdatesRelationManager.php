@@ -96,7 +96,7 @@ class LogUpdatesRelationManager extends RelationManager
                 TextColumn::make('by.user_fname')
                     ->label('By')
                     ->formatStateUsing(fn ($record) => "{$record->by->user_fname} {$record->by->user_lname}")
-                    ->placeholder('-'),
+                    ->placeholder('—'),
                 TextColumn::make('wolu_dt')
                     ->label('Timestamp')
                     ->dateTime('M d, Y | h:i A')

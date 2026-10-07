@@ -36,7 +36,11 @@ class ViewEquipment extends ViewRecord
     public function getSubheading(): ?string
     {
         $record = $this->getRecord();
-        $location = $record->location?->full_path ?? 'No location';
+        $location = $record->effectiveLocation()?->full_path ?? 'No location';
+
+        if ($record->isAllocatedAccessory()) {
+            $location .= " (via {$record->parent?->eqm_name})";
+        }
         $lifecycleStatus = $record->lifecycleStatus?->status_title ?? 'Unknown status';
 
         return "Location: {$location} | Lifecycle status: {$lifecycleStatus}";
@@ -119,7 +123,8 @@ class ViewEquipment extends ViewRecord
                             ->withCount()
                             ->searchable()
                             ->enableBranchNode()
-                            ->default(fn() => $this->record->location_id)
+                            ->default(fn() => $this->record->effectiveLocation()?->getKey())
+                            ->required(fn(): bool => $this->record->isAccessory())
                             ->relationship('location', 'name', 'parent_id'),
 
                         Textarea::make('remarks')
@@ -144,7 +149,8 @@ class ViewEquipment extends ViewRecord
                             ->withCount()
                             ->searchable()
                             ->enableBranchNode()
-                            ->default(fn() => $this->record->location_id)
+                            ->default(fn() => $this->record->effectiveLocation()?->getKey())
+                            ->required(fn(): bool => $this->record->isAccessory())
                             ->relationship('location', 'name', 'parent_id'),
 
                         Textarea::make('remarks')
@@ -179,6 +185,7 @@ class ViewEquipment extends ViewRecord
                 $record->update([
                     'lifecycle_status_id' => $newStatusId,
                     'location_id' => match ($action->a_id) {
+                        'alc' => null,
                         'dep', 'sidle', 'smt' => $data['location_id'] ?? $record->location_id,
                         default => $record->location_id,
                     },

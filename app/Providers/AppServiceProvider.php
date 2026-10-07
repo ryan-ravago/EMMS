@@ -18,6 +18,8 @@ use App\Filament\Support\ModalRecordNavigation;
 use App\Filament\Support\FileUploadDefaults;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\FileUpload;
+use Filament\Tables\Columns\Column;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class AppServiceProvider extends ServiceProvider
@@ -43,10 +45,29 @@ class AppServiceProvider extends ServiceProvider
         // Filament's default page options include 'all', which renders every row
         // and freezes the browser on big tables. Cap it app-wide (tables and
         // relation managers); a table can still override with ->paginated().
+        // On phones (< 640px) rows become cards (see resources/css/mobile-tables.css);
+        // a table can opt out with ->stackedOnMobile(false).
         Table::configureUsing(
             fn(Table $table) => $table
                 ->paginated([10, 25, 50, 100])
                 ->defaultPaginationPageOption(25)
+                ->stackedOnMobile()
+        );
+
+        // Every table column shows — when empty, and long text is cut to 50 characters
+        // followed by "..." (the full text shows on hover). A column can still override
+        // either with its own ->placeholder() / ->limit() / ->tooltip().
+        Column::configureUsing(fn(Column $column) => $column->placeholder('—'));
+
+        TextColumn::configureUsing(
+            fn(TextColumn $column) => $column
+                ->limit(50)
+                ->tooltip(function (TextColumn $column): ?string {
+                    $limit = $column->getCharacterLimit();
+                    $state = $column->getState();
+
+                    return $limit && is_string($state) && mb_strlen($state) > $limit ? $state : null;
+                })
         );
 
         // Previous / Next buttons in every table "View" modal.

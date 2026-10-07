@@ -1,0 +1,38 @@
+/*
+ * One-column modals and slide-overs on phones.
+ *
+ * Below the `md` breakpoint (768px) everything inside a modal or slide-over stacks:
+ * form and infolist grids drop to a single column, and fields/entries with an inline
+ * label put the label above the value instead of beside it. From `md` up, Filament's
+ * own responsive columns apply untouched.
+ */
+@media (width < 48rem) {
+    .fi-modal .fi-grid:not(.fi-grid-direction-col) {
+        grid-template-columns: minmax(0, 1fr) !important;
+
+        & > .fi-grid-col {
+            grid-column: 1 / -1 !important;
+        }
+    }
+
+    .fi-modal .fi-in-entry.fi-in-entry-has-inline-label,
+    .fi-modal .fi-fo-field.fi-fo-field-has-inline-label {
+        grid-template-columns: minmax(0, 1fr) !important;
+
+        & > .fi-in-entry-label-col,
+        & > .fi-in-entry-content-col,
+        & > .fi-fo-field-label-col,
+        & > .fi-fo-field-content-col {
+            grid-column: 1 / -1 !important;
+        }
+    }
+
+    /* "Aside" sections put the heading beside the content; stack them too. */
+    .fi-modal .fi-section.fi-aside {
+        grid-template-columns: minmax(0, 1fr) !important;
+
+        & > .fi-section-content-ctn {
+            grid-column: 1 / -1 !important;
+        }
+    }
+}

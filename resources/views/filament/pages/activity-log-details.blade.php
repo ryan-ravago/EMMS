@@ -1,41 +1,72 @@
-@php
-    $muted = 'opacity:.65;';
-    $cell = 'padding:.4rem .75rem .4rem 0;vertical-align:top;border-bottom:1px solid rgba(128,128,128,.25);';
-@endphp
+<style>
+    .emms-details table { width: 100%; border-collapse: collapse; }
+    .emms-details th,
+    .emms-details td { padding: .4rem .75rem .4rem 0; vertical-align: top; border-bottom: 1px solid rgba(128, 128, 128, .25); }
+    .emms-details thead tr { text-align: left; opacity: .65; }
+    .emms-details .emms-muted { opacity: .65; }
+    .emms-details .emms-wrap { word-break: break-word; }
+    .emms-details .emms-kv td:first-child { width: 9rem; }
+    .emms-details .emms-field { font-weight: 500; }
 
-<div style="display:grid;gap:1.25rem;font-size:.875rem;">
-    <table style="width:100%;border-collapse:collapse;">
+    /* Phones: no side-by-side columns. Each row becomes a stacked block. */
+    @media (width < 40rem) {
+        .emms-details table,
+        .emms-details tbody,
+        .emms-details tr,
+        .emms-details td { display: block; width: 100%; }
+
+        .emms-details tr { padding-block: .5rem; border-bottom: 1px solid rgba(128, 128, 128, .25); }
+        .emms-details td { padding: 0; border: 0; }
+
+        /* Label above value. */
+        .emms-details .emms-kv td:first-child { width: 100%; font-size: .75rem; }
+        .emms-details .emms-kv td:last-child { margin-top: .125rem; }
+
+        /* Field / Before / After: the header row is replaced by a small label on each value. */
+        .emms-details .emms-changes thead { display: none; }
+        .emms-details .emms-changes td + td { margin-top: .25rem; }
+        .emms-details .emms-changes td[data-label]::before {
+            content: attr(data-label);
+            display: block;
+            font-size: .75rem;
+            opacity: .65;
+        }
+    }
+</style>
+
+<div class="emms-details" style="display:grid;gap:1.25rem;font-size:.875rem;">
+    <table class="emms-kv">
         <tbody>
-            <tr><td style="{{ $cell }}{{ $muted }}width:9rem;">When</td><td style="{{ $cell }}">{{ $when }}</td></tr>
-            <tr><td style="{{ $cell }}{{ $muted }}">User</td><td style="{{ $cell }}">{{ $user }}</td></tr>
-            <tr><td style="{{ $cell }}{{ $muted }}">Action</td><td style="{{ $cell }}">{{ $actionLabel }}</td></tr>
+            <tr><td class="emms-muted">When</td><td>{{ $when }}</td></tr>
+            <tr><td class="emms-muted">User</td><td>{{ $user }}</td></tr>
+            <tr><td class="emms-muted">Action</td><td>{{ $actionLabel }}</td></tr>
             @if ($recordName)
-                <tr><td style="{{ $cell }}{{ $muted }}">Record</td><td style="{{ $cell }}">{{ $recordType }}: {{ $recordName }}</td></tr>
+                <tr><td class="emms-muted">Record</td><td>{{ $recordType }}: {{ $recordName }}</td></tr>
             @endif
             @if ($via)
-                <tr><td style="{{ $cell }}{{ $muted }}">Triggered by</td><td style="{{ $cell }}">{{ $via }}</td></tr>
+                <tr><td class="emms-muted">Triggered by</td><td>{{ $via }}</td></tr>
             @endif
-            <tr><td style="{{ $cell }}{{ $muted }}">Summary</td><td style="{{ $cell }}">{{ $description }}</td></tr>
+            <tr><td class="emms-muted">Summary</td><td>{{ $description }}</td></tr>
         </tbody>
     </table>
 
     @if (count($changes))
         <div>
             <div style="font-weight:600;margin-bottom:.4rem;">Changes</div>
-            <table style="width:100%;border-collapse:collapse;">
+            <table class="emms-changes">
                 <thead>
-                    <tr style="text-align:left;{{ $muted }}">
-                        <th style="{{ $cell }}">Field</th>
-                        <th style="{{ $cell }}">Before</th>
-                        <th style="{{ $cell }}">After</th>
+                    <tr>
+                        <th>Field</th>
+                        <th>Before</th>
+                        <th>After</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($changes as $change)
                         <tr>
-                            <td style="{{ $cell }}font-weight:500;">{{ $change['field'] }}</td>
-                            <td style="{{ $cell }}word-break:break-word;">{{ $change['old'] }}</td>
-                            <td style="{{ $cell }}word-break:break-word;">{{ $change['new'] }}</td>
+                            <td class="emms-field">{{ $change['field'] }}</td>
+                            <td class="emms-wrap" data-label="Before">{{ $change['old'] }}</td>
+                            <td class="emms-wrap" data-label="After">{{ $change['new'] }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -46,12 +77,12 @@
     @if (count($extra))
         <div>
             <div style="font-weight:600;margin-bottom:.4rem;">Details</div>
-            <table style="width:100%;border-collapse:collapse;">
+            <table class="emms-kv">
                 <tbody>
                     @foreach ($extra as $label => $value)
                         <tr>
-                            <td style="{{ $cell }}{{ $muted }}width:9rem;">{{ $label }}</td>
-                            <td style="{{ $cell }}word-break:break-word;">{{ $value }}</td>
+                            <td class="emms-muted">{{ $label }}</td>
+                            <td class="emms-wrap">{{ $value }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -68,7 +99,7 @@
                 @endforeach
             </ul>
             @if ($batchTotal > count($batchItems))
-                <div style="{{ $muted }}margin-top:.4rem;">+ {{ $batchTotal - count($batchItems) }} more</div>
+                <div class="emms-muted" style="margin-top:.4rem;">+ {{ $batchTotal - count($batchItems) }} more</div>
             @endif
         </div>
     @endif

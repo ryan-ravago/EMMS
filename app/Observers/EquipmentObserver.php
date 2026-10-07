@@ -26,6 +26,7 @@ class EquipmentObserver
     public function saving(Equipment $equipment): void
     {
         $this->normalizeParentAllocation($equipment);
+        $this->clearAllocatedAccessoryLocation($equipment);
         $this->syncEquipmentType($equipment);
 
         // Recalculate next due whenever PM intervals change
@@ -63,6 +64,16 @@ class EquipmentObserver
 
         if (! $parent?->isEquipmentAsset()) {
             $equipment->parent_id = null;
+        }
+    }
+
+    /**
+     * An allocated accessory takes its parent equipment's location, so it keeps none of its own.
+     */
+    protected function clearAllocatedAccessoryLocation(Equipment $equipment): void
+    {
+        if ($equipment->isAllocatedAccessory()) {
+            $equipment->location_id = null;
         }
     }
 

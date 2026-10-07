@@ -63,15 +63,15 @@ class EquipmentTable
                     ->toggleable()
                     ->sortable()
                     ->searchable(),
-                SelectColumn::make('asset_type_id')
-                    ->label('Asset Type')
-                    // ->toggleable()
-                    // ->sortable()
-                    // ->searchable()
-                    ->visible(fn(): bool => Auth::user()->can('Update:EquipmentResource'))
-                    ->native(false)
-                    ->options(fn(): array => self::assetTypeOptions())
-                    ->rules(['nullable', 'exists:asset_types,id']),
+                // SelectColumn::make('asset_type_id')
+                //     ->label('Asset Type')
+                //     // ->toggleable()
+                //     // ->sortable()
+                //     // ->searchable()
+                //     ->visible(fn(): bool => Auth::user()->can('Update:EquipmentResource'))
+                //     ->native(false)
+                //     ->options(fn(): array => self::assetTypeOptions())
+                //     ->rules(['nullable', 'exists:asset_types,id']),
                 // ->afterStateUpdated(function (mixed $state, Set $set): void {
                 //     if ((int) $state !== (int) AssetType::accessoryId()) {
                 //         $set('parent_id', null);
@@ -107,6 +107,9 @@ class EquipmentTable
                     ->color(fn($record) => $record->lifecycleStatus->status_color),
                 TextColumn::make('location.name')
                     ->label('Location')
+                    // Allocated accessories show their parent equipment's location.
+                    ->state(fn($record): ?string => $record->effectiveLocation()?->full_path)
+                    ->description(fn($record): ?string => $record->isAllocatedAccessory() ? "via {$record->parent?->eqm_name}" : null)
                     ->toggleable()
                     ->searchable()
                     ->sortable()

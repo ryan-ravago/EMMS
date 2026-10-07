@@ -125,7 +125,7 @@ class EquipmentResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
-            ->with(['equipmentModel', 'type', 'brand', 'assetType', 'parent', 'location.parent', 'lifecycleStatus']);
+            ->with(['equipmentModel', 'type', 'brand', 'assetType', 'parent.location', 'location.parent', 'lifecycleStatus']);
 
         if (static::isAccessoriesConfiguration()) {
             $query->accessories();

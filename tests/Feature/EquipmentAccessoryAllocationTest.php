@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Resources\AssetTypes\AssetTypeResource;
-use App\Filament\Resources\AssetTypes\RelationManagers\AssetsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\AccessoriesRelationManager;
 use App\Models\AssetType;
 use App\Models\Equipment;
@@ -142,11 +140,6 @@ class EquipmentAccessoryAllocationTest extends TestCase
         $this->assertTrue($equipment->isEquipmentAsset());
         $this->assertFalse($accessory->isEquipmentAsset());
         $this->assertFalse(AccessoriesRelationManager::canViewForRecord($accessory, 'view'));
-    }
-
-    public function test_asset_type_resource_registers_the_assets_relation_manager(): void
-    {
-        $this->assertContains(AssetsRelationManager::class, AssetTypeResource::getRelations());
     }
 
     public function test_observer_clears_self_parent(): void

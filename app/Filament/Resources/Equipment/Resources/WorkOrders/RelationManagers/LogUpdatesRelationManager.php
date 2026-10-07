@@ -108,7 +108,7 @@ class LogUpdatesRelationManager extends RelationManager
                     ->label('Subject')
                     ->wrap()
                     ->searchable()
-                    ->placeholder('-'),
+                    ->placeholder('—'),
                 TextColumn::make('wolu_update_note')
                     ->label('Update Note')
                     ->wrap()
@@ -124,7 +124,7 @@ class LogUpdatesRelationManager extends RelationManager
                 TextColumn::make('by.user_fname')
                     ->label('By')
                     ->formatStateUsing(fn($record) => "{$record->by->user_fname} {$record->by->user_lname}")
-                    ->placeholder('-'),
+                    ->placeholder('—'),
                 TextColumn::make('wolu_dt')
                     ->label('Timestamp')
                     ->dateTime('M d, Y | h:i A')

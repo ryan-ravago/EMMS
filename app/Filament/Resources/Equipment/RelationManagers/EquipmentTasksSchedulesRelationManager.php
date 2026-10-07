@@ -290,7 +290,7 @@ class EquipmentTasksSchedulesRelationManager extends RelationManager
                 TextColumn::make('ets_due_dt')
                     ->label('Due Date')
                     ->dateTime('M d, Y | h:i A')
-                    ->placeholder('-')
+                    ->placeholder('—')
                     ->sortable(),
                 // TextColumn::make('ets_sort_order')
                 //     ->label('Sort Order')

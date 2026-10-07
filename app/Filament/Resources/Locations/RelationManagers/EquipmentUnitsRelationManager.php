@@ -61,6 +61,7 @@ class EquipmentUnitsRelationManager extends RelationManager
                     ->color(fn($record) => $record->lifecycleStatus->status_color),
                 TextColumn::make('location.name')
                     ->label('Location')
+                    ->state(fn($record): ?string => $record->effectiveLocation()?->full_path)
                     ->toggleable()
                     ->searchable()
                     ->sortable()

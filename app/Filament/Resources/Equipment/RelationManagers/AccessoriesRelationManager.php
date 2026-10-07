@@ -123,6 +123,8 @@ class AccessoriesRelationManager extends RelationManager
                     ->using(function (Model $record, BelongsTo $inverseRelationship, HasMany $relationship): void {
                         DB::transaction(function () use ($record, $inverseRelationship, $relationship): void {
                             $inverseRelationship->associate($relationship->getParent());
+                            // Allocated accessories take the parent's location; the observer clears location_id.
+                            $record->lifecycle_status_id = 'alc';
                             $record->save();
 
                             $this->createLifecycleLog($record, 'alc', 'alc', $relationship->getParent()->getKey());
@@ -134,9 +136,7 @@ class AccessoriesRelationManager extends RelationManager
                     ->label('Unallocate')
                     ->using(function (Model $record, Table $table): void {
                         DB::transaction(function () use ($record, $table): void {
-                            $inverseRelationship = $table->getInverseRelationshipFor($record);
-                            $inverseRelationship->dissociate();
-                            $record->save();
+                            $this->unallocate($record, $table);
 
                             $this->createLifecycleLog($record, 'sidle', 'idle');
                         });
@@ -155,9 +155,7 @@ class AccessoriesRelationManager extends RelationManager
                                 $accessoryIds = [];
 
                                 $records->each(function (Model $record) use ($table, &$accessoryIds): void {
-                                    $inverseRelationship = $table->getInverseRelationshipFor($record);
-                                    $inverseRelationship->dissociate();
-                                    $record->save();
+                                    $this->unallocate($record, $table);
                                     $accessoryIds[] = $record->getKey();
                                 });
 
@@ -176,6 +174,19 @@ class AccessoriesRelationManager extends RelationManager
                     fn(): string => EquipmentResource::getUrl('view', ['record' => $record]),
                 ),
             );
+    }
+
+    /**
+     * An unallocated accessory becomes Idle and needs a location of its own again,
+     * so it stays where its parent equipment is until someone moves it.
+     */
+    protected function unallocate(Model $record, Table $table): void
+    {
+        $record->location_id = $this->getOwnerRecord()->location_id;
+        $record->lifecycle_status_id = 'idle';
+
+        $table->getInverseRelationshipFor($record)->dissociate();
+        $record->save();
     }
 
     protected function createLifecycleLog(

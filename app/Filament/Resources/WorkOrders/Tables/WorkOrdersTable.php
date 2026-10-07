@@ -69,7 +69,7 @@ class WorkOrdersTable
                     ->label('Closed At')
                     ->dateTime('M d, Y h:i A')
                     ->color('gray')
-                    ->placeholder('-')
+                    ->placeholder('—')
                     ->sortable(),
                 TextColumn::make('wo_created_dt')
                     ->label('Date Created')

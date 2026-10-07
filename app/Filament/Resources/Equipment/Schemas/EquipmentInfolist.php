@@ -122,7 +122,11 @@ class EquipmentInfolist
                                     ->view('filament.infolists.entries.category-badges'),
                                 TextEntry::make('location.full_path')
                                     ->label('Location')
-                                    ->visible(fn(Equipment $record): bool => $record->isEquipmentAsset())
+                                    // Allocated accessories show their parent equipment's location.
+                                    ->state(fn(Equipment $record): ?string => $record->effectiveLocation()?->full_path)
+                                    ->helperText(fn(Equipment $record): ?string => $record->isAllocatedAccessory()
+                                        ? "Inherited from {$record->parent?->eqm_name}"
+                                        : null)
                                     ->placeholder('—'),
                                 TextEntry::make('equipmentModel.eqmm_name')
                                     ->label('Model')

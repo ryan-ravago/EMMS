@@ -178,6 +178,26 @@ class Equipment extends Model
         return $this->hasMany(self::class, 'parent_id', 'eqm_id');
     }
 
+    /**
+     * An accessory allocated to an equipment has no location of its own;
+     * it sits wherever its parent equipment is.
+     */
+    public function isAllocatedAccessory(): bool
+    {
+        return $this->isAccessory() && filled($this->parent_id);
+    }
+
+    /**
+     * The location to display: the parent equipment's location for an allocated
+     * accessory, otherwise the asset's own location.
+     */
+    public function effectiveLocation(): ?Location
+    {
+        return $this->isAllocatedAccessory()
+            ? $this->parent?->location
+            : $this->location;
+    }
+
     public function isEquipmentAsset(): bool
     {
         if ($this->relationLoaded('assetType')) {

@@ -71,6 +71,9 @@ class AccessoriesRelationManager extends RelationManager
                     ->color(fn($record) => $record->lifecycleStatus->status_color),
                 TextColumn::make('location.name')
                     ->label('Location')
+                    // Allocated accessories show their parent equipment's location.
+                    ->state(fn($record): ?string => $record->effectiveLocation()?->full_path)
+                    ->description(fn($record): ?string => $record->isAllocatedAccessory() ? "via {$record->parent?->eqm_name}" : null)
                     ->toggleable()
                     ->searchable()
                     ->sortable()
