@@ -15,6 +15,8 @@ class LocationsTable
     public static function configure(Table $table): Table
     {
         return $table
+            // The tree needs its indentation and expand buttons, so keep the normal table on phones.
+            ->stackedOnMobile(false)
             ->columns([
                 TreeColumn::make('name')
                     ->label('Name')

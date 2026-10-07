@@ -143,17 +143,17 @@ class AdminPanelProvider extends PanelProvider
             ->maxContentWidth(Width::SevenExtraLarge)
             ->navigationItems([
                 NavigationItem::make('Assets')
-                    ->icon(Heroicon::OutlinedCube)
+                    ->icon(Heroicon::OutlinedSquares2x2)
                     ->badge(fn (): string => (string) Equipment::query()->count())
                     ->url(fn (): string => route('filament.admin.resources.asset.index'))
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.asset.*')),
                 NavigationItem::make('Equipment')
-                    ->icon(Heroicon::OutlinedCube)
+                    ->icon(Heroicon::OutlinedTruck)
                     ->badge(fn (): string => (string) Equipment::query()->equipmentAssets()->count())
                     ->url(fn (): string => route('filament.admin.resources.equipment.index'))
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.equipment.*')),
                 NavigationItem::make('Accessories')
-                    ->icon(Heroicon::OutlinedCube)
+                    ->icon(Heroicon::OutlinedCog)
                     ->badge(fn (): string => (string) Equipment::query()->accessories()->count())
                     ->url(fn (): string => route('filament.admin.resources.accessories.index'))
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.accessories.*')),
