@@ -6,6 +6,7 @@ use App\Models\AppSetting;
 use App\Models\Equipment;
 use App\Models\OPRC;
 use App\Support\Activity\ActivityLogging;
+use App\Support\SapEquipmentCleanup;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -46,6 +47,10 @@ class SyncEquipmentFromSap implements ShouldQueue
                 return;
             }
 
+            // Delete synced records that are gone from SAP and have no related data; the rest are
+            // deactivated below.
+            $deleted = count(SapEquipmentCleanup::deleteUnusedMissingFromSap($sapRecords->keys()));
+
             $localEquipment = Equipment::whereNotNull('eqm_prc_code')->get()->keyBy('eqm_prc_code');
 
             $deactivated = 0;
@@ -84,11 +89,11 @@ class SyncEquipmentFromSap implements ShouldQueue
                     'last_equipment_sync' => now(),
                 ]);
 
-            ActivityLogging::sapSync('Scheduled', 'success', ['synced' => $synced, 'deactivated' => $deactivated], startedAt: $startedAt);
+            ActivityLogging::sapSync('Scheduled', 'success', ['synced' => $synced, 'deactivated' => $deactivated, 'deleted' => $deleted], startedAt: $startedAt);
 
             Notification::make()
                 ->title('SAP Sync Complete')
-                ->body("Synced: {$synced} records. Deactivated: {$deactivated} records.")
+                ->body("Synced: {$synced} records. Deactivated: {$deactivated} records. Deleted: {$deleted} records.")
                 ->success()
                 ->send();
         });

@@ -92,7 +92,7 @@ class ActivityLogging
         Event::listen(CommandFinished::class, fn () => self::end());
     }
 
-    /** A summary row for a scheduled task run ("SAP sync: 12 synced, 1 deactivated"). */
+    /** A summary row for a scheduled task run ("SAP sync: 12 synced, 1 deactivated, 0 deleted"). */
     public static function scheduled(string $task, string $summary, array $properties = []): void
     {
         try {
@@ -112,7 +112,7 @@ class ActivityLogging
      *
      * @param  'Manual'|'Scheduled'  $trigger
      * @param  'queued'|'success'|'no_records'|'failed'  $status
-     * @param  array{synced?: int, deactivated?: int}  $counts
+     * @param  array{synced?: int, deactivated?: int, deleted?: int}  $counts
      */
     public static function sapSync(string $trigger, string $status, array $counts = [], ?string $error = null, ?float $startedAt = null): void
     {
@@ -121,7 +121,7 @@ class ActivityLogging
 
         $result = match ($status) {
             'queued' => 'started by the daily schedule',
-            'success' => ($counts['synced'] ?? 0).' synced, '.($counts['deactivated'] ?? 0).' deactivated'.$took,
+            'success' => ($counts['synced'] ?? 0).' synced, '.($counts['deactivated'] ?? 0).' deactivated, '.($counts['deleted'] ?? 0).' deleted'.$took,
             'no_records' => 'SAP returned no records'.$took,
             default => 'failed'.$took.($error ? ' — '.Str::limit($error, 300) : ''),
         };

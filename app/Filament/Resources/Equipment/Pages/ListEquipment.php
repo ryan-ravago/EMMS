@@ -7,6 +7,7 @@ use App\Models\AppSetting;
 use App\Models\Equipment;
 use App\Models\OPRC;
 use App\Support\Activity\ActivityLogging;
+use App\Support\SapEquipmentCleanup;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -34,7 +35,7 @@ class ListEquipment extends ListRecords
                 ->color('success')
                 ->requiresConfirmation()
                 ->modalHeading('Sync Equipment from SAP')
-                ->modalDescription('This will fetch equipment data from SAP and update your local database.')
+                ->modalDescription('This will fetch equipment data from SAP and update your local database. Records no longer in SAP are deleted if they have no related data, otherwise deactivated.')
                 ->modalSubmitActionLabel('Yes, Sync Now')
                 ->closeModalByClickingAway(false)        // 👈 can't close by clicking outside
                 ->closeModalByEscaping(false)            // 👈 can't close by pressing Escape
@@ -75,7 +76,10 @@ class ListEquipment extends ListRecords
                                 ->pluck('PrcCode')
                                 ->toArray();
 
-                            // 👇 deactivate local records not found in SAP
+                            // 👇 delete local records not found in SAP that have no related data
+                            $deleted = count(SapEquipmentCleanup::deleteUnusedMissingFromSap($sapPrcCodes));
+
+                            // 👇 deactivate the rest of the local records not found in SAP
                             $deactivated = Equipment::whereNotNull('eqm_prc_code')
                                 ->whereNotIn('eqm_prc_code', $sapPrcCodes)
                                 ->where('eqm_is_active', 1)
@@ -92,11 +96,11 @@ class ListEquipment extends ListRecords
                                     'last_equipment_sync' => now(),
                                 ]);
 
-                            ActivityLogging::sapSync('Manual', 'success', ['synced' => count($data), 'deactivated' => $deactivated], startedAt: $startedAt);
+                            ActivityLogging::sapSync('Manual', 'success', ['synced' => count($data), 'deactivated' => $deactivated, 'deleted' => $deleted], startedAt: $startedAt);
 
                             Notification::make()
                                 ->title('SAP Sync Complete')
-                                ->body('Synced: ' . count($data) . " records. Deactivated: {$deactivated} records.")
+                                ->body('Synced: ' . count($data) . " records. Deactivated: {$deactivated} records. Deleted: {$deleted} records.")
                                 ->success()
                                 ->send();
                         });
