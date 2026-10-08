@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Jobs\SyncEquipmentFromSap;
 use App\Models\AppSetting;
 use App\Models\Equipment;
 use App\Models\OPRC;
@@ -12,28 +11,33 @@ use App\Support\SapEquipmentCleanup;
 use BackedEnum;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Action;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use UnitEnum;
-use Filament\Forms\Components\TimePicker;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Carbon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
+use UnitEnum;
 
 class SapSyncManager extends Page implements HasTable
 {
     use HasPageShield, InteractsWithForms, InteractsWithTable;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-path';
+
     protected static ?string $navigationLabel = 'SAP Sync Manager';
-    protected static string | UnitEnum | null $navigationGroup = 'Super Admin';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Super Admin';
+
     protected static ?int $navigationSort = 99;
+
     protected string $view = 'filament.pages.sap-sync-manager';
 
     public ?array $data = [];
@@ -59,6 +63,8 @@ class SapSyncManager extends Page implements HasTable
 
     public function saveSchedule(): void
     {
+        abort_unless(static::canAccess(), 403);
+
         $data = $this->form->getState();
 
         $oldTime = $this->formatTime(AppSetting::where('key', 'sap_sync_time')->value('value'));
@@ -78,7 +84,7 @@ class SapSyncManager extends Page implements HasTable
 
         Notification::make()
             ->title('Schedule Updated')
-            ->body('SAP sync will now run daily at ' . Carbon::parse($data['value'])->format('g:ia'))
+            ->body('SAP sync will now run daily at '.Carbon::parse($data['value'])->format('g:ia'))
             ->success()
             ->send();
     }
@@ -172,6 +178,7 @@ class SapSyncManager extends Page implements HasTable
                 ->label('Sync from SAP')
                 ->icon('heroicon-o-arrow-path')
                 ->color('success')
+                ->authorize(fn (): bool => static::canAccess())
                 ->requiresConfirmation()
                 ->modalHeading('Sync Equipment from SAP')
                 ->modalDescription('This will fetch equipment data from SAP and update your local database. Records no longer in SAP are deleted if they have no related data, otherwise deactivated.')
@@ -197,20 +204,21 @@ class SapSyncManager extends Page implements HasTable
                                     ->body('SAP returned no records to sync.')
                                     ->warning()
                                     ->send();
+
                                 return;
                             }
 
                             $data = $sapRecords
-                                ->filter(fn($sap) => !empty($sap->PrcCode))
-                                ->map(fn($sap) => [
-                                    'eqm_prc_code'  => $sap->PrcCode,
-                                    'eqm_name'      => $sap->PrcName,
+                                ->filter(fn ($sap) => ! empty($sap->PrcCode))
+                                ->map(fn ($sap) => [
+                                    'eqm_prc_code' => $sap->PrcCode,
+                                    'eqm_name' => $sap->PrcName,
                                     'eqm_is_active' => $sap->Active === 'Y' ? 1 : 0,
                                 ])->toArray();
 
                             // 👇 get all PrcCodes from SAP
                             $sapPrcCodes = $sapRecords
-                                ->filter(fn($sap) => !empty($sap->PrcCode))
+                                ->filter(fn ($sap) => ! empty($sap->PrcCode))
                                 ->pluck('PrcCode')
                                 ->toArray();
 
@@ -238,11 +246,11 @@ class SapSyncManager extends Page implements HasTable
 
                             Notification::make()
                                 ->title('SAP Sync Complete')
-                                ->body("Synced: " . count($data) . " records. Deactivated: {$deactivated} records. Deleted: {$deleted} records.")
+                                ->body('Synced: '.count($data)." records. Deactivated: {$deactivated} records. Deleted: {$deleted} records.")
                                 ->success()
                                 ->send();
                         });
-                    } catch (\Illuminate\Database\QueryException $e) {
+                    } catch (QueryException $e) {
                         ActivityLogging::sapSync('Manual', 'failed', error: $e->getMessage(), startedAt: $startedAt);
 
                         $previous = $e->getPrevious();
@@ -256,7 +264,7 @@ class SapSyncManager extends Page implements HasTable
                         } else {
                             Notification::make()
                                 ->title('Database Error')
-                                ->body('Query failed: ' . $e->getMessage())
+                                ->body('Query failed: '.$e->getMessage())
                                 ->danger()
                                 ->send();
                         }
@@ -265,11 +273,11 @@ class SapSyncManager extends Page implements HasTable
 
                         Notification::make()
                             ->title('Sync Failed')
-                            ->body('Unexpected error: ' . $e->getMessage())
+                            ->body('Unexpected error: '.$e->getMessage())
                             ->danger()
                             ->send();
                     }
-                })
+                }),
             // ->successNotificationTitle('Sync completed successfully'),
         ];
     }

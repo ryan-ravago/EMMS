@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsChanges;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\HasName;
@@ -11,13 +12,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
-use App\Models\Concerns\LogsChanges;
 
 class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasName
 {
+    use HasApiTokens, HasRoles;
     use LogsChanges;
-
-    use HasRoles, HasApiTokens;
 
     protected $table = 'app_users';
 
@@ -80,6 +79,22 @@ class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasNam
     }
 
     /**
+     * Only super admins may use the Impersonate action (filament-impersonate).
+     */
+    public function canImpersonate(): bool
+    {
+        return $this->hasRole('super_admin');
+    }
+
+    /**
+     * Super admin accounts can never be impersonated, and inactive users can't be logged into.
+     */
+    public function canBeImpersonated(): bool
+    {
+        return $this->is_active && ! $this->hasRole('super_admin');
+    }
+
+    /**
      * Scope a query to only include active users.
      * Use this everywhere a list of users is fetched for
      * authentication, notifications, or emails.
@@ -113,6 +128,6 @@ class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasNam
 
     public function getFilamentAvatarUrl(): ?string
     {
-        return $this->user_avatar ?: 'https://ui-avatars.com/api/?name=' . urlencode($this->user_fname . ' ' . $this->user_lname) . '&color=FFFFFF&background=03449d';
+        return $this->user_avatar ?: 'https://ui-avatars.com/api/?name='.urlencode($this->user_fname.' '.$this->user_lname).'&color=FFFFFF&background=03449d';
     }
 }

@@ -62,6 +62,11 @@ class AdminPanelProvider extends PanelProvider
                         report: false
                     );
 
+                    // The name is written raw into <link> and <style>: only allow plain font names.
+                    if (! is_string($font) || ! preg_match('/^[A-Za-z0-9 ]{1,50}$/', $font)) {
+                        $font = 'Inter';
+                    }
+
                     $encoded = str_replace(' ', '+', $font);
 
                     $vite = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);

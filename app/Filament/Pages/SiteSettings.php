@@ -137,6 +137,8 @@ class SiteSettings extends Page
 
     public function save(): void
     {
+        abort_unless(static::canAccess(), 403);
+
         $data = $this->form->getState();
 
         $settings = SiteSetting::instance();

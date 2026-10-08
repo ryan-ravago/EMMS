@@ -9,7 +9,6 @@ use Filament\Auth\Pages\Login;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -37,7 +36,7 @@ class CustomLogin extends Login
 
     public function authenticate(): ?LoginResponse
     {
-        $key = 'login-attempt:' . request()->ip();
+        $key = 'login-attempt:'.request()->ip();
 
         // 1. Check if they are locked out
         if (RateLimiter::tooManyAttempts($key, 3)) {
@@ -65,7 +64,7 @@ class CustomLogin extends Login
             $usrUser = Usr::where('email', $email)
                 ->first();
 
-            if (! $usrUser || ! Hash::check($password, $usrUser->userPassword)) {
+            if (! $usrUser || ! Hash::check($password, $usrUser->userPassword) || $usrUser->isActive != 1) {
                 $currentAttempts = RateLimiter::hit($key, 60);
 
                 if (RateLimiter::attempts($key) >= 3) {
@@ -83,7 +82,7 @@ class CustomLogin extends Login
                 } else {
                     Notification::make()
                         ->title('Invalid Login')
-                        ->body('Email or password is incorrect. Attempts remaining: ' . (3 - RateLimiter::attempts($key)))
+                        ->body('Email or password is incorrect. Attempts remaining: '.(3 - RateLimiter::attempts($key)))
                         ->warning()
                         ->send();
                 }
@@ -118,7 +117,7 @@ class CustomLogin extends Login
                 } else {
                     Notification::make()
                         ->title('Invalid Login')
-                        ->body('User account not found. Attempts remaining: ' . (3 - RateLimiter::attempts($key)))
+                        ->body('Email or password is incorrect. Attempts remaining: '.(3 - RateLimiter::attempts($key)))
                         ->warning()
                         ->send();
                 }
@@ -142,12 +141,10 @@ class CustomLogin extends Login
             // Clear rate limiter on successful validation
             RateLimiter::clear($key);
 
-            // Log in with AppUser (do this first)
-            Auth::login($appUser, $data['remember'] ?? false);
             Filament::auth()->login($appUser);
 
-            // Regenerate CSRF token only (not full session to avoid "page expired")
-            request()->session()->regenerateToken();
+            // New session id on login to prevent session fixation (also rotates the CSRF token).
+            session()->regenerate();
 
             Notification::make()
                 ->title('Welcome back!')
@@ -161,7 +158,7 @@ class CustomLogin extends Login
             // Re-throw validation exceptions (for invalid credentials, lockout, etc.)
             throw $e;
         } catch (\Exception $e) {
-            Log::error('Login failed: ' . $e->getMessage());
+            Log::error('Login failed: '.$e->getMessage());
             RateLimiter::hit($key, 60);
 
             Notification::make()

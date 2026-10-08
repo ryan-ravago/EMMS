@@ -56,16 +56,22 @@ class ChangePassword extends EditProfile
     {
         return Action::make('back')
             ->label(__('filament-panels::auth/pages/edit-profile.actions.cancel.label'))
-            ->alpineClickHandler('window.location.href = ' . Js::from(filament()->getUrl()))
+            ->alpineClickHandler('window.location.href = '.Js::from(filament()->getUrl()))
             ->color('gray');
     }
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
-        // $data['password'] is already hashed by the form field.
-        $this->getCompanyAccount()->update(['userPassword' => $data['password']]);
+        // $data['password'] is already hashed by the form field. forceFill keeps Usr fully guarded.
+        $this->getCompanyAccount()->forceFill(['userPassword' => $data['password']])->save();
 
         return $record;
+    }
+
+    // Filament only resets password and passwordConfirmation after saving.
+    protected function afterSave(): void
+    {
+        $this->data['currentPassword'] = null;
     }
 
     private function getCompanyAccount(): Usr

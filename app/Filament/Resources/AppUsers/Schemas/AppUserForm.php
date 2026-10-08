@@ -8,6 +8,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 
 class AppUserForm
 {
@@ -58,7 +59,13 @@ class AppUserForm
                     ->default(true),
                 CheckboxList::make('roles')
                     // ->required()
-                    ->relationship('roles', 'name')
+                    ->relationship(
+                        'roles',
+                        'name',
+                        modifyQueryUsing: fn (Builder $query): Builder => auth()->user()?->hasRole('super_admin')
+                            ? $query
+                            : $query->where('name', '!=', 'super_admin'),
+                    )
                     ->getOptionLabelFromRecordUsing(
                         fn ($record) => $record->display_name ?? str($record->name)->replace('_', ' ')->title()
                     )

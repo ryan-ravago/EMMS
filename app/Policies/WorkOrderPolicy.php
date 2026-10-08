@@ -55,7 +55,8 @@ class WorkOrderPolicy
             return true;
         }
 
-        return $authUser->can('Update:WorkOrderResource');
+        return $this->isSameDepartment($authUser, $workOrder)
+            && $authUser->can('Update:WorkOrderResource');
     }
 
     public function delete(AuthUser $authUser, WorkOrder $workOrder): bool
@@ -64,7 +65,8 @@ class WorkOrderPolicy
             return true;
         }
 
-        return $authUser->can('Delete:WorkOrderResource');
+        return $this->isSameDepartment($authUser, $workOrder)
+            && $authUser->can('Delete:WorkOrderResource');
     }
 
     public function deleteAny(AuthUser $authUser): bool
@@ -82,7 +84,8 @@ class WorkOrderPolicy
             return true;
         }
 
-        return $authUser->can('Restore:WorkOrderResource');
+        return $this->isSameDepartment($authUser, $workOrder)
+            && $authUser->can('Restore:WorkOrderResource');
     }
 
     public function forceDelete(AuthUser $authUser, WorkOrder $workOrder): bool
@@ -91,7 +94,8 @@ class WorkOrderPolicy
             return true;
         }
 
-        return $authUser->can('ForceDelete:WorkOrderResource');
+        return $this->isSameDepartment($authUser, $workOrder)
+            && $authUser->can('ForceDelete:WorkOrderResource');
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
@@ -118,7 +122,8 @@ class WorkOrderPolicy
             return true;
         }
 
-        return $authUser->can('Replicate:WorkOrderResource');
+        return $this->isSameDepartment($authUser, $workOrder)
+            && $authUser->can('Replicate:WorkOrderResource');
     }
 
     public function reorder(AuthUser $authUser): bool
@@ -281,5 +286,14 @@ class WorkOrderPolicy
         }
 
         return false;
+    }
+
+    /**
+     * Work orders belong to a department; only its members may change them.
+     */
+    private function isSameDepartment(AuthUser $authUser, WorkOrder $workOrder): bool
+    {
+        return $authUser->user_dep_id !== null
+            && (int) $authUser->user_dep_id === (int) $workOrder->wo_dep_id;
     }
 }

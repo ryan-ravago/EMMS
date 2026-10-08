@@ -12,6 +12,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class UsersRelationManager extends RelationManager
 {
@@ -98,7 +99,13 @@ class UsersRelationManager extends RelationManager
 
                                 CheckboxList::make('roles')
                                     ->label('Assigned Roles')
-                                    ->relationship('roles', 'name')
+                                    ->relationship(
+                                        'roles',
+                                        'name',
+                                        modifyQueryUsing: fn (Builder $query): Builder => auth()->user()?->hasRole('super_admin')
+                                            ? $query
+                                            : $query->where('name', '!=', 'super_admin'),
+                                    )
                                     ->getOptionLabelFromRecordUsing(
                                         fn ($record) => $record->display_name ?? str($record->name)->replace('_', ' ')->title()
                                     )
