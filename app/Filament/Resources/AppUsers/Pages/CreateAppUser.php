@@ -32,7 +32,7 @@ class CreateAppUser extends CreateRecord
                 return;
             }
 
-            Mail::to($this->record->user_email)->send(new EmmsAccessGrantedMail($this->record));
+            Mail::to($this->record->user_email)->queue(new EmmsAccessGrantedMail($this->record));
 
             Notification::make()
                 ->title('Access email sent')

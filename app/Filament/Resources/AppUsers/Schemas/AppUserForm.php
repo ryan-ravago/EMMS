@@ -27,6 +27,7 @@ class AppUserForm
                 TextInput::make('user_email')
                     ->label('Email')
                     ->email()
+                    ->unique()
                     ->required(),
                 Select::make('user_dep_id')
                     ->label('Department')
@@ -62,12 +63,12 @@ class AppUserForm
                     ->relationship(
                         'roles',
                         'name',
-                        modifyQueryUsing: fn (Builder $query): Builder => auth()->user()?->hasRole('super_admin')
+                        modifyQueryUsing: fn(Builder $query): Builder => auth()->user()?->hasRole('super_admin')
                             ? $query
                             : $query->where('name', '!=', 'super_admin'),
                     )
                     ->getOptionLabelFromRecordUsing(
-                        fn ($record) => $record->display_name ?? str($record->name)->replace('_', ' ')->title()
+                        fn($record) => $record->display_name ?? str($record->name)->replace('_', ' ')->title()
                     )
                     ->searchable()
                     ->bulkToggleable(),
