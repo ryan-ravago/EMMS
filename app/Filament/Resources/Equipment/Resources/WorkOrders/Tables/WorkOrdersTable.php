@@ -33,7 +33,7 @@ class WorkOrdersTable
                     return $query->whereRaw('1 = 0');
                 }
 
-                if ($user->hasRole('super_admin')) {
+                if ($user->hasAnyRole(['super_admin', 'execom'])) {
                     return $query;
                 }
 
@@ -58,7 +58,7 @@ class WorkOrdersTable
                 TextColumn::make('department.dep_name')
                     ->label('Department')
                     ->sortable()
-                    ->visible(fn () => auth()->user()->hasRole('super_admin')),
+                    ->visible(fn () => auth()->user()->hasAnyRole(['super_admin', 'execom'])),
                 // TextColumn::make('wo_title')
                 //     ->label('Title')
                 //     ->searchable()
@@ -96,7 +96,7 @@ class WorkOrdersTable
                     ->relationship('department', 'dep_name')
                     ->searchable()
                     ->preload()
-                    ->visible(fn () => auth()->user()->hasRole('super_admin')),
+                    ->visible(fn () => auth()->user()->hasAnyRole(['super_admin', 'execom'])),
                 SelectFilter::make('eqm_id')
                     ->label('Equipment')
                     ->relationship('equipment', 'eqm_name')
@@ -158,8 +158,8 @@ class WorkOrdersTable
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['from'] ?? null, fn ($q, $date): Builder => $q->where('wo_created_dt', '>=', \Carbon\Carbon::parse($date)->startOfDay()))
-                            ->when($data['until'] ?? null, fn ($q, $date): Builder => $q->where('wo_created_dt', '<=', \Carbon\Carbon::parse($date)->endOfDay()));
+                            ->when($data['from'] ?? null, fn ($q, $date): Builder => $q->where('wo_created_dt', '>=', Carbon::parse($date)->startOfDay()))
+                            ->when($data['until'] ?? null, fn ($q, $date): Builder => $q->where('wo_created_dt', '<=', Carbon::parse($date)->endOfDay()));
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];

@@ -25,9 +25,9 @@ class WorkOrdersRelationManager extends RelationManager
             return '0';
         }
 
-        if ($user->hasRole('super_admin')) {
+        if ($user->hasAnyRole(['super_admin', 'execom'])) {
             return (string) $query->count();
-        } else if ($user->hasRole('manager')) {
+        } elseif ($user->hasRole('manager')) {
             $query->where('wo_dep_id', $user->user_dep_id);
         }
 
@@ -39,7 +39,7 @@ class WorkOrdersRelationManager extends RelationManager
         return $table
             ->headerActions([
                 CreateAction::make()
-                    ->authorize(fn(): bool => (bool) $this->getOwnerRecord()->eqm_is_active
+                    ->authorize(fn (): bool => (bool) $this->getOwnerRecord()->eqm_is_active
                         && (Auth::user()?->can('create', WorkOrder::class) ?? false)),
             ]);
     }

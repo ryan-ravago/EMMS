@@ -33,6 +33,7 @@ class WorkOrderPolicy
 
         if (
             $authUser->user_dep_id === $workOrder->wo_dep_id
+            || $authUser->hasRole('execom')
         ) {
             return $authUser->can('View:WorkOrderResource');
         }
