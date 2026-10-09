@@ -14,9 +14,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
+use STS\FilamentImpersonate\Actions\Impersonate;
 
 /**
- * Read-only list of the users who have the role, shown when viewing a role.
+ * Read-only list of the users who have the role, shown when viewing a role. Super admins can
+ * impersonate from here; the Impersonate action hides itself for everyone else.
  */
 class UsersRelationManager extends RelationManager
 {
@@ -70,6 +72,11 @@ class UsersRelationManager extends RelationManager
                     ->boolean(),
             ])
             ->defaultSort('user_fname')
+            ->recordActions([
+                Impersonate::make()
+                    ->iconButton()
+                    ->tooltip('Impersonate'),
+            ])
             ->recordUrl(fn (AppUser $record): ?string => Auth::user()?->can('view', $record)
                 ? AppUserResource::getUrl('view', ['record' => $record])
                 : null);
