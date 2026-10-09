@@ -8,13 +8,14 @@ use App\Filament\Resources\Roles\Pages\CreateRole;
 use App\Filament\Resources\Roles\Pages\EditRole;
 use App\Filament\Resources\Roles\Pages\ListRoles;
 use App\Filament\Resources\Roles\Pages\ViewRole;
+use App\Filament\Resources\Roles\RelationManagers\UsersRelationManager;
+use App\Filament\Support\RoleDeleteActions;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use BezhanSalleh\FilamentShield\Support\Utils;
 use BezhanSalleh\FilamentShield\Traits\HasShieldFormComponents;
 use BezhanSalleh\PluginEssentials\Concerns\Resource as Essentials;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -128,11 +129,12 @@ class RoleResource extends Resource
                 //
             ])
             ->recordActions([
+                ViewAction::make(),
                 EditAction::make(),
-                DeleteAction::make(),
+                RoleDeleteActions::delete(),
             ])
             ->toolbarActions([
-                DeleteBulkAction::make(),
+                RoleDeleteActions::bulkDelete(),
             ]);
     }
 
@@ -140,7 +142,7 @@ class RoleResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            UsersRelationManager::class,
         ];
     }
 

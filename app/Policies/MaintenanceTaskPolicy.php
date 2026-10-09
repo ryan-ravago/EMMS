@@ -141,6 +141,24 @@ class MaintenanceTaskPolicy
         return $authUser->can('Reorder:MaintenanceTaskResource');
     }
 
+    public function export(AuthUser $authUser): bool
+    {
+        if ($authUser->hasRole('super_admin')) {
+            return true;
+        }
+
+        return $authUser->can('Export:MaintenanceTaskResource');
+    }
+
+    public function previewExport(AuthUser $authUser): bool
+    {
+        if ($authUser->hasRole('super_admin')) {
+            return true;
+        }
+
+        return $authUser->can('PreviewExport:MaintenanceTaskResource');
+    }
+
     public function makeWorkOrder(AuthUser $authUser, MaintenanceTask $maintenanceTask): bool
     {
         if (

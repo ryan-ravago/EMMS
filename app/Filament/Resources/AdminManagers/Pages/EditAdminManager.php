@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\AdminManagers\Pages;
 
 use App\Filament\Resources\AdminManagers\AdminManagerResource;
-use Filament\Actions\DeleteAction;
+use App\Filament\Support\UserDeleteActions;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
@@ -15,7 +15,7 @@ class EditAdminManager extends EditRecord
     {
         return [
             ViewAction::make(),
-            DeleteAction::make(),
+            UserDeleteActions::delete(),
         ];
     }
 }

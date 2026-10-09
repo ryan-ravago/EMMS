@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\AppUsers\Tables;
 
 use App\Filament\Resources\AppUsers\AppUserResource;
+use App\Filament\Support\UserDeleteActions;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
@@ -79,7 +79,7 @@ class AppUsersTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()
+                    UserDeleteActions::bulkDelete()
                         ->authorizeIndividualRecords('delete'),
                 ]),
             ]);

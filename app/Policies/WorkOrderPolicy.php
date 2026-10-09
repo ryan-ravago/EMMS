@@ -238,6 +238,24 @@ class WorkOrderPolicy
         return false;
     }
 
+    public function export(AuthUser $authUser): bool
+    {
+        if ($authUser->hasRole('super_admin')) {
+            return true;
+        }
+
+        return $authUser->can('Export:WorkOrderResource');
+    }
+
+    public function previewExport(AuthUser $authUser): bool
+    {
+        if ($authUser->hasRole('super_admin')) {
+            return true;
+        }
+
+        return $authUser->can('PreviewExport:WorkOrderResource');
+    }
+
     public function assignWorkOrder(AuthUser $authUser, WorkOrder $workOrder): bool
     {
         if ($workOrder->wo_status_id !== 'pndwor') {

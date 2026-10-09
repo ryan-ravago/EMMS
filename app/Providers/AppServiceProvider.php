@@ -2,7 +2,20 @@
 
 namespace App\Providers;
 
+use App\Filament\Support\FileUploadDefaults;
+use App\Filament\Support\ModalRecordNavigation;
 use App\Models\AppUser;
+use App\Models\Equipment;
+use App\Models\Export;
+use App\Observers\EquipmentObserver;
+use App\Support\Activity\ActivityLogging;
+use Filament\Actions\Exports\ExportColumn;
+use Filament\Actions\Exports\Models\Export as FilamentExport;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\FileUpload;
+use Filament\Tables\Columns\Column;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -11,16 +24,6 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Pulse\Facades\Pulse;
-use App\Models\Equipment;
-use App\Observers\EquipmentObserver;
-use App\Support\Activity\ActivityLogging;
-use App\Filament\Support\ModalRecordNavigation;
-use App\Filament\Support\FileUploadDefaults;
-use Filament\Actions\ViewAction;
-use Filament\Forms\Components\FileUpload;
-use Filament\Tables\Columns\Column;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,7 +32,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(FilamentExport::class, Export::class);
     }
 
     /**
@@ -48,7 +51,7 @@ class AppServiceProvider extends ServiceProvider
         // On phones (< 640px) rows become cards (see resources/css/mobile-tables.css);
         // a table can opt out with ->stackedOnMobile(false).
         Table::configureUsing(
-            fn(Table $table) => $table
+            fn (Table $table) => $table
                 ->paginated([10, 25, 50, 100])
                 ->defaultPaginationPageOption(25)
                 ->stackedOnMobile()
@@ -57,10 +60,10 @@ class AppServiceProvider extends ServiceProvider
         // Every table column shows — when empty, and long text is cut to 50 characters
         // followed by "..." (the full text shows on hover). A column can still override
         // either with its own ->placeholder() / ->limit() / ->tooltip().
-        Column::configureUsing(fn(Column $column) => $column->placeholder('—'));
+        Column::configureUsing(fn (Column $column) => $column->placeholder('—'));
 
         TextColumn::configureUsing(
-            fn(TextColumn $column) => $column
+            fn (TextColumn $column) => $column
                 ->limit(50)
                 ->tooltip(function (TextColumn $column): ?string {
                     $limit = $column->getCharacterLimit();
@@ -70,17 +73,29 @@ class AppServiceProvider extends ServiceProvider
                 })
         );
 
+        // Exported text that starts with = + - @ is read as a formula by Excel (CSV injection),
+        // so prefix it with a quote. Filament only ships this from a later release; the macro
+        // steps aside if the installed version already defines preventFormulaInjection().
+        ExportColumn::macro('preventFormulaInjection', function (): ExportColumn {
+            /** @var ExportColumn $this */
+            return $this->formatStateUsing(
+                fn (mixed $state): mixed => is_string($state) && $state !== '' && in_array($state[0], ['=', '+', '-', '@', "\t", "\r"], true)
+                    ? "'".$state
+                    : $state
+            );
+        });
+
         // Previous / Next buttons in every table "View" modal.
-        ViewAction::configureUsing(fn(ViewAction $action) => ModalRecordNavigation::configure($action));
+        ViewAction::configureUsing(fn (ViewAction $action) => ModalRecordNavigation::configure($action));
 
         // Every form upload refuses videos and optimizes images before the path reaches the database.
-        FileUpload::configureUsing(fn(FileUpload $upload) => FileUploadDefaults::configure($upload));
+        FileUpload::configureUsing(fn (FileUpload $upload) => FileUploadDefaults::configure($upload));
 
         // Log (not throw) lazy-loaded relations so N+1 spots show up in storage/logs.
         Model::preventLazyLoading(! app()->isProduction());
         Model::handleLazyLoadingViolationUsing(
-            fn(Model $model, string $relation) => logger()->warning(
-                'N+1: lazy loading [' . $relation . '] on [' . $model::class . ']'
+            fn (Model $model, string $relation) => logger()->warning(
+                'N+1: lazy loading ['.$relation.'] on ['.$model::class.']'
             )
         );
         // URL::forceScheme('https');
@@ -115,7 +130,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Backs `$middleware->throttleApi()` in bootstrap/app.php (used by the RFID log API).
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(120)->by('api:' . $this->rateLimitKey($request));
+            return Limit::perMinute(120)->by('api:'.$this->rateLimitKey($request));
         });
 
         RateLimiter::for('google-auth', function (Request $request) {
@@ -153,32 +168,32 @@ class AppServiceProvider extends ServiceProvider
 
     private function generalFilamentLimit(Request $request): Limit
     {
-        return Limit::perMinute(60)->by('filament:' . $this->rateLimitKey($request));
+        return Limit::perMinute(60)->by('filament:'.$this->rateLimitKey($request));
     }
 
     private function loginLimit(Request $request): Limit
     {
-        return Limit::perMinute(10)->by('login:' . $request->ip());
+        return Limit::perMinute(10)->by('login:'.$request->ip());
     }
 
     private function uploadLimit(Request $request): Limit
     {
-        return Limit::perMinute(10)->by('uploads:' . $this->rateLimitKey($request));
+        return Limit::perMinute(10)->by('uploads:'.$this->rateLimitKey($request));
     }
 
     private function exportLimit(Request $request): Limit
     {
-        return Limit::perMinute(5)->by('exports:' . $this->rateLimitKey($request));
+        return Limit::perMinute(5)->by('exports:'.$this->rateLimitKey($request));
     }
 
     private function emailLimit(Request $request): Limit
     {
-        return Limit::perMinute(5)->by('emails:' . $this->rateLimitKey($request));
+        return Limit::perMinute(5)->by('emails:'.$this->rateLimitKey($request));
     }
 
     private function mutationLimit(Request $request): Limit
     {
-        return Limit::perMinute(30)->by('mutations:' . $this->rateLimitKey($request));
+        return Limit::perMinute(30)->by('mutations:'.$this->rateLimitKey($request));
     }
 
     private function rateLimitKey(Request $request): string

@@ -2,13 +2,17 @@
 
 namespace App\Filament\Resources\MaintenanceTasks\Pages;
 
+use App\Filament\Exports\MaintenanceTaskExporter;
 use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
+use App\Filament\Support\ExportPreviewAction;
 use App\Models\MaintenanceTask;
 use App\Models\Status;
 use Filament\Actions\CreateAction;
+use Filament\Actions\ExportAction;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class ListMaintenanceTasks extends ListRecords
 {
@@ -17,6 +21,13 @@ class ListMaintenanceTasks extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            ExportPreviewAction::make()
+                ->exporter(MaintenanceTaskExporter::class)
+                ->authorize(fn () => Auth::user()->can('previewExport', MaintenanceTask::class)),
+            ExportAction::make()
+                ->exporter(MaintenanceTaskExporter::class)
+                ->color('gray')
+                ->authorize(fn () => Auth::user()->can('export', MaintenanceTask::class)),
             CreateAction::make(),
         ];
     }

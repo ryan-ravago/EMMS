@@ -10,12 +10,13 @@ use Filament\Panel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasName
 {
-    use HasApiTokens, HasRoles;
+    use HasApiTokens, HasRoles, Notifiable;
     use LogsChanges;
 
     protected $table = 'app_users';

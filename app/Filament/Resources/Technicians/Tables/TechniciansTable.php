@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\Technicians\Tables;
 
 use App\Filament\Resources\Technicians\TechnicianResource;
+use App\Filament\Support\UserDeleteActions;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
@@ -69,7 +69,7 @@ class TechniciansTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    UserDeleteActions::bulkDelete(),
                 ]),
             ]);
     }

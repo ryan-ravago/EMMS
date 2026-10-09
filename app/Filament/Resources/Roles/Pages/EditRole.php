@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Roles\Pages;
 
 use App\Filament\Resources\Roles\RoleResource;
+use App\Filament\Support\RoleDeleteActions;
 use BezhanSalleh\FilamentShield\Support\Utils;
-use Filament\Actions\DeleteAction;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -21,7 +22,8 @@ class EditRole extends EditRecord
     protected function getActions(): array
     {
         return [
-            DeleteAction::make(),
+            ViewAction::make(),
+            RoleDeleteActions::delete(),
         ];
     }
 

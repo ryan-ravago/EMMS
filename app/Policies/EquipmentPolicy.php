@@ -129,6 +129,24 @@ class EquipmentPolicy
         return $authUser->can('Sync:EquipmentResource');
     }
 
+    public function export(AuthUser $authUser): bool
+    {
+        if ($authUser->hasRole('super_admin')) {
+            return true;
+        }
+
+        return $authUser->can('Export:EquipmentResource');
+    }
+
+    public function previewExport(AuthUser $authUser): bool
+    {
+        if ($authUser->hasRole('super_admin')) {
+            return true;
+        }
+
+        return $authUser->can('PreviewExport:EquipmentResource');
+    }
+
     public function allocate(AuthUser $authUser, Equipment $equipment): bool
     {
         return $equipment->asset_type_id === 2

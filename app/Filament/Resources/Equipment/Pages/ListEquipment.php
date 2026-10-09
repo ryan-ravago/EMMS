@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Equipment\Pages;
 
+use App\Filament\Exports\EquipmentExporter;
 use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Filament\Support\ExportPreviewAction;
 use App\Models\AppSetting;
 use App\Models\Equipment;
 use App\Models\OPRC;
@@ -11,6 +13,7 @@ use App\Support\SapEquipmentCleanup;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
+use Filament\Actions\ExportAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -28,8 +31,15 @@ class ListEquipment extends ListRecords
     {
         return [
             CreateAction::make(),
+            ExportPreviewAction::make()
+                ->exporter(EquipmentExporter::class)
+                ->authorize(fn () => Auth::user()->can('previewExport', Equipment::class)),
+            ExportAction::make()
+                ->exporter(EquipmentExporter::class)
+                ->color('gray')
+                ->authorize(fn () => Auth::user()->can('export', Equipment::class)),
             Action::make('sync')
-                ->visible(fn() => Auth::user()->can('Sync:EquipmentResource'))
+                ->visible(fn () => Auth::user()->can('Sync:EquipmentResource'))
                 ->label('Sync from SAP')
                 ->icon('heroicon-o-arrow-path')
                 ->color('success')
@@ -63,8 +73,8 @@ class ListEquipment extends ListRecords
                             }
 
                             $data = $sapRecords
-                                ->filter(fn($sap) => ! empty($sap->PrcCode))
-                                ->map(fn($sap) => [
+                                ->filter(fn ($sap) => ! empty($sap->PrcCode))
+                                ->map(fn ($sap) => [
                                     'eqm_prc_code' => $sap->PrcCode,
                                     'eqm_name' => $sap->PrcName,
                                     'eqm_is_active' => $sap->Active === 'Y' ? 1 : 0,
@@ -72,7 +82,7 @@ class ListEquipment extends ListRecords
 
                             // 👇 get all PrcCodes from SAP
                             $sapPrcCodes = $sapRecords
-                                ->filter(fn($sap) => ! empty($sap->PrcCode))
+                                ->filter(fn ($sap) => ! empty($sap->PrcCode))
                                 ->pluck('PrcCode')
                                 ->toArray();
 
@@ -100,7 +110,7 @@ class ListEquipment extends ListRecords
 
                             Notification::make()
                                 ->title('SAP Sync Complete')
-                                ->body('Synced: ' . count($data) . " records. Deactivated: {$deactivated} records. Deleted: {$deleted} records.")
+                                ->body('Synced: '.count($data)." records. Deactivated: {$deactivated} records. Deleted: {$deleted} records.")
                                 ->success()
                                 ->send();
                         });
@@ -119,7 +129,7 @@ class ListEquipment extends ListRecords
                         } else {
                             Notification::make()
                                 ->title('Database Error')
-                                ->body('Query failed: ' . $e->getMessage())
+                                ->body('Query failed: '.$e->getMessage())
                                 ->danger()
                                 ->send();
                         }
@@ -128,7 +138,7 @@ class ListEquipment extends ListRecords
 
                         Notification::make()
                             ->title('Sync Failed')
-                            ->body('Unexpected error: ' . $e->getMessage())
+                            ->body('Unexpected error: '.$e->getMessage())
                             ->danger()
                             ->send();
                     }
@@ -162,15 +172,15 @@ class ListEquipment extends ListRecords
     {
         return [
             'all' => Tab::make('All')
-                ->badge(fn() => $this->tabCounts()['total']),
+                ->badge(fn () => $this->tabCounts()['total']),
 
             'active' => Tab::make('Active')
-                ->badge(fn() => $this->tabCounts()['active'])
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('eqm_is_active', 1)),
+                ->badge(fn () => $this->tabCounts()['active'])
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('eqm_is_active', 1)),
 
             'inactive' => Tab::make('Inactive')
-                ->badge(fn() => $this->tabCounts()['inactive'])
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('eqm_is_active', 0)),
+                ->badge(fn () => $this->tabCounts()['inactive'])
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('eqm_is_active', 0)),
         ];
     }
 
@@ -190,6 +200,6 @@ class ListEquipment extends ListRecords
         // Converts the timestamp into something like "6:05 AM"
         $timeOnly = Carbon::parse($setting->last_equipment_sync)->format('g:i A');
 
-        return 'Last equipment sync: ' . $timeOnly;
+        return 'Last equipment sync: '.$timeOnly;
     }
 }

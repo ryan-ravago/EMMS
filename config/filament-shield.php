@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Filament\Resources\Equipment\Resources\Insps\InspsResource;
 use App\Filament\Resources\EquipmentUnitCategories\EquipmentUnitCategoryResource;
 use App\Filament\Resources\InspectionItems\InspectionItemResource;
 use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
@@ -195,6 +196,8 @@ return [
                 'delete',
             ],
             EquipmentResource::class => [
+                'export',
+                'previewExport',
                 'sync',
                 'allocate',
                 'deploy',
@@ -202,6 +205,8 @@ return [
                 'setToMaintenance',
             ],
             WorkOrderResource::class => [
+                'export',
+                'previewExport',
                 'approveWorkOrder',
                 'assignWorkOrder',
                 'rejectWorkOrder',
@@ -221,6 +226,8 @@ return [
                 'cancelWorkOrder',
             ],
             MaintenanceTaskResource::class => [
+                'export',
+                'previewExport',
                 'makeWorkOrder',
                 'snooze',
                 'markAsComplete',
@@ -234,9 +241,9 @@ return [
             ],
         ],
         'exclude' => [
-            \App\Filament\Resources\Models\Resources\Equipment\EquipmentResource::class,
-            \App\Filament\Resources\Equipment\Resources\Insps\InspsResource::class,
-            \App\Filament\Resources\Equipment\Resources\WorkOrders\WorkOrderResource::class,
+            App\Filament\Resources\Models\Resources\Equipment\EquipmentResource::class,
+            InspsResource::class,
+            App\Filament\Resources\Equipment\Resources\WorkOrders\WorkOrderResource::class,
         ],
     ],
 
@@ -290,7 +297,10 @@ return [
     |
     */
 
-    'custom_permissions' => [],
+    'custom_permissions' => [
+        'PreviewReports' => 'Preview Reports',
+        'ExportReports' => 'Export Reports',
+    ],
 
     /*
     |--------------------------------------------------------------------------

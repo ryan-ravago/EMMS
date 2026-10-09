@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Technicians\Pages;
 
 use App\Filament\Resources\Technicians\TechnicianResource;
-use Filament\Actions\DeleteAction;
+use App\Filament\Support\UserDeleteActions;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
@@ -15,7 +15,7 @@ class EditTechnician extends EditRecord
     {
         return [
             ViewAction::make(),
-            DeleteAction::make(),
+            UserDeleteActions::delete(),
         ];
     }
 }

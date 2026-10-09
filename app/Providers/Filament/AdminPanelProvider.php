@@ -49,6 +49,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('')
             ->spa()
+            ->databaseNotifications()
             ->passwordReset()
             ->profile(ChangePassword::class)
             ->globalSearch(position: GlobalSearchPosition::Sidebar)
@@ -248,6 +249,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 'Equipment',
+                'Reports',
                 'Super Admin',
             ])
             ->authMiddleware([
