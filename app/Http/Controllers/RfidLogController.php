@@ -61,7 +61,7 @@ class RfidLogController extends Controller
 
             $seen[$key] = true;
 
-            // rssi and created_at are intentionally left out (NULL); received_at is the DB default.
+            // received_at is the DB default.
             $rows[] = [
                 'detected_at' => $log['Timestamp'],
                 'tag_id' => $tag,

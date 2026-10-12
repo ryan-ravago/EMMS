@@ -14,7 +14,6 @@ class AssetTagLog extends Model
         return [
             'detected_at' => 'datetime',
             'received_at' => 'datetime',
-            'created_at' => 'datetime',
         ];
     }
 

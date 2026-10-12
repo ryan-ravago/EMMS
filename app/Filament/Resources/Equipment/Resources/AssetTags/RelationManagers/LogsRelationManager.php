@@ -34,19 +34,12 @@ class LogsRelationManager extends RelationManager
                             ->label('Yard')
                             ->placeholder('—')
                             ->inlineLabel(),
-                        TextEntry::make('rssi')
-                            ->label('RSSI')
-                            ->inlineLabel(),
                         TextEntry::make('detected_at')
                             ->label('Detected At')
                             ->dateTime('M d, Y h:i:s A')
                             ->inlineLabel(),
                         TextEntry::make('received_at')
                             ->label('Received At')
-                            ->dateTime('M d, Y h:i:s A')
-                            ->inlineLabel(),
-                        TextEntry::make('created_at')
-                            ->label('Created At')
                             ->dateTime('M d, Y h:i:s A')
                             ->inlineLabel(),
                     ]),
@@ -70,9 +63,6 @@ class LogsRelationManager extends RelationManager
                 TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => $state === 'IN' ? 'success' : 'warning')
-                    ->sortable(),
-                TextColumn::make('rssi')
-                    ->label('RSSI')
                     ->sortable(),
                 TextColumn::make('received_at')
                     ->label('Received At')
