@@ -7,7 +7,6 @@ use Closure;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
@@ -43,6 +42,13 @@ class WorkOrderForm
                             // ->preload()
                             // ->native(false)
                             // ->live(),
+                            Select::make('wo_type_id')
+                                ->label('Type')
+                                ->relationship('type', 'type')
+                                ->searchable()
+                                ->required()
+                                ->preload()
+                                ->native(false),
                             Select::make('wo_dep_id')
                                 ->label('Department')
                                 ->relationship(

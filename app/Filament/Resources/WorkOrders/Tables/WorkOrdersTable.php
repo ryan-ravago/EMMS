@@ -53,6 +53,11 @@ class WorkOrdersTable
                     ->label('Priority')
                     ->badge()
                     ->sortable(),
+                TextColumn::make('type.type')
+                    ->label('Type')
+                    ->badge()
+                    ->placeholder('-')
+                    ->sortable(),
                 TextColumn::make('workers')
                     ->badge()
                     ->searchable(
@@ -144,8 +149,8 @@ class WorkOrdersTable
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['from'] ?? null, fn ($q, $date): Builder => $q->where('wo_created_dt', '>=', \Carbon\Carbon::parse($date)->startOfDay()))
-                            ->when($data['until'] ?? null, fn ($q, $date): Builder => $q->where('wo_created_dt', '<=', \Carbon\Carbon::parse($date)->endOfDay()));
+                            ->when($data['from'] ?? null, fn ($q, $date): Builder => $q->where('wo_created_dt', '>=', Carbon::parse($date)->startOfDay()))
+                            ->when($data['until'] ?? null, fn ($q, $date): Builder => $q->where('wo_created_dt', '<=', Carbon::parse($date)->endOfDay()));
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];

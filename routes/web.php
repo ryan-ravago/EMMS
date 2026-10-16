@@ -3,6 +3,7 @@
 use App\Http\Controllers\SocialiteController;
 use App\Mail\WorkOrderConfirmationMail;
 use App\Models\WorkOrder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 // Route::get('/', function () {
@@ -25,3 +26,17 @@ Route::get('/auth/google/callback', [SocialiteController::class, 'handleGoogleCa
 
 //     return new WorkOrderConfirmationMail($workOrder);
 // });
+
+Route::get('/test-aims-db', function () {
+    try {
+        // Read directly from your .env setting or pass 'sqlsrv_aims'
+        $connectionName = env('DB_AIMS_CONNECTION', 'sqlsrv_aims');
+
+        $db = DB::connection($connectionName);
+        $db->getPdo();
+
+        return "Connected successfully to [{$connectionName}] -> Database: ".$db->getDatabaseName();
+    } catch (Exception $e) {
+        return 'Connection failed: '.$e->getMessage();
+    }
+});

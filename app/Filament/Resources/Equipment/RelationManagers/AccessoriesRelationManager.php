@@ -212,12 +212,15 @@ class AccessoriesRelationManager extends RelationManager
     {
         $loggedAt = now();
 
+        $snapshot = LifecycleLog::withNameSnapshots(['performed_by' => Auth::id()]);
+
         LifecycleLog::query()->insert(array_map(
             fn(int|string $accessoryId): array => [
                 'asset_id' => $accessoryId,
                 'action_id' => $actionId,
                 'status_id' => $statusId,
-                'performed_by' => Auth::id(),
+                'performed_by' => $snapshot['performed_by'],
+                'performed_by_name' => $snapshot['performed_by_name'] ?? null,
                 'logged_at' => $loggedAt,
             ],
             $accessoryIds,

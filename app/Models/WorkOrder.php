@@ -30,6 +30,7 @@ class WorkOrder extends Model
         'wo_dep_id',
         'wo_mt_id',
         'wo_insi_id',
+        'wo_type_id',
         'wo_title',
         'wo_req_desc',
         'wo_desc',
@@ -66,6 +67,11 @@ class WorkOrder extends Model
     public function inspectionItem(): BelongsTo
     {
         return $this->belongsTo(InspectionItem::class, 'wo_insi_id', 'insi_id');
+    }
+
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(WorkOrderType::class, 'wo_type_id');
     }
 
     public function priority(): BelongsTo
@@ -119,7 +125,7 @@ class WorkOrder extends Model
             ->logAll()
             ->logOnlyDirty()
             ->useLogName('WorkOrder')
-            ->setDescriptionForEvent(fn(string $eventName) => "Work Order has been {$eventName}")
+            ->setDescriptionForEvent(fn (string $eventName) => "Work Order has been {$eventName}")
             ->dontSubmitEmptyLogs();
     }
 }

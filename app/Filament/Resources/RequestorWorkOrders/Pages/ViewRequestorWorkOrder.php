@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RequestorWorkOrders\Pages;
 
+use App\Filament\Concerns\HasDetailsTab;
 use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\RequestorWorkOrders\RelationManagers\LogsRelationManager;
 use App\Filament\Resources\RequestorWorkOrders\RequestorWorkOrderResource;
@@ -25,6 +26,7 @@ use Illuminate\Support\Facades\Mail;
 
 class ViewRequestorWorkOrder extends ViewRecord
 {
+    use HasDetailsTab;
     use HasRecordNavigation;
 
     protected function getRecordNavigationOrder(): array
@@ -33,16 +35,6 @@ class ViewRequestorWorkOrder extends ViewRecord
     }
 
     protected static string $resource = RequestorWorkOrderResource::class;
-
-    // public function hasCombinedRelationManagerTabsWithContent(): bool
-    // {
-    //     return true;
-    // }
-
-    public function getContentTabLabel(): string
-    {
-        return 'Details';
-    }
 
     public function getRelationManagers(): array
     {

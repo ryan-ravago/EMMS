@@ -4,9 +4,9 @@ namespace App\Filament\Resources\WorkOrders\Schemas;
 
 use App\Models\AppUser;
 use App\Models\Equipment;
+use Closure;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
-use Closure;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Get;
@@ -61,6 +61,13 @@ class WorkOrderForm
                                 ->required()
                                 ->native(false)
                                 ->live(),
+                            Select::make('wo_type_id')
+                                ->label('Type')
+                                ->relationship('type', 'type')
+                                ->searchable()
+                                ->preload()
+                                ->required()
+                                ->native(false),
                             Select::make('wo_dep_id')
                                 ->label('Department')
                                 ->relationship(

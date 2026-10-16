@@ -89,11 +89,11 @@ class LifecycleLogsRelationManager extends RelationManager
                             ->badge()
                             ->color(fn($record) => $record->status->status_color)
                             ->icon(fn($record) => $record->status->status_icon),
-                        TextEntry::make('deployToLocation.name')
+                        TextEntry::make('deploy_to_loc_name')
                             ->label('Location')
                             ->visible(fn(): bool => $this->ownerHasAssetType(1))
                             ->placeholder('—'),
-                        TextEntry::make('allocateToEquipment.eqm_name')
+                        TextEntry::make('allocate_to_equipment_name')
                             ->label('Allocated To Equipment')
                             ->visible(fn(): bool => $this->ownerHasAssetType(2))
                             ->placeholder('—'),
@@ -101,15 +101,9 @@ class LifecycleLogsRelationManager extends RelationManager
                             ->label('Remarks')
                             ->placeholder('No remarks')
                             ->columnSpanFull(),
-                        TextEntry::make('performedBy')
+                        TextEntry::make('performed_by_name')
                             ->label('Performed By')
-                            ->formatStateUsing(function ($record) {
-                                if (! $record->performedBy) {
-                                    return '—';
-                                }
-
-                                return trim(implode(' ', array_filter([$record->performedBy->user_fname, $record->performedBy->user_mname, $record->performedBy->user_lname])));
-                            }),
+                            ->placeholder('—'),
                         TextEntry::make('logged_at')
                             ->label('Logged At')
                             ->dateTime('M d, Y h:i A'),
@@ -146,13 +140,13 @@ class LifecycleLogsRelationManager extends RelationManager
                     ->color(fn($record) => $record->status?->status_color)
                     ->searchable(),
 
-                TextColumn::make('deployToLocation.name')
+                TextColumn::make('deploy_to_loc_name')
                     ->label('Location')
                     ->placeholder('—')
                     ->visible(fn(): bool => $this->ownerHasAssetType(1))
                     ->searchable(),
 
-                TextColumn::make('allocateToEquipment.eqm_name')
+                TextColumn::make('allocate_to_equipment_name')
                     ->label('Allocated To')
                     ->placeholder('—')
                     ->visible(fn(): bool => $this->ownerHasAssetType(2))
@@ -164,24 +158,10 @@ class LifecycleLogsRelationManager extends RelationManager
                     ->tooltip(fn($record) => $record->remarks)
                     ->placeholder('—'),
 
-                TextColumn::make('performedBy.user_fname')
+                TextColumn::make('performed_by_name')
                     ->label('Performed By')
-                    ->formatStateUsing(function ($state, $record) {
-                        if (! $record->performedBy) {
-                            return '—';
-                        }
-
-                        return trim(implode(' ', array_filter([
-                            $record->performedBy->user_fname,
-                            $record->performedBy->user_mname,
-                            $record->performedBy->user_lname,
-                        ])));
-                    })
-                    ->searchable([
-                        'user_fname',
-                        'user_mname',
-                        'user_lname',
-                    ]),
+                    ->placeholder('—')
+                    ->searchable(),
 
                 TextColumn::make('logged_at')
                     ->label('Date & Time')

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\TechnicianWorkOrders\Pages;
 
+use App\Filament\Concerns\HasDetailsTab;
 use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\TechnicianWorkOrders\RelationManagers\LogsRelationManager;
 use App\Filament\Resources\TechnicianWorkOrders\RelationManagers\LogUpdatesRelationManager;
@@ -31,6 +32,7 @@ use Illuminate\Support\Facades\Mail;
 
 class ViewTechnicianWorkOrder extends ViewRecord
 {
+    use HasDetailsTab;
     use HasRecordNavigation;
 
     protected function getRecordNavigationOrder(): array
@@ -39,16 +41,6 @@ class ViewTechnicianWorkOrder extends ViewRecord
     }
 
     protected static string $resource = TechnicianWorkOrderResource::class;
-
-    public function hasCombinedRelationManagerTabsWithContent(): bool
-    {
-        return true; // merges infolist + relation manager tabs together
-    }
-
-    public function getContentTabLabel(): string
-    {
-        return 'Details'; // label for the main infolist tab
-    }
 
     public function getRelationManagers(): array
     {

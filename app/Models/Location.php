@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsChanges;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Concerns\LogsChanges;
 
 class Location extends Model
 {
@@ -33,6 +33,101 @@ class Location extends Model
                 throw new \InvalidArgumentException('A location cannot have one of its own descendants as its parent.');
             }
         });
+
+        static::deleting(function (self $location) {
+            if ($location->isReferenced()) {
+                throw new \RuntimeException('Location cannot be deleted: '.$location->deletionBlockedReason());
+            }
+        });
+    }
+
+    /**
+     * Records that can be moved or removed, after which the location becomes deletable.
+     *
+     * @return array<string, int>
+     */
+    public function getRemovableReferenceCounts(): array
+    {
+        return array_filter([
+            'child locations' => $this->children()->count(),
+            'equipment / accessories' => $this->equipmentUnits()->count(),
+        ]);
+    }
+
+    /**
+     * History that points at this location. Logs are never deleted, so these keep the location forever.
+     *
+     * @return array<string, int>
+     */
+    public function getHistoryReferenceCounts(): array
+    {
+        $id = $this->getKey();
+
+        return array_filter([
+            'lifecycle logs' => LifecycleLog::query()->where('deploy_to_loc_id', $id)->count(),
+            'edit logs' => AssetEditLog::query()
+                ->where(fn ($query) => $query
+                    ->where('changes->location_id->old', $id)
+                    ->orWhere('changes->location_id->new', $id))
+                ->count(),
+            'RFID tag logs' => AssetTagLog::query()->where('yard_id', $id)->count(),
+        ]);
+    }
+
+    /**
+     * Every record that points at this location, keyed by a readable label. Only non-zero counts are returned.
+     *
+     * @return array<string, int>
+     */
+    public function getReferenceCounts(): array
+    {
+        return [...$this->getRemovableReferenceCounts(), ...$this->getHistoryReferenceCounts()];
+    }
+
+    public function isReferenced(): bool
+    {
+        return $this->getReferenceCounts() !== [];
+    }
+
+    /**
+     * For example: "2 equipment / accessories, 5 lifecycle logs".
+     */
+    public function referenceSummary(): string
+    {
+        return self::summarize($this->getReferenceCounts());
+    }
+
+    /**
+     * Why this location cannot be deleted, or null when it can be.
+     */
+    public function deletionBlockedReason(): ?string
+    {
+        $history = $this->getHistoryReferenceCounts();
+        $removable = $this->getRemovableReferenceCounts();
+
+        if ($history !== []) {
+            $reason = "\"{$this->name}\" appears in ".self::summarize($history).'. Logs are permanent, so this location must be kept.';
+
+            return $removable === []
+                ? $reason
+                : $reason.' It is also used by '.self::summarize($removable).'.';
+        }
+
+        if ($removable !== []) {
+            return "\"{$this->name}\" is still used by ".self::summarize($removable).'. Move or remove these first.';
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, int>  $counts
+     */
+    private static function summarize(array $counts): string
+    {
+        return collect($counts)
+            ->map(fn (int $count, string $label): string => "{$count} {$label}")
+            ->implode(', ');
     }
 
     /**

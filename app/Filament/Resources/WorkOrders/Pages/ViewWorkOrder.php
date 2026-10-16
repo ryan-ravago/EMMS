@@ -2,10 +2,9 @@
 
 namespace App\Filament\Resources\WorkOrders\Pages;
 
+use App\Filament\Concerns\HasDetailsTab;
 use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\WorkOrders\RelationManagers\LogsRelationManager;
-use Closure;
-use Filament\Schemas\Components\Utilities\Get;
 use App\Filament\Resources\WorkOrders\RelationManagers\LogUpdatesRelationManager;
 use App\Filament\Resources\WorkOrders\RelationManagers\ReportSubmissionsRelationManager;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
@@ -27,6 +26,7 @@ use App\Models\WorkOrder;
 use App\Models\WorkOrderLog;
 use App\Models\WorkOrderLogUpdate;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
@@ -35,6 +35,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -43,6 +44,7 @@ use Illuminate\Support\Facades\Mail;
 
 class ViewWorkOrder extends ViewRecord
 {
+    use HasDetailsTab;
     use HasRecordNavigation;
 
     protected function getRecordNavigationOrder(): array
@@ -51,16 +53,6 @@ class ViewWorkOrder extends ViewRecord
     }
 
     protected static string $resource = WorkOrderResource::class;
-
-    // public function hasCombinedRelationManagerTabsWithContent(): bool
-    // {
-    //     return true; // merges infolist + relation manager tabs together
-    // }
-
-    // public function getContentTabLabel(): string
-    // {
-    //     return 'Details'; // label for the main infolist tab
-    // }
 
     // public function getRelationManagers(): array
     // {
@@ -79,7 +71,7 @@ class ViewWorkOrder extends ViewRecord
                 ->label('Export PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
-                ->visible(fn() => auth()->user()->hasRole('manager'))
+                ->visible(fn () => auth()->user()->hasRole('manager'))
                 ->action(function (WorkOrder $record) {
                     $record->load([
                         'workers',
@@ -88,9 +80,9 @@ class ViewWorkOrder extends ViewRecord
                         'status',
                         'equipment',
                         'department',
-                        'logUpdates' => fn($q) => $q->with('by'),
-                        'logs' => fn($q) => $q->with('by')->orderByDesc('wol_dt'),
-                        'reportSubmissions' => fn($q) => $q->with(['submittedBy', 'workers']),
+                        'logUpdates' => fn ($q) => $q->with('by'),
+                        'logs' => fn ($q) => $q->with('by')->orderByDesc('wol_dt'),
+                        'reportSubmissions' => fn ($q) => $q->with(['submittedBy', 'workers']),
                     ]);
 
                     $pdf = Pdf::loadView('reports.work-order-report', [
@@ -106,15 +98,15 @@ class ViewWorkOrder extends ViewRecord
                         ->setOption('margin_bottom', 12.7);
 
                     return response()->streamDownload(
-                        fn() => print($pdf->output()),
-                        $record->wo_no . '.pdf',
+                        fn () => print ($pdf->output()),
+                        $record->wo_no.'.pdf',
                         ['Content-Type' => 'application/pdf'],
                     );
                 }),
             ActionGroup::make([
                 Action::make('addUpdate')
                     ->label('Add Update')
-                    ->visible(fn() => Auth::user()->can('addUpdate', $this->record))
+                    ->visible(fn () => Auth::user()->can('addUpdate', $this->record))
                     ->icon('heroicon-o-chat-bubble-left-ellipsis')
                     ->color('info')
                     ->modalHeading('Add Work Order Update')
@@ -159,7 +151,7 @@ class ViewWorkOrder extends ViewRecord
                     }),
                 Action::make('reject')
                     ->label('Reject Completion Request')
-                    ->visible(fn() => Auth::user()->can('rejectCompletion', $this->record))
+                    ->visible(fn () => Auth::user()->can('rejectCompletion', $this->record))
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->modalHeading('Reject Completion Request')
@@ -306,7 +298,7 @@ class ViewWorkOrder extends ViewRecord
                     }),
                 Action::make('approve')
                     ->label('Approve Completion Request')
-                    ->visible(fn() => Auth::user()->can('approveCompletion', $this->record))
+                    ->visible(fn () => Auth::user()->can('approveCompletion', $this->record))
                     ->icon('heroicon-o-check-badge')
                     ->color('success')
                     ->modalHeading('Approve Completion Request')
@@ -450,7 +442,7 @@ class ViewWorkOrder extends ViewRecord
                     }),
                 Action::make('cancel')
                     ->label('Cancel Work Order')
-                    ->visible(fn() => Auth::user()->can('cancelWorkOrder', $this->record))
+                    ->visible(fn () => Auth::user()->can('cancelWorkOrder', $this->record))
                     ->icon('heroicon-o-no-symbol')
                     ->color('danger')
                     ->modalHeading('Cancel Work Order')
@@ -604,7 +596,7 @@ class ViewWorkOrder extends ViewRecord
                     }),
                 Action::make('completeWorkOrder')
                     ->label('Complete Work Order')
-                    ->visible(fn() => Auth::user()->can('completeWorkOrder', $this->record))
+                    ->visible(fn () => Auth::user()->can('completeWorkOrder', $this->record))
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->modalHeading('Complete Work Order')
@@ -721,7 +713,7 @@ class ViewWorkOrder extends ViewRecord
                     }),
                 Action::make('assignWorkOrder')
                     ->label('Assign Work Order')
-                    ->authorize(fn() => Auth::user()->can('assignWorkOrder', $this->record))
+                    ->authorize(fn () => Auth::user()->can('assignWorkOrder', $this->record))
                     ->icon('heroicon-o-user-plus')
                     ->color('success')
                     ->modalHeading('Assign Work Order')
@@ -734,16 +726,16 @@ class ViewWorkOrder extends ViewRecord
                             ->relationship(
                                 name: 'workers',
                                 titleAttribute: 'user_fname',
-                                modifyQueryUsing: fn(Builder $query, Get $get) => $query
+                                modifyQueryUsing: fn (Builder $query, Get $get) => $query
                                     ->where('is_active', true)
                                     ->where('user_dep_id', static::resolveDepartmentId($get))
                             )
-                            ->options(fn(Get $get) => static::activeTechnicians(static::resolveDepartmentId($get))
-                                ->mapWithKeys(fn($user) => [
+                            ->options(fn (Get $get) => static::activeTechnicians(static::resolveDepartmentId($get))
+                                ->mapWithKeys(fn ($user) => [
                                     $user->user_id => "{$user->user_fname} {$user->user_lname}",
                                 ]))
                             ->rules([
-                                fn(Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get): void {
+                                fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get): void {
                                     $depId = static::resolveDepartmentId($get);
                                     $validIds = static::activeTechnicians($depId)->pluck('user_id')->all();
                                     $invalid = array_diff((array) $value, $validIds);
@@ -817,7 +809,7 @@ class ViewWorkOrder extends ViewRecord
                             $manager = auth()->user();
 
                             // Notify managers
-                            $managerEmails = AppUser::whereHas('roles', fn($q) => $q->where('name', 'manager'))
+                            $managerEmails = AppUser::whereHas('roles', fn ($q) => $q->where('name', 'manager'))
                                 ->where('user_dep_id', $record->wo_dep_id)
                                 ->where('is_active', true)
                                 ->whereNotNull('user_email')
@@ -857,7 +849,7 @@ class ViewWorkOrder extends ViewRecord
                             }
 
                             Notification::make()
-                                ->title('Work order ' . strtolower($assignAction->a_past_tense) . ' successfully.')
+                                ->title('Work order '.strtolower($assignAction->a_past_tense).' successfully.')
                                 ->success()
                                 ->send();
 
@@ -865,7 +857,7 @@ class ViewWorkOrder extends ViewRecord
                             $this->redirect(WorkOrderResource::getUrl('view', ['record' => $record]), navigate: true);
                         } catch (\Throwable $e) {
                             Notification::make()
-                                ->title('Failed to ' . strtolower($assignAction->a_past_tense) . ' work order.')
+                                ->title('Failed to '.strtolower($assignAction->a_past_tense).' work order.')
                                 ->body($e->getMessage())
                                 ->danger()
                                 ->send();
@@ -873,7 +865,7 @@ class ViewWorkOrder extends ViewRecord
                     }),
                 Action::make('rejectWorkOrder')
                     ->label('Reject Work Order')
-                    ->visible(fn() => Auth::user()->can('rejectWorkOrder', $this->record))
+                    ->visible(fn () => Auth::user()->can('rejectWorkOrder', $this->record))
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->modalHeading('Reject Work Order')
@@ -980,7 +972,7 @@ class ViewWorkOrder extends ViewRecord
             return AppUser::whereRaw('1 = 0')->get();
         }
 
-        return AppUser::whereHas('roles', fn($q) => $q->where('name', 'technician'))
+        return AppUser::whereHas('roles', fn ($q) => $q->where('name', 'technician'))
             ->where('user_dep_id', $depId)
             ->where('is_active', 1)
             ->get();

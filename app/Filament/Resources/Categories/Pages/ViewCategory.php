@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Categories\Pages;
 
+use App\Filament\Concerns\HasDetailsTab;
 use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\Categories\CategoryResource;
 use Filament\Actions\DeleteAction;
@@ -10,6 +11,7 @@ use Filament\Resources\Pages\ViewRecord;
 
 class ViewCategory extends ViewRecord
 {
+    use HasDetailsTab;
     use HasRecordNavigation;
 
     protected static string $resource = CategoryResource::class;

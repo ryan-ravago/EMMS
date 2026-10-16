@@ -3,9 +3,12 @@
 namespace App\Filament\Resources\Equipment\Pages;
 
 use App\Filament\Resources\Equipment\EquipmentResource;
+use BackedEnum;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Resources\Pages\Enums\ContentTabPosition;
+use Filament\Support\Icons\Heroicon;
 
 class EditEquipment extends EditRecord
 {
@@ -20,6 +23,26 @@ class EditEquipment extends EditRecord
     }
 
     protected static string $resource = EquipmentResource::class;
+
+    public function hasCombinedRelationManagerTabsWithContent(): bool
+    {
+        return true;
+    }
+
+    public function getContentTabLabel(): ?string
+    {
+        return 'Details';
+    }
+
+    public function getContentTabIcon(): string|BackedEnum|null
+    {
+        return Heroicon::OutlinedInformationCircle;
+    }
+
+    public function getContentTabPosition(): ?ContentTabPosition
+    {
+        return ContentTabPosition::Before;
+    }
 
     protected ?array $originalAttributes = null;
 

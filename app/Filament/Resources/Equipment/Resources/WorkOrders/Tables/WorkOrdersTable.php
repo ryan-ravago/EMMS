@@ -67,6 +67,11 @@ class WorkOrdersTable
                     ->label('Priority')
                     ->badge()
                     ->sortable(),
+                TextColumn::make('type.type')
+                    ->label('Type')
+                    ->badge()
+                    ->placeholder('-')
+                    ->sortable(),
                 TextColumn::make('workers')
                     ->badge()
                     ->searchable(

@@ -39,6 +39,14 @@ class RequestorWorkOrderForm
                             ->required()
                             ->native(false)
                             ->live(),
+                        Select::make('wo_type_id')
+                            ->label('Type')
+                            ->relationship('type', 'type')
+                            ->searchable()
+                            ->required()
+                            ->preload()
+                            ->columnSpanFull()
+                            ->native(false),
                         Select::make('wo_dep_id')
                             ->label('Department')
                             ->placeholder('Department to be assigned')

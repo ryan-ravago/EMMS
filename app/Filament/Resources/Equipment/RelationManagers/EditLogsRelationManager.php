@@ -5,12 +5,7 @@ namespace App\Filament\Resources\Equipment\RelationManagers;
 use App\Models\AssetEditLog;
 use Carbon\Carbon;
 use Filament\Actions\AssociateAction;
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DateTimePicker;
@@ -158,14 +153,9 @@ class EditLogsRelationManager extends RelationManager
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
-                DissociateAction::make(),
-                DeleteAction::make(),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DissociateBulkAction::make(),
-                    DeleteBulkAction::make(),
-                ]),
+                // No delete or dissociate actions: edit logs are permanent history.
             ]);
     }
 }

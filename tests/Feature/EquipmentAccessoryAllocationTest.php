@@ -29,6 +29,7 @@ class EquipmentAccessoryAllocationTest extends TestCase
             $table->id('eqm_id');
             $table->foreignId('asset_type_id')->nullable()->constrained('asset_types');
             $table->unsignedBigInteger('parent_id')->nullable();
+            $table->unsignedBigInteger('location_id')->nullable();
             $table->unsignedBigInteger('eqm_eqmm_id')->nullable();
             $table->string('eqm_name');
             $table->string('eqm_prc_code')->nullable()->unique();
@@ -41,9 +42,12 @@ class EquipmentAccessoryAllocationTest extends TestCase
             $table->string('action_id');
             $table->string('status_id');
             $table->unsignedBigInteger('deploy_to_loc_id')->nullable();
+            $table->string('deploy_to_loc_name')->nullable();
             $table->unsignedBigInteger('allocate_to_equipment_id')->nullable();
+            $table->string('allocate_to_equipment_name')->nullable();
             $table->text('remarks')->nullable();
             $table->unsignedBigInteger('performed_by')->nullable();
+            $table->string('performed_by_name')->nullable();
             $table->timestamp('logged_at');
         });
 
@@ -84,6 +88,7 @@ class EquipmentAccessoryAllocationTest extends TestCase
             'action_id' => 'alc',
             'status_id' => 'alc',
             'allocate_to_equipment_id' => $equipment->eqm_id,
+            'allocate_to_equipment_name' => $equipment->eqm_name,
         ]);
     }
 

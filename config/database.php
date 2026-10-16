@@ -147,6 +147,25 @@ return [
             'trust_server_certificate' => true,
         ],
 
+        'sqlsrv_aims' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DB_AIMS_URL'),
+            'host' => env('DB_AIMS_HOST'),
+            'port' => env('DB_AIMS_PORT', '1433'),
+            'database' => env('DB_AIMS_DATABASE'),
+            'username' => env('DB_AIMS_USERNAME'),
+            'password' => env('DB_AIMS_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            // 'encrypt' => env('DB_ENCRYPT', false),
+            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', true),
+
+            // USE REAL BOOLEANS HERE - NO QUOTES
+            'encrypt' => 'no',
+            'trust_server_certificate' => true,
+        ],
+
     ],
 
     /*

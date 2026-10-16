@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Locations\Pages;
 
+use App\Filament\Concerns\HasDetailsTab;
 use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\Locations\LocationResource;
 use Filament\Actions\EditAction;
@@ -9,6 +10,7 @@ use Filament\Resources\Pages\ViewRecord;
 
 class ViewLocation extends ViewRecord
 {
+    use HasDetailsTab;
     use HasRecordNavigation;
 
     protected static string $resource = LocationResource::class;

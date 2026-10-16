@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MaintenanceTasks\Pages;
 
+use App\Filament\Concerns\HasDetailsTab;
 use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
 use App\Mail\WorkOrderAssignedMail;
@@ -38,6 +39,7 @@ use Throwable;
 
 class ViewMaintenanceTask extends ViewRecord
 {
+    use HasDetailsTab;
     use HasRecordNavigation;
 
     protected function getRecordNavigationOrder(): array

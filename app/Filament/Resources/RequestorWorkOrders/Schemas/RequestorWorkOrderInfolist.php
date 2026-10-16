@@ -9,12 +9,12 @@ use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
 use App\Models\Status;
 use App\Models\WorkOrder;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\IconPosition;
-use Illuminate\Support\Facades\Storage;
 use Filament\Support\Enums\TextSize;
-use Filament\Schemas\Components\Grid;
+use Illuminate\Support\Facades\Storage;
 
 class RequestorWorkOrderInfolist
 {
@@ -42,25 +42,29 @@ class RequestorWorkOrderInfolist
                         TextEntry::make('equipment.eqm_name')
                             ->label('Equipment')
                             ->inlineLabel()
-                            ->url(fn($record) => EquipmentResource::getUrl('view', ['record' => $record->wo_eqm_id]))
+                            ->url(fn ($record) => EquipmentResource::getUrl('view', ['record' => $record->wo_eqm_id]))
                             ->icon('heroicon-o-arrow-top-right-on-square')
                             ->iconPosition(IconPosition::After),
                         TextEntry::make('priority.prio_name')
                             ->label('Priority')
                             ->badge(),
+                        TextEntry::make('type.type')
+                            ->label('Type')
+                            ->badge()
+                            ->placeholder('-'),
                         // TextEntry::make('wo_title')
                         //     ->label('Title')
                         //     ->inlineLabel(),
                         TextEntry::make('wo_req_desc')
                             ->label('Requestor - Problem Description')
-                            ->visible(fn($record) => filled($record->wo_req_desc)),
+                            ->visible(fn ($record) => filled($record->wo_req_desc)),
                         TextEntry::make('wo_desc')
-                            ->label(fn($record) => filled($record->wo_req_desc) ? 'Manager - Problem Description' : 'Problem Description')
+                            ->label(fn ($record) => filled($record->wo_req_desc) ? 'Manager - Problem Description' : 'Problem Description')
                             ->placeholder('-'),
                         TextEntry::make('department.dep_name')
                             ->label('Department')
-                            ->visible(fn() => auth()->user()->hasRole('super_admin'))
-                            ->url(fn($record) => DepartmentResource::getUrl('view', ['record' => $record->wo_dep_id]))
+                            ->visible(fn () => auth()->user()->hasRole('super_admin'))
+                            ->url(fn ($record) => DepartmentResource::getUrl('view', ['record' => $record->wo_dep_id]))
                             ->icon('heroicon-o-arrow-top-right-on-square')
                             ->iconPosition(IconPosition::After),
                         // TextEntry::make('wo_mt_id')
@@ -87,7 +91,7 @@ class RequestorWorkOrderInfolist
                             ->listWithLineBreaks()
                             ->badge()
                             ->icon('heroicon-o-user-circle')
-                            ->state(fn($record) => $record->workers->map(fn($w) => "{$w->user_fname} {$w->user_lname}")->toArray()),
+                            ->state(fn ($record) => $record->workers->map(fn ($w) => "{$w->user_fname} {$w->user_lname}")->toArray()),
                         TextEntry::make('createdBy.full_name')
                             ->label('Submitted By')
                             ->numeric(),
@@ -112,9 +116,9 @@ class RequestorWorkOrderInfolist
                                     ->label('Status')
                                     ->size('lg')
                                     ->weight('bold')
-                                    ->color(fn($record) => $record->status?->status_color)
-                                    ->icon(fn($record) => $record->status?->status_icon)
-                                    ->iconColor(fn($record) => $record->status?->status_color)
+                                    ->color(fn ($record) => $record->status?->status_color)
+                                    ->icon(fn ($record) => $record->status?->status_icon)
+                                    ->iconColor(fn ($record) => $record->status?->status_color),
                             ]),
 
                         Section::make('Attachments')
@@ -135,13 +139,13 @@ class RequestorWorkOrderInfolist
 
                                                 return "
                                             <div class='flex items-center justify-between gap-3 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 mb-2'>
-                                                <span class='text-xs text-gray-700 dark:text-gray-300 truncate'>" . basename($file) . "</span>
+                                                <span class='text-xs text-gray-700 dark:text-gray-300 truncate'>".basename($file)."</span>
                                                 <div class='flex gap-1'>
                                                     <a href='{$url}' target='_blank' title='Preview'
                                                         class='text-xs p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition'>
                                                         View
                                                     </a>
-                                                    <a href='{$url}' download='" . basename($file) . "' title='Download'
+                                                    <a href='{$url}' download='".basename($file)."' title='Download'
                                                         class='text-xs p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition'>
                                                         Download
                                                     </a>
@@ -157,7 +161,7 @@ class RequestorWorkOrderInfolist
                     // ->columnStart(1)
                     ->columnSpan(3)
                     ->inlineLabel()
-                    ->visible(fn($record) => filled($record->wo_root_cause))
+                    ->visible(fn ($record) => filled($record->wo_root_cause))
                     ->schema([
                         TextEntry::make('wo_root_cause')
                             ->label('Root Cause'),

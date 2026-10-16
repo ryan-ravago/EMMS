@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Equipment\Pages;
 
+use App\Filament\Concerns\HasDetailsTab;
 use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Models\Action as ModelsAction;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 
 class ViewEquipment extends ViewRecord
 {
+    use HasDetailsTab;
     use HasRecordNavigation;
 
     /**
@@ -63,7 +65,7 @@ class ViewEquipment extends ViewRecord
                     ->label($allocateActionModel->a_present_tense)
                     ->icon($allocateActionModel->a_icon)
                     ->color('success')
-                    ->visible(fn() => Auth::user()->can('allocate', $record))
+                    ->visible(fn () => Auth::user()->can('allocate', $record))
                     ->modalHeading("Mark as {$allocateActionModel->a_present_tense}")
                     ->modalIcon($allocateActionModel->a_icon)
                     ->modalWidth('md')
@@ -71,7 +73,7 @@ class ViewEquipment extends ViewRecord
                     ->schema([
                         Select::make('allocate_to_equipment_id')
                             ->label('Allocate To Equipment')
-                            ->options(fn() => Equipment::where('asset_type_id', 1)->pluck('eqm_name', 'eqm_id'))
+                            ->options(fn () => Equipment::where('asset_type_id', 1)->pluck('eqm_name', 'eqm_id'))
                             ->searchable()
                             ->preload()
                             ->required(),
@@ -81,13 +83,13 @@ class ViewEquipment extends ViewRecord
                             ->rows(3)
                             ->columnSpanFull(),
                     ])
-                    ->action(fn(array $data) => $this->saveLifecycleTransition($allocateActionModel, 'alc', $data)),
+                    ->action(fn (array $data) => $this->saveLifecycleTransition($allocateActionModel, 'alc', $data)),
 
                 Action::make('deploy')
                     ->label($deployActionModel->a_present_tense)
                     ->icon($deployActionModel->a_icon)
                     ->color('success')
-                    ->visible(fn() => Auth::user()->can('deploy', $record))
+                    ->visible(fn () => Auth::user()->can('deploy', $record))
                     ->modalHeading("Mark as {$deployActionModel->a_present_tense}")
                     ->modalIcon($deployActionModel->a_icon)
                     ->modalWidth('md')
@@ -98,7 +100,7 @@ class ViewEquipment extends ViewRecord
                             ->withCount()
                             ->searchable()
                             ->enableBranchNode()
-                            ->default(fn() => $this->record->location_id)
+                            ->default(fn () => $this->record->location_id)
                             ->relationship('location', 'name', 'parent_id'),
 
                         Textarea::make('remarks')
@@ -106,13 +108,13 @@ class ViewEquipment extends ViewRecord
                             ->rows(3)
                             ->columnSpanFull(),
                     ])
-                    ->action(fn(array $data) => $this->saveLifecycleTransition($deployActionModel, 'dep', $data)),
+                    ->action(fn (array $data) => $this->saveLifecycleTransition($deployActionModel, 'dep', $data)),
 
                 Action::make('setToIdle')
                     ->label($setIdleActionModel->a_present_tense)
                     ->icon($setIdleActionModel->a_icon)
                     ->color('danger')
-                    ->visible(fn() => Auth::user()->can('setToIdle', $record))
+                    ->visible(fn () => Auth::user()->can('setToIdle', $record))
                     ->modalHeading("Mark as {$setIdleActionModel->a_present_tense}")
                     ->modalIcon($setIdleActionModel->a_icon)
                     ->modalWidth('md')
@@ -123,8 +125,8 @@ class ViewEquipment extends ViewRecord
                             ->withCount()
                             ->searchable()
                             ->enableBranchNode()
-                            ->default(fn() => $this->record->effectiveLocation()?->getKey())
-                            ->required(fn(): bool => $this->record->isAccessory())
+                            ->default(fn () => $this->record->effectiveLocation()?->getKey())
+                            ->required(fn (): bool => $this->record->isAccessory())
                             ->relationship('location', 'name', 'parent_id'),
 
                         Textarea::make('remarks')
@@ -132,13 +134,13 @@ class ViewEquipment extends ViewRecord
                             ->rows(3)
                             ->columnSpanFull(),
                     ])
-                    ->action(fn(array $data) => $this->saveLifecycleTransition($setIdleActionModel, 'idle', $data)),
+                    ->action(fn (array $data) => $this->saveLifecycleTransition($setIdleActionModel, 'idle', $data)),
 
                 Action::make('setToMaintenance')
                     ->label($setUnderMaintenanceActionModel->a_present_tense)
                     ->icon($setUnderMaintenanceActionModel->a_icon)
                     ->color('primary')
-                    ->visible(fn() => Auth::user()->can('setToMaintenance', $record))
+                    ->visible(fn () => Auth::user()->can('setToMaintenance', $record))
                     ->modalHeading("Mark as {$setUnderMaintenanceActionModel->a_present_tense}")
                     ->modalIcon($setUnderMaintenanceActionModel->a_icon)
                     ->modalWidth('md')
@@ -149,8 +151,8 @@ class ViewEquipment extends ViewRecord
                             ->withCount()
                             ->searchable()
                             ->enableBranchNode()
-                            ->default(fn() => $this->record->effectiveLocation()?->getKey())
-                            ->required(fn(): bool => $this->record->isAccessory())
+                            ->default(fn () => $this->record->effectiveLocation()?->getKey())
+                            ->required(fn (): bool => $this->record->isAccessory())
                             ->relationship('location', 'name', 'parent_id'),
 
                         Textarea::make('remarks')
@@ -158,7 +160,7 @@ class ViewEquipment extends ViewRecord
                             ->rows(3)
                             ->columnSpanFull(),
                     ])
-                    ->action(fn(array $data) => $this->saveLifecycleTransition($setUnderMaintenanceActionModel, 'udmt', $data)),
+                    ->action(fn (array $data) => $this->saveLifecycleTransition($setUnderMaintenanceActionModel, 'udmt', $data)),
             ])
                 ->label('More actions')
                 ->button()

@@ -12,9 +12,12 @@ class LifecycleLog extends Model
         'action_id',
         'status_id',
         'deploy_to_loc_id',
+        'deploy_to_loc_name',
         'allocate_to_equipment_id',
+        'allocate_to_equipment_name',
         'remarks',
         'performed_by',
+        'performed_by_name',
         'logged_at',
     ];
 
@@ -23,6 +26,46 @@ class LifecycleLog extends Model
     protected $casts = [
         'logged_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (LifecycleLog $log): void {
+            $log->forceFill(static::withNameSnapshots($log->getAttributes()));
+        });
+
+        static::deleting(function (): void {
+            throw new \RuntimeException('Lifecycle logs are permanent history and cannot be deleted.');
+        });
+    }
+
+    /**
+     * Copies the current location, allocated equipment and performer names onto the log attributes,
+     * so the history keeps showing them after those records are renamed or deleted.
+     * Use it directly for bulk inserts, which skip model events.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    public static function withNameSnapshots(array $attributes): array
+    {
+        if (empty($attributes['deploy_to_loc_name']) && ! empty($attributes['deploy_to_loc_id'])) {
+            $attributes['deploy_to_loc_name'] = Location::query()->whereKey($attributes['deploy_to_loc_id'])->value('name');
+        }
+
+        if (empty($attributes['allocate_to_equipment_name']) && ! empty($attributes['allocate_to_equipment_id'])) {
+            $attributes['allocate_to_equipment_name'] = Equipment::query()->whereKey($attributes['allocate_to_equipment_id'])->value('eqm_name');
+        }
+
+        if (empty($attributes['performed_by_name']) && ! empty($attributes['performed_by'])) {
+            $user = AppUser::query()->find($attributes['performed_by'], ['user_id', 'user_fname', 'user_mname', 'user_lname']);
+
+            $attributes['performed_by_name'] = $user
+                ? (trim(implode(' ', array_filter([$user->user_fname, $user->user_mname, $user->user_lname]))) ?: null)
+                : null;
+        }
+
+        return $attributes;
+    }
 
     public function asset(): BelongsTo
     {

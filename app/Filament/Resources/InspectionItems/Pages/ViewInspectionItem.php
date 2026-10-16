@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\InspectionItems\Pages;
 
+use App\Filament\Concerns\HasDetailsTab;
 use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\InspectionItems\InspectionItemResource;
 use App\Mail\InspectionItemDisregardedMail;
@@ -33,6 +34,7 @@ use Illuminate\Support\Facades\Mail;
 
 class ViewInspectionItem extends ViewRecord
 {
+    use HasDetailsTab;
     use HasRecordNavigation;
 
     protected function getRecordNavigationOrder(): array

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\TechnicianWorkOrders\Tables;
 
 use App\Models\WorkOrder;
+use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -32,7 +33,7 @@ class TechnicianWorkOrdersTable
                 TextColumn::make('department.dep_name')
                     ->label('Department')
                     ->sortable()
-                    ->visible(fn() => auth()->user()->hasRole('super_admin')),
+                    ->visible(fn () => auth()->user()->hasRole('super_admin')),
                 TextColumn::make('wo_title')
                     ->label('Title')
                     ->searchable()
@@ -41,17 +42,22 @@ class TechnicianWorkOrdersTable
                     ->label('Priority')
                     ->badge()
                     ->sortable(),
+                TextColumn::make('type.type')
+                    ->label('Type')
+                    ->badge()
+                    ->placeholder('-')
+                    ->sortable(),
                 TextColumn::make('status.status_title')
                     ->label('Status')
                     ->badge()
-                    ->color(fn(WorkOrder $record) => $record->status->status_color)
-                    ->icon(fn(WorkOrder $record) => $record->status->status_icon)
+                    ->color(fn (WorkOrder $record) => $record->status->status_color)
+                    ->icon(fn (WorkOrder $record) => $record->status->status_icon)
                     ->sortable(),
                 TextColumn::make('workers')
                     ->badge()
                     ->listWithLineBreaks()
                     ->icon('heroicon-o-user-circle')
-                    ->state(fn($record) => $record->workers->map(fn($w) => "{$w->user_fname} {$w->user_lname}")->toArray()),
+                    ->state(fn ($record) => $record->workers->map(fn ($w) => "{$w->user_fname} {$w->user_lname}")->toArray()),
                 TextColumn::make('wo_created_dt')
                     ->label('Created At')
                     ->dateTime('M d, Y | h:i A')
@@ -63,7 +69,7 @@ class TechnicianWorkOrdersTable
                     ->relationship('department', 'dep_name')
                     ->searchable()
                     ->preload()
-                    ->visible(fn() => auth()->user()->hasRole('super_admin')),
+                    ->visible(fn () => auth()->user()->hasRole('super_admin')),
                 SelectFilter::make('wo_prio_id')
                     ->label('Priority')
                     ->relationship('priority', 'prio_name')
@@ -82,8 +88,8 @@ class TechnicianWorkOrdersTable
                     ])
                     ->query(function (Builder $query, array $data) {
                         return $query
-                            ->when($data['from'], fn($q) => $q->where('wo_created_dt', '>=', \Carbon\Carbon::parse($data['from'])->startOfDay()))
-                            ->when($data['until'], fn($q) => $q->where('wo_created_dt', '<=', \Carbon\Carbon::parse($data['until'])->endOfDay()));
+                            ->when($data['from'], fn ($q) => $q->where('wo_created_dt', '>=', Carbon::parse($data['from'])->startOfDay()))
+                            ->when($data['until'], fn ($q) => $q->where('wo_created_dt', '<=', Carbon::parse($data['until'])->endOfDay()));
                     }),
             ])
             ->recordActions([

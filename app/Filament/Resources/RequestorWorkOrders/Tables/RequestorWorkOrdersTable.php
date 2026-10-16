@@ -36,7 +36,7 @@ class RequestorWorkOrdersTable
                 TextColumn::make('department.dep_name')
                     ->label('Department')
                     ->sortable()
-                    ->visible(fn() => auth()->user()->hasRole('super_admin')),
+                    ->visible(fn () => auth()->user()->hasRole('super_admin')),
                 TextColumn::make('wo_title')
                     ->label('Title')
                     ->searchable()
@@ -44,6 +44,11 @@ class RequestorWorkOrdersTable
                 TextColumn::make('priority.prio_name')
                     ->label('Priority')
                     ->badge()
+                    ->sortable(),
+                TextColumn::make('type.type')
+                    ->label('Type')
+                    ->badge()
+                    ->placeholder('-')
                     ->sortable(),
                 TextColumn::make('status.status_title')
                     ->label('Status')
@@ -71,8 +76,8 @@ class RequestorWorkOrdersTable
                     //         ? (Status::find('appr')->status_icon ?? 'heroicon-o-check-badge')
                     //         : $record->status->status_icon;
                     // })
-                    ->color(fn(WorkOrder $record) => $record->status->status_color)
-                    ->icon(fn(WorkOrder $record) => $record->status->status_icon)
+                    ->color(fn (WorkOrder $record) => $record->status->status_color)
+                    ->icon(fn (WorkOrder $record) => $record->status->status_icon)
                     ->sortable(),
                 TextColumn::make('wo_created_dt')
                     ->label('Date Created')
@@ -85,7 +90,7 @@ class RequestorWorkOrdersTable
                     ->relationship('department', 'dep_name')
                     ->searchable()
                     ->preload()
-                    ->visible(fn() => auth()->user()->hasRole('super_admin')),
+                    ->visible(fn () => auth()->user()->hasRole('super_admin')),
                 SelectFilter::make('eqm_id')
                     ->label('Equipment')
                     ->relationship('equipment', 'eqm_name')
@@ -95,8 +100,13 @@ class RequestorWorkOrdersTable
                     ->relationship(
                         'priority',
                         'prio_name',
-                        fn($query) => $query->orderByRaw("FIELD(prio_id, 1, 2, 3, 4)")
+                        fn ($query) => $query->orderByRaw('FIELD(prio_id, 1, 2, 3, 4)')
                     )
+                    ->searchable()
+                    ->preload(),
+                SelectFilter::make('wo_type_id')
+                    ->label('Type')
+                    ->relationship('type', 'type')
                     ->searchable()
                     ->preload(),
                 SelectFilter::make('wo_status_id')
@@ -104,7 +114,7 @@ class RequestorWorkOrdersTable
                     ->relationship(
                         'status',
                         'status_title',
-                        fn($query) => $query
+                        fn ($query) => $query
                             ->whereIn('status_id', ['pndwor', 'inprog', 'rej', 'cnc', 'cmp'])
                             ->orderByRaw("FIELD(status_id, 'pndwor', 'inprog', 'cmp', 'rej', 'cnc')")
                     )
@@ -116,7 +126,7 @@ class RequestorWorkOrdersTable
                         $indicators = [];
 
                         if ($data['wo_desc'] ?? null) {
-                            $indicators[] = "Manager Problem Description: " . $data['wo_desc'];
+                            $indicators[] = 'Manager Problem Description: '.$data['wo_desc'];
                         }
 
                         return $indicators;
@@ -124,13 +134,13 @@ class RequestorWorkOrdersTable
                     ->schema([
                         TextInput::make('wo_desc')
                             ->placeholder('Search...')
-                            ->label('Manager Problem Description')
+                            ->label('Manager Problem Description'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
                                 $data['wo_desc'],
-                                fn(Builder $query, $managerProbDesc): Builder => $query->where('wo_desc', 'like', "%{$managerProbDesc}%")
+                                fn (Builder $query, $managerProbDesc): Builder => $query->where('wo_desc', 'like', "%{$managerProbDesc}%")
                             );
                     }),
                 Filter::make('wo_created_dt')
@@ -147,19 +157,19 @@ class RequestorWorkOrdersTable
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['from'] ?? null, fn($q, $date): Builder => $q->where('wo_created_dt', '>=', \Carbon\Carbon::parse($date)->startOfDay()))
-                            ->when($data['until'] ?? null, fn($q, $date): Builder => $q->where('wo_created_dt', '<=', \Carbon\Carbon::parse($date)->endOfDay()));
+                            ->when($data['from'] ?? null, fn ($q, $date): Builder => $q->where('wo_created_dt', '>=', Carbon::parse($date)->startOfDay()))
+                            ->when($data['until'] ?? null, fn ($q, $date): Builder => $q->where('wo_created_dt', '<=', Carbon::parse($date)->endOfDay()));
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
 
                         if ($data['from'] ?? null) {
-                            $indicators[] = Indicator::make('From ' . Carbon::parse($data['from'])->toFormattedDateString())
+                            $indicators[] = Indicator::make('From '.Carbon::parse($data['from'])->toFormattedDateString())
                                 ->removeField('from');
                         }
 
                         if ($data['until'] ?? null) {
-                            $indicators[] = Indicator::make('Until ' . Carbon::parse($data['until'])->toFormattedDateString())
+                            $indicators[] = Indicator::make('Until '.Carbon::parse($data['until'])->toFormattedDateString())
                                 ->removeField('until');
                         }
 

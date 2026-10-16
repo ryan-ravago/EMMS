@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Models\Pages;
 
+use App\Filament\Concerns\HasDetailsTab;
 use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\Models\ModelResource;
 use Filament\Actions\DeleteAction;
@@ -10,6 +11,7 @@ use Filament\Resources\Pages\ViewRecord;
 
 class ViewModel extends ViewRecord
 {
+    use HasDetailsTab;
     use HasRecordNavigation;
 
     protected static string $resource = ModelResource::class;

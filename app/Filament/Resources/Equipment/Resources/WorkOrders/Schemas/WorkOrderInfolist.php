@@ -46,6 +46,10 @@ class WorkOrderInfolist
                         TextEntry::make('priority.prio_name')
                             ->label('Priority')
                             ->badge(),
+                        TextEntry::make('type.type')
+                            ->label('Type')
+                            ->badge()
+                            ->placeholder('-'),
                         // TextEntry::make('wo_title')
                         //     ->label('Title')
                         //     ->inlineLabel(),

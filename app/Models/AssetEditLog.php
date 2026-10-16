@@ -23,6 +23,16 @@ class AssetEditLog extends Model
     ];
 
     /**
+     * Edit logs are permanent history.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (): void {
+            throw new \RuntimeException('Edit logs are permanent history and cannot be deleted.');
+        });
+    }
+
+    /**
      * @var array<string, string>
      */
     protected static array $fieldLabels = [
