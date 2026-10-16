@@ -68,7 +68,8 @@ class LocationDeletionTest extends TestCase
         Schema::create('lifecycle_logs', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('asset_id');
-            $table->unsignedBigInteger('deploy_to_loc_id')->nullable();
+            $table->foreignId('deploy_to_loc_id')->nullable()->constrained('locations')->nullOnDelete();
+            $table->string('deploy_to_loc_name')->nullable();
         });
 
         Schema::create('asset_edit_logs', function (Blueprint $table): void {
@@ -94,7 +95,6 @@ class LocationDeletionTest extends TestCase
             'child location' => ['child', 'child locations'],
             'equipment' => ['equipment', 'equipment / accessories'],
             'RFID tag log' => ['tag_log', 'RFID tag logs'],
-            'lifecycle log' => ['lifecycle_log', 'lifecycle logs'],
             'edit log moving an asset away from the location' => ['edit_log_old', 'edit logs'],
             'edit log moving an asset to the location' => ['edit_log_new', 'edit logs'],
         ];
@@ -103,13 +103,41 @@ class LocationDeletionTest extends TestCase
     public function test_reason_for_history_says_logs_are_permanent(): void
     {
         $location = Location::create(['name' => 'Main Yard']);
-        $this->addReference($location, 'lifecycle_log');
         $this->addReference($location, 'edit_log_new');
+        $this->addReference($location, 'tag_log');
 
         $this->assertSame(
-            '"Main Yard" appears in 1 lifecycle logs, 1 edit logs. Logs are permanent, so this location must be kept.',
+            '"Main Yard" appears in 1 edit logs, 1 RFID tag logs. Logs are permanent, so this location must be kept.',
             $location->deletionBlockedReason(),
         );
+    }
+
+    public function test_location_used_only_by_lifecycle_logs_can_be_deleted_and_logs_keep_the_name(): void
+    {
+        $location = Location::create(['name' => 'Main Yard']);
+        $this->addReference($location, 'lifecycle_log');
+
+        $this->assertFalse($location->isReferenced());
+        $this->assertNull($location->deletionBlockedReason());
+
+        $location->delete();
+
+        $this->assertFalse(Location::query()->whereKey($location->id)->exists());
+        $this->assertDatabaseHas('lifecycle_logs', ['deploy_to_loc_id' => null, 'deploy_to_loc_name' => 'Main Yard']);
+    }
+
+    public function test_edit_page_deletes_a_location_used_only_by_lifecycle_logs(): void
+    {
+        $this->actingAs($this->makeSuperAdmin());
+        $location = Location::create(['name' => 'Main Yard']);
+        $this->addReference($location, 'lifecycle_log');
+
+        Livewire::test(EditLocation::class, ['record' => $location->id])
+            ->callAction(DeleteAction::class)
+            ->assertRedirect();
+
+        $this->assertFalse(Location::query()->whereKey($location->id)->exists());
+        $this->assertDatabaseHas('lifecycle_logs', ['deploy_to_loc_id' => null, 'deploy_to_loc_name' => 'Main Yard']);
     }
 
     public function test_reason_for_removable_records_says_to_move_them_first(): void
@@ -200,9 +228,9 @@ class LocationDeletionTest extends TestCase
         $location = Location::create(['name' => 'Main Yard']);
         $this->addReference($location, 'equipment');
         $this->addReference($location, 'equipment');
-        $this->addReference($location, 'lifecycle_log');
+        $this->addReference($location, 'tag_log');
 
-        $this->assertSame('2 equipment / accessories, 1 lifecycle logs', $location->referenceSummary());
+        $this->assertSame('2 equipment / accessories, 1 RFID tag logs', $location->referenceSummary());
     }
 
     public function test_bulk_delete_is_cancelled_when_any_selected_location_is_in_use(): void
@@ -267,7 +295,7 @@ class LocationDeletionTest extends TestCase
             'child' => Location::create(['name' => 'Child of '.$location->name, 'parent_id' => $location->id]),
             'equipment' => DB::table('equipment_units')->insert(['eqm_name' => 'Unit', 'location_id' => $location->id]),
             'tag_log' => DB::table('asset_tag_logs')->insert(['tag_id' => 'tag-1', 'yard_id' => $location->id]),
-            'lifecycle_log' => DB::table('lifecycle_logs')->insert(['asset_id' => 1, 'deploy_to_loc_id' => $location->id]),
+            'lifecycle_log' => DB::table('lifecycle_logs')->insert(['asset_id' => 1, 'deploy_to_loc_id' => $location->id, 'deploy_to_loc_name' => $location->name]),
             'edit_log_old' => DB::table('asset_edit_logs')->insert(['asset_id' => 1, 'changes' => json_encode(['location_id' => ['old' => $location->id, 'new' => null]])]),
             'edit_log_new' => DB::table('asset_edit_logs')->insert(['asset_id' => 1, 'changes' => json_encode(['location_id' => ['old' => null, 'new' => $location->id]])]),
         };

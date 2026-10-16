@@ -56,6 +56,7 @@ class Location extends Model
 
     /**
      * History that points at this location. Logs are never deleted, so these keep the location forever.
+     * Lifecycle logs are not listed: they keep the location name, and their id is cleared on delete.
      *
      * @return array<string, int>
      */
@@ -64,7 +65,6 @@ class Location extends Model
         $id = $this->getKey();
 
         return array_filter([
-            'lifecycle logs' => LifecycleLog::query()->where('deploy_to_loc_id', $id)->count(),
             'edit logs' => AssetEditLog::query()
                 ->where(fn ($query) => $query
                     ->where('changes->location_id->old', $id)

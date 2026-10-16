@@ -13,6 +13,8 @@ class LifecycleLogNameSnapshotTest extends TestCase
 {
     private const string SNAPSHOT_MIGRATION = 'database/migrations/2026_10_16_104717_snapshot_names_on_lifecycle_logs_table.php';
 
+    private const string SET_NULL_MIGRATION = 'database/migrations/2026_10_16_114441_set_null_on_delete_for_deploy_to_loc_id_on_lifecycle_logs_table.php';
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -87,7 +89,20 @@ class LifecycleLogNameSnapshotTest extends TestCase
         DB::table('locations')->where('id', 3)->delete();
 
         $log = LifecycleLog::query()->sole();
-        $this->assertSame(3, (int) $log->deploy_to_loc_id);
+        $this->assertNull($log->deploy_to_loc_id);
+        $this->assertSame('Main Yard', $log->deploy_to_loc_name);
+    }
+
+    public function test_migration_clears_ids_of_locations_that_were_already_deleted(): void
+    {
+        (require base_path(self::SNAPSHOT_MIGRATION))->up();
+        $this->createLog(['deploy_to_loc_id' => 3]);
+        DB::table('locations')->where('id', 3)->delete();
+
+        (require base_path(self::SET_NULL_MIGRATION))->up();
+
+        $log = LifecycleLog::query()->sole();
+        $this->assertNull($log->deploy_to_loc_id);
         $this->assertSame('Main Yard', $log->deploy_to_loc_name);
     }
 
@@ -174,6 +189,7 @@ class LifecycleLogNameSnapshotTest extends TestCase
     {
         $this->runSnapshotMigration();
 
+        (require base_path(self::SET_NULL_MIGRATION))->down();
         (require base_path(self::SNAPSHOT_MIGRATION))->down();
 
         $this->assertFalse(Schema::hasColumn('lifecycle_logs', 'deploy_to_loc_name'));
@@ -183,6 +199,7 @@ class LifecycleLogNameSnapshotTest extends TestCase
     private function runSnapshotMigration(): void
     {
         (require base_path(self::SNAPSHOT_MIGRATION))->up();
+        (require base_path(self::SET_NULL_MIGRATION))->up();
     }
 
     /**
