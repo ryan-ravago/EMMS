@@ -55,23 +55,28 @@ class Location extends Model
     }
 
     /**
-     * History that points at this location. Logs are never deleted, so these keep the location forever.
-     * Lifecycle logs are not listed: they keep the location name, and their id is cleared on delete.
+     * History that points at this location by id. Logs are never deleted, so these keep the location forever.
+     * Lifecycle logs and edit logs are not listed: they store the location name/path, not a live reference.
      *
      * @return array<string, int>
      */
     public function getHistoryReferenceCounts(): array
     {
-        $id = $this->getKey();
-
         return array_filter([
-            'edit logs' => AssetEditLog::query()
-                ->where(fn ($query) => $query
-                    ->where('changes->location_id->old', $id)
-                    ->orWhere('changes->location_id->new', $id))
-                ->count(),
-            'RFID tag logs' => AssetTagLog::query()->where('yard_id', $id)->count(),
+            'RFID tag logs' => AssetTagLog::query()->where('yard_id', $this->getKey())->count(),
         ]);
+    }
+
+    /**
+     * The text stored in history for a location id: its full path, or a placeholder when the location is gone.
+     */
+    public static function pathForId(mixed $id): ?string
+    {
+        if ($id === null || $id === '') {
+            return null;
+        }
+
+        return self::query()->find($id)?->full_path ?? "Deleted location #{$id}";
     }
 
     /**

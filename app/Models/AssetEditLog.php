@@ -68,7 +68,6 @@ class AssetEditLog extends Model
      */
     protected static array $relatedLookups = [
         'asset_type_id' => ['class' => AssetType::class, 'column' => 'name'],
-        'location_id' => ['class' => Location::class, 'column' => 'name'],
         'lifecycle_status_id' => ['class' => Status::class, 'column' => 'status_title'],
         'parent_id' => ['class' => Equipment::class, 'column' => 'eqm_name'],
         'eqm_eqmm_id' => ['class' => EquipmentModel::class, 'column' => 'eqmm_name'],

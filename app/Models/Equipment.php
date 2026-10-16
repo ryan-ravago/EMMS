@@ -138,10 +138,16 @@ class Equipment extends Model
             $diff = collect($equipment->getChanges())
                 ->except('eqm_updated_at')
                 ->mapWithKeys(fn($new, $field) => [
-                    $field => [
-                        'old' => $equipment->getOriginal($field),
-                        'new' => $new,
-                    ],
+                    // Locations are stored by path so the log stays readable after the location is renamed or deleted.
+                    $field => $field === 'location_id'
+                        ? [
+                            'old' => Location::pathForId($equipment->getOriginal($field)),
+                            'new' => Location::pathForId($new),
+                        ]
+                        : [
+                            'old' => $equipment->getOriginal($field),
+                            'new' => $new,
+                        ],
                 ])
                 ->toArray();
 
