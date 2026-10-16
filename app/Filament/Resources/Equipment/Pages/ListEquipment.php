@@ -150,11 +150,15 @@ class ListEquipment extends ListRecords
     /** @var array{total:int, active:int, inactive:int}|null */
     protected ?array $tabCounts = null;
 
-    /** One query for all three tab badges instead of three. */
+    /**
+     * One query for all three tab badges instead of three. It starts from the resource query, so the
+     * Equipment and Accessories pages count only their own assets, the same rows the table shows.
+     */
     protected function tabCounts(): array
     {
         if ($this->tabCounts === null) {
-            $row = Equipment::query()
+            $row = static::getResource()::getEloquentQuery()
+                ->withoutEagerLoads()
                 ->selectRaw('COUNT(*) as total, SUM(eqm_is_active = 1) as active, SUM(eqm_is_active = 0) as inactive')
                 ->first();
 
