@@ -2,8 +2,8 @@
 
 use App\Console\Commands\CheckDueMaintenanceCommand;
 use App\Console\Commands\SendOverdueMaintenanceTaskNotifications;
-use App\Console\Commands\SyncGoogleSheetInspections;
 use App\Console\Commands\SyncGoogleWorkOrderReplies;
+use App\Console\Commands\SyncInspections;
 use App\Jobs\ProcessDueDateChecks;
 use App\Jobs\SyncEquipmentFromSap;
 use App\Models\AppSetting;
@@ -46,9 +46,10 @@ Schedule::command(SyncGoogleWorkOrderReplies::class)
     ->everyMinute()
     ->withoutOverlapping();
 
-// Schedule::command(SyncGoogleSheetInspections::class)
-//     ->everyMinute()
-//     ->withoutOverlapping();
+// Copies closed (Completed / Cancelled) AppSheet inspections into the maintenance_inspections / aims_inspections tables.
+Schedule::command(SyncInspections::class)
+    ->dailyAt('01:00')
+    ->withoutOverlapping();
 
 Schedule::command(CheckDueMaintenanceCommand::class)
     ->daily()

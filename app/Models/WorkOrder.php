@@ -64,11 +64,6 @@ class WorkOrder extends Model
         return $this->belongsTo(MaintenanceTask::class, 'wo_mt_id', 'mt_id');
     }
 
-    public function inspectionItem(): BelongsTo
-    {
-        return $this->belongsTo(InspectionItem::class, 'wo_insi_id', 'insi_id');
-    }
-
     public function type(): BelongsTo
     {
         return $this->belongsTo(WorkOrderType::class, 'wo_type_id');

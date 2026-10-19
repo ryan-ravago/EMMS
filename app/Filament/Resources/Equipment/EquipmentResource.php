@@ -7,12 +7,12 @@ use App\Filament\Resources\Equipment\Pages\EditEquipment;
 use App\Filament\Resources\Equipment\Pages\ListEquipment;
 use App\Filament\Resources\Equipment\Pages\ViewEquipment;
 use App\Filament\Resources\Equipment\RelationManagers\AccessoriesRelationManager;
+use App\Filament\Resources\Equipment\RelationManagers\AimsInspectionsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\EditLogsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\EquipmentTaskChecklistTemplatesRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\EquipmentTasksSchedulesRelationManager;
-use App\Filament\Resources\Equipment\RelationManagers\InspectionsRelationManager;
-use App\Filament\Resources\Equipment\RelationManagers\InspsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\LifecycleLogsRelationManager;
+use App\Filament\Resources\Equipment\RelationManagers\MaintenanceInspectionsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\MaintenanceTasksRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\RequestorWorkOrdersRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\TagLogsRelationManager;
@@ -150,7 +150,8 @@ class EquipmentResource extends Resource
             LifecycleLogsRelationManager::class,
             WorkOrdersRelationManager::class,
             MaintenanceTasksRelationManager::class,
-            InspsRelationManager::class,
+            MaintenanceInspectionsRelationManager::class,
+            AimsInspectionsRelationManager::class,
             EditLogsRelationManager::class,
         ];
 
@@ -163,9 +164,7 @@ class EquipmentResource extends Resource
         //         WorkOrdersRelationManager::class,
         //         // EquipmentTaskChecklistTemplatesRelationManager::class,
         //         // EquipmentTasksSchedulesRelationManager::class,
-        //         // InspectionsRelationManager::class,
         //         MaintenanceTasksRelationManager::class,
-        //         InspsRelationManager::class,
         //     ]);
         // }
 

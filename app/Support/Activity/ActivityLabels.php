@@ -23,7 +23,6 @@ class ActivityLabels
         'EquipmentModel' => 'Equipment Model',
         'RequestorWorkOrder' => 'Work Order',
         'TechnicianWorkOrder' => 'Work Order',
-        'Insp' => 'Inspection',
     ];
 
     private const MODEL_EVENTS = [

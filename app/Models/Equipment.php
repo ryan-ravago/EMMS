@@ -334,14 +334,20 @@ class Equipment extends Model
         );
     }
 
-    public function inspections(): HasMany
+    /**
+     * Closed maintenance inspections of this asset. They store the equipment as text, so they are matched by PRC code.
+     */
+    public function maintenanceInspections(): HasMany
     {
-        return $this->hasMany(Inspection::class, 'ins_eqm_id', 'eqm_id');
+        return $this->hasMany(MaintenanceInspection::class, 'equipment_prc_code', 'eqm_prc_code');
     }
 
-    public function insps(): HasMany
+    /**
+     * Closed AIMS inspections of this asset, matched by PRC code.
+     */
+    public function aimsInspections(): HasMany
     {
-        return $this->hasMany(Insp::class, 'insp_eqm_id', 'eqm_id');
+        return $this->hasMany(AimsInspection::class, 'equipment_prc_code', 'eqm_prc_code');
     }
 
     public function workOrders(): HasMany

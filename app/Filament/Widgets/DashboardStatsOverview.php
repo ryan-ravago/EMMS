@@ -5,8 +5,7 @@ namespace App\Filament\Widgets;
 use App\Filament\Resources\Categories\CategoryResource;
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Filament\Resources\EquipmentTypes\EquipmentTypeResource;
-use App\Filament\Resources\Inspections\InspectionResource;
-use App\Filament\Resources\Insps\InspResource;
+use App\Filament\Resources\MaintenanceInspections\MaintenanceInspectionResource;
 use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
 use App\Filament\Resources\Models\ModelResource;
 use App\Filament\Resources\RequestorWorkOrders\RequestorWorkOrderResource;
@@ -19,8 +18,7 @@ use App\Models\Equipment;
 use App\Models\EquipmentCategory;
 use App\Models\EquipmentModel;
 use App\Models\EquipmentType;
-use App\Models\Insp;
-use App\Models\Inspection;
+use App\Models\MaintenanceInspection;
 use App\Models\MaintenanceTask;
 use App\Models\WorkOrder;
 use Filament\Support\Icons\Heroicon;
@@ -81,11 +79,11 @@ class DashboardStatsOverview extends StatsOverviewWidget
                     ->descriptionIcon(Heroicon::InformationCircle)
                     ->color('primary')
                     ->url(EquipmentResource::getUrl()),
-                Stat::make('Total Inspections', Inspection::count())
+                Stat::make('Total Inspections', MaintenanceInspection::count())
                     ->icon(Heroicon::ClipboardDocumentList)
-                    ->description('Conducted inspections')
+                    ->description('Closed maintenance inspections')
                     ->color('success')
-                    ->url(InspectionResource::getUrl()),
+                    ->url(MaintenanceInspectionResource::getUrl()),
                 Stat::make('Overdue Maintenance', $overdueCount)
                     ->icon(Heroicon::ExclamationTriangle)
                     ->description($overdueCount > 0 ? 'Urgent attention required' : 'All tasks on track')
@@ -102,10 +100,10 @@ class DashboardStatsOverview extends StatsOverviewWidget
 
         if ($user->hasRole('manager')) {
             $stats = [
-                Stat::make('Department Inspections', Insp::where('insp_dep_id', $user->user_dep_id)->count())
+                Stat::make('Department Inspections', MaintenanceInspection::visibleTo($user)->count())
                     ->icon(Heroicon::ClipboardDocumentList)
                     ->color('success')
-                    ->url(InspResource::getUrl()),
+                    ->url(MaintenanceInspectionResource::getUrl()),
             ];
 
             if ($user->user_dep_id == $preventiveDepId) {

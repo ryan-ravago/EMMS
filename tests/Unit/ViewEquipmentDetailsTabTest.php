@@ -7,12 +7,11 @@ use App\Filament\Resources\Categories\Pages\ViewCategory;
 use App\Filament\Resources\Departments\Pages\ViewDepartment;
 use App\Filament\Resources\Equipment\Pages\ViewEquipment;
 use App\Filament\Resources\Equipment\Resources\AssetTags\Pages\ViewAssetTag;
-use App\Filament\Resources\Equipment\Resources\Insps\Pages\ViewInsps;
 use App\Filament\Resources\Equipment\Resources\WorkOrders\Pages\ViewWorkOrder as ViewEquipmentWorkOrder;
 use App\Filament\Resources\EquipmentTypes\Pages\ViewEquipmentType;
-use App\Filament\Resources\InspectionItems\Pages\ViewInspectionItem;
-use App\Filament\Resources\Insps\Pages\ViewInsp;
+use App\Filament\Resources\AimsInspections\Pages\ViewAimsInspection;
 use App\Filament\Resources\Locations\Pages\ViewLocation;
+use App\Filament\Resources\MaintenanceInspections\Pages\ViewMaintenanceInspection;
 use App\Filament\Resources\MaintenanceTasks\Pages\ViewMaintenanceTask;
 use App\Filament\Resources\Models\Pages\ViewModel;
 use App\Filament\Resources\RequestorWorkOrders\Pages\ViewRequestorWorkOrder;
@@ -39,10 +38,9 @@ class ViewEquipmentDetailsTabTest extends TestCase
             'categories' => [ViewCategory::class],
             'departments' => [ViewDepartment::class],
             'asset tags' => [ViewAssetTag::class],
-            'equipment insps' => [ViewInsps::class],
             'equipment types' => [ViewEquipmentType::class],
-            'inspection items' => [ViewInspectionItem::class],
-            'insps' => [ViewInsp::class],
+            'maintenance inspections' => [ViewMaintenanceInspection::class],
+            'aims inspections' => [ViewAimsInspection::class],
             'locations' => [ViewLocation::class],
             'maintenance tasks' => [ViewMaintenanceTask::class],
             'models' => [ViewModel::class],

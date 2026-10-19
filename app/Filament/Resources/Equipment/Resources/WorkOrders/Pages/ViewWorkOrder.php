@@ -14,8 +14,6 @@ use App\Mail\WorkOrderRejectedMail;
 use App\Mail\WorkOrderRejectionMail;
 use App\Models\Action as ModelsAction;
 use App\Models\AppUser;
-use App\Models\InspectionItem;
-use App\Models\InspectionItemLog;
 use App\Models\MaintenanceTask;
 use App\Models\MaintenanceTaskLog;
 use App\Models\Status;
@@ -177,30 +175,7 @@ class ViewWorkOrder extends ViewRecord
                                     'wol_dt' => $now,
                                 ]);
 
-                                if ($workOrder->wo_insi_id) {
-                                    $inspectionItem = InspectionItem::query()
-                                        ->where('insi_id', $workOrder->wo_insi_id)
-                                        ->lockForUpdate()
-                                        ->first();
-
-                                    if ($inspectionItem) {
-                                        $inspectionItem->update([
-                                            'insi_status_id' => $pendingStatus->status_id,
-                                        ]);
-
-                                        InspectionItemLog::create([
-                                            'inil_insi_id' => $inspectionItem->insi_id,
-                                            'inil_a_id' => $action->a_id,
-                                            'inil_status_id' => $pendingStatus->status_id,
-                                            'inil_action_made' => $action->a_past_tense,
-                                            'inil_status_log' => $pendingStatus->status_title,
-                                            'inil_remarks' => 'Completion request rejected; inspection finding moved back to pending.',
-                                            'inil_wo_id' => $workOrder->wo_id,
-                                            'inil_by' => Auth::id(),
-                                            'inil_dt' => $now,
-                                        ]);
-                                    }
-                                } elseif ($workOrder->wo_mt_id) {
+                                if ($workOrder->wo_mt_id) {
                                     $maintenanceTask = MaintenanceTask::query()
                                         ->where('mt_id', $workOrder->wo_mt_id)
                                         ->lockForUpdate()
@@ -322,30 +297,7 @@ class ViewWorkOrder extends ViewRecord
                                     'wol_dt' => $now,
                                 ]);
 
-                                if ($workOrder->wo_insi_id) {
-                                    $inspectionItem = InspectionItem::where('insi_id', $workOrder->wo_insi_id)
-                                        ->lockForUpdate()
-                                        ->first();
-
-                                    if ($inspectionItem) {
-                                        $inspectionItem->update([
-                                            'insi_status_id' => $status->status_id,
-                                            'insi_closed_dt' => $now,
-                                        ]);
-
-                                        InspectionItemLog::create([
-                                            'inil_insi_id' => $inspectionItem->insi_id,
-                                            'inil_a_id' => $action->a_id,
-                                            'inil_status_id' => $status->status_id,
-                                            'inil_action_made' => $action->a_past_tense,
-                                            'inil_status_log' => $status->status_title,
-                                            'inil_remarks' => 'Completion approved by manager.',
-                                            'inil_wo_id' => $workOrder->wo_id,
-                                            'inil_by' => auth()->id(),
-                                            'inil_dt' => $now,
-                                        ]);
-                                    }
-                                } elseif ($workOrder->wo_mt_id) {
+                                if ($workOrder->wo_mt_id) {
                                     $maintenanceTask = MaintenanceTask::where('mt_id', $workOrder->wo_mt_id)
                                         ->lockForUpdate()
                                         ->first();
@@ -466,32 +418,7 @@ class ViewWorkOrder extends ViewRecord
                                     'wol_dt' => $now,
                                 ]);
 
-                                if ($workOrder->wo_insi_id) {
-                                    $inspectionItem = InspectionItem::where('insi_id', $workOrder->wo_insi_id)
-                                        ->lockForUpdate()
-                                        ->first();
-
-                                    if ($inspectionItem) {
-                                        $inspectionItem->update([
-                                            'insi_status_id' => 'pnd',
-                                        ]);
-
-                                        $updateAction = ModelsAction::find('upt');
-                                        $pendingStatus = Status::find('pnd');
-
-                                        InspectionItemLog::create([
-                                            'inil_insi_id' => $inspectionItem->insi_id,
-                                            'inil_a_id' => $updateAction->a_id,
-                                            'inil_status_id' => $pendingStatus->status_id,
-                                            'inil_action_made' => $updateAction->a_past_tense,
-                                            'inil_status_log' => $pendingStatus->status_title,
-                                            'inil_remarks' => 'Cancelled the linked work order and reverted this inspection finding to pending.',
-                                            'inil_wo_id' => $workOrder->wo_id,
-                                            'inil_by' => auth()->id(),
-                                            'inil_dt' => $now,
-                                        ]);
-                                    }
-                                } elseif ($workOrder->wo_mt_id) {
+                                if ($workOrder->wo_mt_id) {
                                     $maintenanceTask = MaintenanceTask::where('mt_id', $workOrder->wo_mt_id)
                                         ->lockForUpdate()
                                         ->first();

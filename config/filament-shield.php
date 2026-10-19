@@ -3,9 +3,7 @@
 declare(strict_types=1);
 
 use App\Filament\Resources\Equipment\EquipmentResource;
-use App\Filament\Resources\Equipment\Resources\Insps\InspsResource;
 use App\Filament\Resources\EquipmentUnitCategories\EquipmentUnitCategoryResource;
-use App\Filament\Resources\InspectionItems\InspectionItemResource;
 use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
 use App\Filament\Resources\RequestorWorkOrders\RequestorWorkOrderResource;
 use App\Filament\Resources\TechnicianWorkOrders\TechnicianWorkOrderResource;
@@ -232,17 +230,12 @@ return [
                 'snooze',
                 'markAsComplete',
             ],
-            InspectionItemResource::class => [
-                'disregard',
-                'makeWorkOrder',
-            ],
             EquipmentUnitCategoryResource::class => [
                 'allocateCategory',
             ],
         ],
         'exclude' => [
             App\Filament\Resources\Models\Resources\Equipment\EquipmentResource::class,
-            InspsResource::class,
             App\Filament\Resources\Equipment\Resources\WorkOrders\WorkOrderResource::class,
         ],
     ],
