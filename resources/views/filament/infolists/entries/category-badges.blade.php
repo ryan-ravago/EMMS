@@ -1,5 +1,5 @@
 <x-dynamic-component :component="$getEntryWrapperView()" :entry="$entry">
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-wrap gap-2">
         @forelse ($getRecord()->categories as $category)
             <a href="{{ \App\Filament\Resources\Categories\CategoryResource::getUrl('view', ['record' => $category]) }}">
                 <x-filament::badge>
