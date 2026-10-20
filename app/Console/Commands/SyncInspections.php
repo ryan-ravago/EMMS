@@ -2,11 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\AimsInspection;
-use App\Models\MaintenanceInspection;
-use App\Models\SyncAuditLog;
-use App\Services\Google\GoogleSheetReader;
-use App\Services\Inspections\AppSheetInspectionSync as Sync;
+use App\Services\Inspections\InspectionSyncRunner;
+use App\Support\Activity\ActivityLogging;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -14,81 +11,61 @@ use Throwable;
 class SyncInspections extends Command
 {
     protected $signature = 'inspections:sync
+        {--only= : Sync only "maintenance" or "aims" (default: both)}
+        {--manual : Record the run as a manual one instead of a scheduled one}
         {--dry-run : Show what would be imported without writing anything}';
 
     protected $description = 'Copy closed (Completed / Cancelled) maintenance and AIMS inspections from the AppSheet Google Sheet into plain-text tables';
 
-    public function handle(GoogleSheetReader $reader, Sync $sync): int
+    public function handle(InspectionSyncRunner $runner): int
     {
-        $dryRun = (bool) $this->option('dry-run');
+        $only = $this->option('only');
 
-        try {
-            $maintenance = [$reader->rows('insps', Sync::MAINTENANCE_COLUMNS), $reader->rows('insp_items', Sync::MAINTENANCE_ITEM_COLUMNS), $reader->rows('insp_logs', Sync::MAINTENANCE_LOG_COLUMNS)];
-            $aims = [$reader->rows('ainsps', Sync::AIMS_COLUMNS), $reader->rows('ainsp_items', Sync::AIMS_ITEM_COLUMNS), $reader->rows('ainsp_logs', Sync::AIMS_LOG_COLUMNS)];
+        if ($only !== null && ! in_array($only, InspectionSyncRunner::KINDS, true)) {
+            $this->error('--only must be "maintenance" or "aims".');
 
-            $lookups = $sync->buildLookups(
-                $reader->rows('statuses', Sync::STATUS_COLUMNS),
-                $reader->rows('actions', Sync::ACTION_COLUMNS),
-                $reader->rows('checklists', Sync::CHECKLIST_COLUMNS),
-                $sync->departmentLookup(),
-                $sync->equipmentLookup([...array_column($maintenance[0], 'insp_eqm_id'), ...array_column($aims[0], 'ainsp_eqm_id')]),
-            );
-
-            $results = [
-                'insps' => [MaintenanceInspection::class, $sync->planMaintenance(...[...$maintenance, $lookups]), 'persistMaintenance', count($maintenance[0])],
-                'ainsps' => [AimsInspection::class, $sync->planAims(...[...$aims, $lookups]), 'persistAims', count($aims[0])],
-            ];
-        } catch (Throwable $exception) {
-            Log::error('Inspection sync failed', ['message' => $exception->getMessage()]);
-
-            foreach (['insps', 'ainsps'] as $sheet) {
-                $this->audit($sheet, 0, null, 'failed', $exception->getMessage(), $dryRun);
-            }
-
-            $this->error('Sync failed: '.$exception->getMessage());
-
-            return self::FAILURE;
+            return self::INVALID;
         }
+
+        $kinds = $only === null ? InspectionSyncRunner::KINDS : [$only];
+        $dryRun = (bool) $this->option('dry-run');
+        $trigger = $this->option('manual') ? 'Manual' : 'Scheduled';
 
         $rows = [];
+        $failed = false;
 
-        foreach ($results as $sheet => [$model, $planned, $persist, $sheetRows]) {
-            $new = count($sync->onlyNew($model, $planned['plans']));
-            $outcome = $dryRun ? ['inserted' => $new, 'skipped' => count($planned['plans']) - $new, 'failed' => 0] : $sync->{$persist}($planned['plans']);
+        foreach ($kinds as $kind) {
+            $startedAt = microtime(true);
 
-            $rows[] = [
-                $sheet,
-                $sheetRows,
-                $planned['open'],
-                count($planned['plans']),
-                $outcome['skipped'],
-                $outcome['inserted'],
-                $planned['unresolved_equipment'],
-                $outcome['failed'],
-            ];
+            try {
+                $result = $runner->run($kind, $dryRun);
+            } catch (Throwable $exception) {
+                Log::error('Inspection sync failed', ['kind' => $kind, 'message' => $exception->getMessage()]);
 
-            $this->audit($sheet, $outcome['inserted'], $sheetRows, $outcome['failed'] > 0 ? 'failed' : 'success', $outcome['failed'] > 0 ? "{$outcome['failed']} inspection(s) could not be saved; see the log." : null, $dryRun);
+                if (! $dryRun) {
+                    ActivityLogging::inspectionSync($kind, $trigger, 'failed', error: $exception->getMessage(), startedAt: $startedAt);
+                }
+
+                $this->error("Sync of {$kind} inspections failed: {$exception->getMessage()}");
+                $failed = true;
+
+                continue;
+            }
+
+            if (! $dryRun) {
+                ActivityLogging::inspectionSync($kind, $trigger, $result['failed'] > 0 ? 'failed' : 'success', $result, $result['failed'] > 0 ? "{$result['failed']} inspection(s) could not be saved" : null, $startedAt);
+            }
+
+            $failed = $failed || $result['failed'] > 0;
+
+            $rows[] = [$result['sheet'], $result['rows'], $result['open'], $result['closed'], $result['skipped'], $result['imported'], $result['unresolved_equipment'], $result['failed']];
         }
 
-        $this->table(['Sheet', 'Rows read', 'Still open', 'Closed', 'Already imported', $dryRun ? 'Would import' : 'Imported', 'Equipment not found', 'Failed'], $rows);
-        $this->info($dryRun ? 'Dry run - nothing was written.' : 'Sync complete.');
-
-        return collect($rows)->sum(7) > 0 ? self::FAILURE : self::SUCCESS;
-    }
-
-    private function audit(string $sheet, int $synced, ?int $lastRow, string $status, ?string $error, bool $dryRun): void
-    {
-        if ($dryRun) {
-            return;
+        if ($rows !== []) {
+            $this->table(['Sheet', 'Rows read', 'Still open', 'Closed', 'Already imported', $dryRun ? 'Would import' : 'Imported', 'Equipment not found', 'Failed'], $rows);
+            $this->info($dryRun ? 'Dry run - nothing was written.' : 'Sync complete.');
         }
 
-        SyncAuditLog::query()->create([
-            'sheet_name' => $sheet,
-            'synced_rows' => $synced,
-            'last_row_processed' => $lastRow,
-            'status' => $status,
-            'error_message' => $error,
-            'synced_at' => now(),
-        ]);
+        return $failed ? self::FAILURE : self::SUCCESS;
     }
 }

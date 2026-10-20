@@ -47,6 +47,7 @@ class AppSheetInspectionSyncTest extends TestCase
         });
 
         (require base_path('database/migrations/2026_10_19_162850_create_maintenance_and_aims_inspection_tables.php'))->up();
+        (require base_path('database/migrations/2026_10_20_084131_add_work_order_no_to_maintenance_inspections_table.php'))->up();
 
         DB::table('departments')->insert([
             ['dep_code' => 'MECH', 'dep_name' => 'Mechanical'],
@@ -176,6 +177,22 @@ class AppSheetInspectionSyncTest extends TestCase
         $this->assertSame('2026-10-02 11:52:40', $attributes['requested_at']);
         $this->assertSame('richard.vea@ravago.com.ph, laav.blanche@gmail.com, tech1@g.co', $attributes['technicians']);
         $this->assertSame('verifier1@g.co, verifier2@g.co', $attributes['verifiers']);
+    }
+
+    public function test_the_work_order_number_is_kept_as_text(): void
+    {
+        $planned = $this->sync->planMaintenance([
+            $this->maintenanceRow(['insp_id' => 'a', 'insp_no' => 'IN-1', 'insp_wo_id' => 'WO-MECH-261016001']),
+            $this->maintenanceRow(['insp_id' => 'b', 'insp_no' => 'IN-2', 'insp_wo_id' => null]),
+        ], [], [], $this->lookups())['plans'];
+
+        $this->assertSame('WO-MECH-261016001', $planned[0]['attributes']['work_order_no']);
+        $this->assertNull($planned[1]['attributes']['work_order_no']);
+
+        $this->sync->persistMaintenance($planned);
+
+        $this->assertSame('WO-MECH-261016001', MaintenanceInspection::query()->where('inspection_no', 'IN-1')->value('work_order_no'));
+        $this->assertNull(MaintenanceInspection::query()->where('inspection_no', 'IN-2')->value('work_order_no'));
     }
 
     public function test_items_and_logs_are_attached_to_their_inspection_and_logs_are_sorted(): void
@@ -430,9 +447,62 @@ class AppSheetInspectionSyncTest extends TestCase
             }
         });
 
-        $this->artisan('inspections:sync')->expectsOutputToContain('Sync failed: Google is down')->assertFailed();
+        $this->artisan('inspections:sync')->expectsOutputToContain('Google is down')->assertFailed();
 
         $this->assertSame(['failed', 'failed'], SyncAuditLog::query()->pluck('status')->all());
         $this->assertSame(0, MaintenanceInspection::query()->count());
+    }
+
+    public function test_only_option_syncs_just_one_kind(): void
+    {
+        $this->bindFakeSheets();
+
+        $this->artisan('inspections:sync', ['--only' => 'aims'])->assertSuccessful();
+
+        $this->assertSame(0, MaintenanceInspection::query()->count());
+        $this->assertSame(1, AimsInspection::query()->count());
+        $this->assertSame(['ainsps'], SyncAuditLog::query()->pluck('sheet_name')->all());
+
+        $this->artisan('inspections:sync', ['--only' => 'maintenance'])->assertSuccessful();
+
+        $this->assertSame(1, MaintenanceInspection::query()->count());
+        $this->assertSame(['ainsps', 'insps'], SyncAuditLog::query()->orderBy('id')->pluck('sheet_name')->all());
+    }
+
+    public function test_an_unknown_only_value_is_rejected(): void
+    {
+        $this->bindFakeSheets();
+
+        $this->artisan('inspections:sync', ['--only' => 'everything'])
+            ->expectsOutputToContain('--only must be')
+            ->assertExitCode(2);
+
+        $this->assertSame(0, SyncAuditLog::query()->count());
+    }
+
+    public function test_a_failure_in_one_kind_does_not_stop_the_other(): void
+    {
+        $sheets = $this->fakeSheets();
+        unset($sheets['insps']);
+
+        $this->app->instance(GoogleSheetReader::class, new class($sheets) extends GoogleSheetReader
+        {
+            /**
+             * @param  array<string, list<array<string, string|null>>>  $sheets
+             */
+            public function __construct(private array $sheets) {}
+
+            public function rows(string $sheetName, array $columns): array
+            {
+                return $this->sheets[$sheetName] ?? throw new RuntimeException("Sheet {$sheetName} is unreadable");
+            }
+        });
+
+        $this->artisan('inspections:sync')->assertFailed();
+
+        $this->assertSame(0, MaintenanceInspection::query()->count());
+        $this->assertSame(1, AimsInspection::query()->count());
+        $this->assertSame('failed', SyncAuditLog::query()->where('sheet_name', 'insps')->value('status'));
+        $this->assertSame('success', SyncAuditLog::query()->where('sheet_name', 'ainsps')->value('status'));
     }
 }

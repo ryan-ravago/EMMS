@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\MaintenanceInspections\Tables;
 
+use App\Filament\Resources\MaintenanceInspections\MaintenanceInspectionResource;
 use App\Models\MaintenanceInspection;
 use Filament\Actions\ViewAction;
+use Filament\Support\Enums\IconPosition;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -32,6 +34,13 @@ class MaintenanceInspectionsTable
                 TextColumn::make('checklist_name')
                     ->label('Checklist')
                     ->placeholder('—')
+                    ->searchable(),
+                TextColumn::make('work_order_no')
+                    ->label('Work Order')
+                    ->placeholder('—')
+                    ->url(fn (MaintenanceInspection $record): ?string => MaintenanceInspectionResource::workOrderUrl($record))
+                    ->icon(fn (MaintenanceInspection $record): ?string => MaintenanceInspectionResource::workOrderUrl($record) ? 'heroicon-o-arrow-top-right-on-square' : null)
+                    ->iconPosition(IconPosition::After)
                     ->searchable(),
                 TextColumn::make('status')
                     ->badge()

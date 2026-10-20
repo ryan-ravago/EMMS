@@ -22,7 +22,8 @@ class AimsInspection extends Model
 
     public const STATUS_CANCELLED = 'Cancelled';
 
-    public const DEPARTMENT_CODE = 'AIMS';
+    /** The roles that may see AIMS inspections. */
+    public const VIEWER_ROLES = ['super_admin', 'asset_admin', 'asset_manager'];
 
     public $timestamps = false;
 
@@ -57,12 +58,11 @@ class AimsInspection extends Model
     }
 
     /**
-     * AIMS inspections are for super admins and the AIMS department only.
+     * AIMS inspections are only for super admins, Asset Admins and Asset Managers.
      */
     public static function isVisibleTo(?AppUser $user): bool
     {
-        return $user !== null
-            && ($user->hasRole('super_admin') || strtoupper((string) $user->department?->dep_code) === self::DEPARTMENT_CODE);
+        return $user !== null && $user->hasAnyRole(self::VIEWER_ROLES);
     }
 
     /**

@@ -42,6 +42,10 @@ class ClosedInspectionScreensTest extends TestCase
 
     private int $aimsId;
 
+    private int $prevId;
+
+    private int $itId;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -81,13 +85,25 @@ class ClosedInspectionScreensTest extends TestCase
         });
 
         (require base_path('database/migrations/2026_10_19_162850_create_maintenance_and_aims_inspection_tables.php'))->up();
+        (require base_path('database/migrations/2026_10_20_084131_add_work_order_no_to_maintenance_inspections_table.php'))->up();
 
-        $this->mechId = DB::table('departments')->insertGetId(['dep_code' => 'MECH', 'dep_name' => 'Mechanical']);
-        $this->elecId = DB::table('departments')->insertGetId(['dep_code' => 'ELEC', 'dep_name' => 'Electrical']);
-        $this->aimsId = DB::table('departments')->insertGetId(['dep_code' => 'AIMS', 'dep_name' => 'Asset Inventory Management']);
+        Schema::create('work_orders', function (Blueprint $table): void {
+            $table->id('wo_id');
+            $table->string('wo_no')->nullable()->unique();
+            $table->unsignedBigInteger('wo_dep_id')->nullable();
+            $table->unsignedBigInteger('wo_created_by')->nullable();
+        });
+
+        $this->mechId = DB::table('departments')->insertGetId(['dep_code' => 'MECH', 'dep_name' => 'Mechanical', 'is_maintenance' => true]);
+        $this->elecId = DB::table('departments')->insertGetId(['dep_code' => 'ELEC', 'dep_name' => 'Electrical', 'is_maintenance' => true]);
+        $this->prevId = DB::table('departments')->insertGetId(['dep_code' => 'PREV', 'dep_name' => 'Preventive', 'is_maintenance' => true]);
+        $this->aimsId = DB::table('departments')->insertGetId(['dep_code' => 'AIMS', 'dep_name' => 'Asset Inventory Management', 'is_maintenance' => false]);
+        $this->itId = DB::table('departments')->insertGetId(['dep_code' => 'IT', 'dep_name' => 'Information Technology', 'is_maintenance' => false]);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
-        Role::create(['name' => 'super_admin', 'guard_name' => 'web']);
+        foreach (['super_admin', 'manager', 'technician', 'asset_admin', 'asset_manager'] as $role) {
+            Role::create(['name' => $role, 'guard_name' => 'web']);
+        }
 
         Filament::setCurrentPanel('admin');
     }
@@ -95,7 +111,11 @@ class ClosedInspectionScreensTest extends TestCase
     /**
      * @param  list<string>  $permissions
      */
-    private function makeUser(?int $departmentId, array $permissions = [], bool $superAdmin = false): AppUser
+    /**
+     * @param  list<string>  $permissions
+     * @param  list<string>  $roles
+     */
+    private function makeUser(?int $departmentId, array $permissions = [], bool $superAdmin = false, array $roles = []): AppUser
     {
         $user = AppUser::create([
             'user_fname' => fake()->firstName(),
@@ -112,7 +132,11 @@ class ClosedInspectionScreensTest extends TestCase
         $user->givePermissionTo($permissions);
 
         if ($superAdmin) {
-            $user->assignRole('super_admin');
+            $roles[] = 'super_admin';
+        }
+
+        if ($roles !== []) {
+            $user->assignRole($roles);
         }
 
         return $user;
@@ -189,6 +213,70 @@ class ClosedInspectionScreensTest extends TestCase
             ->assertCanSeeTableRecords([$log]);
     }
 
+    public function test_the_work_order_number_links_to_the_work_order_when_it_exists_and_the_user_may_view_it(): void
+    {
+        $workOrderId = DB::table('work_orders')->insertGetId(['wo_no' => 'WO-MECH-261016001', 'wo_dep_id' => $this->mechId]);
+        $inspection = MaintenanceInspection::factory()->create(['work_order_no' => 'WO-MECH-261016001']);
+
+        $this->actingAs($this->makeUser($this->mechId, [...self::MAINTENANCE_VIEW, 'View:WorkOrderResource']));
+
+        $this->assertSame($workOrderId, $inspection->workOrder->wo_id);
+        $this->assertSame(
+            route('filament.admin.resources.work-orders.view', ['record' => $workOrderId]),
+            MaintenanceInspectionResource::workOrderUrl($inspection),
+        );
+
+        Livewire::test(ListMaintenanceInspections::class)
+            ->assertSee('WO-MECH-261016001')
+            ->assertTableColumnFormattedStateSet('work_order_no', 'WO-MECH-261016001', $inspection);
+        Livewire::test(ViewMaintenanceInspection::class, ['record' => $inspection->id])
+            ->assertSee('WO-MECH-261016001');
+    }
+
+    public function test_the_work_order_number_is_plain_text_when_the_work_order_is_missing_or_not_viewable(): void
+    {
+        DB::table('work_orders')->insert(['wo_no' => 'WO-ELEC-1', 'wo_dep_id' => $this->elecId]);
+        $missing = MaintenanceInspection::factory()->create(['work_order_no' => 'WO-NOT-IN-THIS-DB']);
+        $otherDepartment = MaintenanceInspection::factory()->create(['work_order_no' => 'WO-ELEC-1']);
+        $none = MaintenanceInspection::factory()->create(['work_order_no' => null]);
+
+        $this->actingAs($this->makeUser($this->mechId, [...self::MAINTENANCE_VIEW, 'View:WorkOrderResource']));
+
+        $this->assertNull($missing->workOrder);
+        $this->assertNull(MaintenanceInspectionResource::workOrderUrl($missing), 'work order is not in the database');
+        $this->assertNull(MaintenanceInspectionResource::workOrderUrl($otherDepartment), 'user may not view another department\'s work order');
+        $this->assertNull(MaintenanceInspectionResource::workOrderUrl($none));
+        $this->assertSame('WO-NOT-IN-THIS-DB', $missing->work_order_no);
+    }
+
+    public function test_a_super_admin_can_open_any_work_order_from_an_inspection(): void
+    {
+        $workOrderId = DB::table('work_orders')->insertGetId(['wo_no' => 'WO-ELEC-1', 'wo_dep_id' => $this->elecId]);
+        $inspection = MaintenanceInspection::factory()->create(['work_order_no' => 'WO-ELEC-1']);
+
+        $this->actingAs($this->makeUser($this->mechId, self::MAINTENANCE_VIEW, superAdmin: true));
+
+        $this->assertStringEndsWith("/work-orders/{$workOrderId}", MaintenanceInspectionResource::workOrderUrl($inspection));
+    }
+
+    public function test_deleting_the_work_order_keeps_the_number_on_the_inspection(): void
+    {
+        DB::table('work_orders')->insert(['wo_no' => 'WO-MECH-1', 'wo_dep_id' => $this->mechId]);
+        $inspection = MaintenanceInspection::factory()->create(['work_order_no' => 'WO-MECH-1']);
+
+        DB::table('work_orders')->where('wo_no', 'WO-MECH-1')->delete();
+
+        $this->assertNull($inspection->fresh()->workOrder);
+        $this->assertSame('WO-MECH-1', $inspection->fresh()->work_order_no);
+    }
+
+    public function test_the_work_order_column_migration_can_be_rolled_back(): void
+    {
+        (require base_path('database/migrations/2026_10_20_084131_add_work_order_no_to_maintenance_inspections_table.php'))->down();
+
+        $this->assertFalse(Schema::hasColumn('maintenance_inspections', 'work_order_no'));
+    }
+
     public function test_another_departments_inspection_cannot_be_opened(): void
     {
         $elec = MaintenanceInspection::factory()->forDepartment('ELEC', 'Electrical')->create();
@@ -200,18 +288,89 @@ class ClosedInspectionScreensTest extends TestCase
         Livewire::test(ViewMaintenanceInspection::class, ['record' => $elec->id]);
     }
 
-    public function test_aims_inspections_are_only_for_the_aims_department_and_super_admins(): void
+    public function test_aims_inspections_are_for_asset_admins_asset_managers_and_super_admins(): void
     {
         $inspection = AimsInspection::factory()->create();
 
-        $this->actingAs($this->makeUser($this->aimsId, self::AIMS_VIEW));
-        Livewire::test(ListAimsInspections::class)->assertCanSeeTableRecords([$inspection]);
+        foreach ([['asset_admin'], ['asset_manager'], ['super_admin']] as [$role]) {
+            $this->actingAs($this->makeUser($this->itId, roles: [$role]));
 
-        $this->actingAs($this->makeUser($this->mechId, self::AIMS_VIEW));
-        Livewire::test(ListAimsInspections::class)->assertForbidden();
+            Livewire::test(ListAimsInspections::class)->assertCanSeeTableRecords([$inspection]);
+        }
+    }
 
-        $this->actingAs($this->makeUser($this->mechId, self::AIMS_VIEW, superAdmin: true));
-        Livewire::test(ListAimsInspections::class)->assertCanSeeTableRecords([$inspection]);
+    public function test_nobody_else_can_open_aims_inspections_even_with_the_permission_or_in_the_aims_department(): void
+    {
+        $inspection = AimsInspection::factory()->create();
+
+        $outsiders = [
+            'aims department, no role' => $this->makeUser($this->aimsId, self::AIMS_VIEW),
+            'maintenance manager with the permission' => $this->makeUser($this->mechId, self::AIMS_VIEW, roles: ['manager']),
+            'technician with the permission' => $this->makeUser($this->mechId, self::AIMS_VIEW, roles: ['technician']),
+        ];
+
+        foreach ($outsiders as $label => $user) {
+            $this->actingAs($user);
+
+            Livewire::test(ListAimsInspections::class)->assertForbidden();
+            $this->assertFalse(Gate::forUser($user)->allows('view', $inspection), $label);
+            $this->assertFalse(AimsInspection::isVisibleTo($user), $label);
+        }
+    }
+
+    public function test_a_maintenance_manager_sees_only_their_own_departments_inspections_without_any_permission(): void
+    {
+        $mech = MaintenanceInspection::factory()->create();
+        $elec = MaintenanceInspection::factory()->forDepartment('ELEC', 'Electrical')->create();
+        $prev = MaintenanceInspection::factory()->forDepartment('PREV', 'Preventive')->create();
+
+        foreach ([[$this->mechId, $mech], [$this->elecId, $elec], [$this->prevId, $prev]] as [$departmentId, $own]) {
+            $manager = $this->makeUser($departmentId, roles: ['manager']);
+            $this->actingAs($manager);
+
+            $others = collect([$mech, $elec, $prev])->reject(fn ($inspection) => $inspection->is($own))->all();
+
+            Livewire::test(ListMaintenanceInspections::class)
+                ->assertCanSeeTableRecords([$own])
+                ->assertCanNotSeeTableRecords($others);
+
+            Livewire::test(ViewMaintenanceInspection::class, ['record' => $own->id])->assertSuccessful();
+
+            foreach ($others as $other) {
+                $this->assertFalse(Gate::forUser($manager)->allows('view', $other));
+            }
+        }
+    }
+
+    public function test_a_manager_outside_the_maintenance_departments_and_other_roles_see_nothing_by_default(): void
+    {
+        MaintenanceInspection::factory()->create();
+
+        $users = [
+            'manager in IT' => $this->makeUser($this->itId, roles: ['manager']),
+            'manager in AIMS' => $this->makeUser($this->aimsId, roles: ['manager']),
+            'manager without a department' => $this->makeUser(null, roles: ['manager']),
+            'technician in MECH' => $this->makeUser($this->mechId, roles: ['technician']),
+            'asset admin' => $this->makeUser($this->aimsId, roles: ['asset_admin']),
+        ];
+
+        foreach ($users as $label => $user) {
+            $this->actingAs($user);
+
+            Livewire::test(ListMaintenanceInspections::class)->assertForbidden();
+            $this->assertFalse(Gate::forUser($user)->allows('viewAny', MaintenanceInspection::class), $label);
+        }
+    }
+
+    public function test_a_manager_of_a_maintenance_department_cannot_see_another_departments_inspection_by_url(): void
+    {
+        $elec = MaintenanceInspection::factory()->forDepartment('ELEC', 'Electrical')->create();
+
+        $this->actingAs($this->makeUser($this->mechId, roles: ['manager']));
+
+        $this->expectException(ModelNotFoundException::class);
+
+        Livewire::test(ViewMaintenanceInspection::class, ['record' => $elec->id]);
     }
 
     public function test_aims_view_page_and_items_tab(): void
@@ -219,7 +378,7 @@ class ClosedInspectionScreensTest extends TestCase
         $inspection = AimsInspection::factory()->create(['lessee' => 'Samsung', 'jobsite' => 'Laguna']);
         $item = AimsInspectionItem::factory()->create(['aims_inspection_id' => $inspection->id, 'task' => 'Brakes']);
 
-        $this->actingAs($this->makeUser($this->aimsId, self::AIMS_VIEW));
+        $this->actingAs($this->makeUser($this->aimsId, roles: ['asset_manager']));
 
         Livewire::test(ViewAimsInspection::class, ['record' => $inspection->id])
             ->assertSuccessful()
@@ -235,11 +394,11 @@ class ClosedInspectionScreensTest extends TestCase
         $maintenance = MaintenanceInspection::factory()->create();
         $aims = AimsInspection::factory()->create();
 
-        $user = $this->makeUser($this->aimsId, [
+        $user = $this->makeUser($this->mechId, [
             ...self::MAINTENANCE_VIEW, ...self::AIMS_VIEW,
             'Create:MaintenanceInspectionResource', 'Update:MaintenanceInspectionResource', 'Delete:MaintenanceInspectionResource', 'DeleteAny:MaintenanceInspectionResource',
             'Create:AimsInspectionResource', 'Update:AimsInspectionResource', 'Delete:AimsInspectionResource', 'DeleteAny:AimsInspectionResource',
-        ]);
+        ], roles: ['manager', 'asset_admin']);
 
         foreach ([$maintenance, $aims] as $inspection) {
             foreach (['create' => $inspection::class, 'update' => $inspection, 'delete' => $inspection, 'deleteAny' => $inspection::class] as $ability => $argument) {
@@ -280,12 +439,12 @@ class ClosedInspectionScreensTest extends TestCase
         AimsInspection::factory()->create(['equipment_prc_code' => 'CR-1']);
         $crane = Equipment::query()->findOrFail(1);
 
-        $this->actingAs($this->makeUser($this->mechId, [...self::MAINTENANCE_VIEW, ...self::AIMS_VIEW]));
+        $this->actingAs($this->makeUser($this->mechId, roles: ['manager']));
         $this->assertSame('1', MaintenanceInspectionsRelationManager::getBadge($crane, 'view'));
         $this->assertSame('0', AimsInspectionsRelationManager::getBadge($crane, 'view'));
         $this->assertFalse(AimsInspectionsRelationManager::canViewForRecord($crane, 'view'));
 
-        $this->actingAs($this->makeUser($this->aimsId, self::AIMS_VIEW));
+        $this->actingAs($this->makeUser($this->itId, roles: ['asset_admin']));
         $this->assertSame('1', AimsInspectionsRelationManager::getBadge($crane, 'view'));
         $this->assertTrue(AimsInspectionsRelationManager::canViewForRecord($crane, 'view'));
 
@@ -293,14 +452,15 @@ class ClosedInspectionScreensTest extends TestCase
         $this->assertSame('2', MaintenanceInspectionsRelationManager::getBadge($crane, 'view'));
     }
 
-    public function test_the_inspection_sync_is_scheduled_daily_at_one_in_the_morning(): void
+    public function test_each_inspection_sync_is_scheduled_daily_at_its_default_time(): void
     {
-        $event = collect(app(Schedule::class)->events())
-            ->first(fn ($event): bool => str_contains((string) $event->command, 'inspections:sync'));
+        $events = collect(app(Schedule::class)->events());
+        $find = fn (string $kind) => $events->first(fn ($event): bool => str_contains((string) $event->command, 'inspections:sync') && str_contains((string) $event->command, $kind));
 
-        $this->assertNotNull($event, 'inspections:sync is not scheduled');
-        $this->assertSame('0 1 * * *', $event->expression);
-        $this->assertTrue($event->withoutOverlapping);
+        $this->assertSame('0 1 * * *', $find('maintenance')?->expression);
+        $this->assertSame('15 1 * * *', $find('aims')?->expression);
+        $this->assertTrue($find('maintenance')->withoutOverlapping);
+        $this->assertTrue($find('aims')->withoutOverlapping);
     }
 
     private function createLegacyTables(): void

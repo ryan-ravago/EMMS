@@ -8,6 +8,7 @@ use App\Filament\Resources\MaintenanceInspections\RelationManagers\ItemsRelation
 use App\Filament\Resources\MaintenanceInspections\RelationManagers\LogsRelationManager;
 use App\Filament\Resources\MaintenanceInspections\Schemas\MaintenanceInspectionInfolist;
 use App\Filament\Resources\MaintenanceInspections\Tables\MaintenanceInspectionsTable;
+use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use App\Models\MaintenanceInspection;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -40,7 +41,22 @@ class MaintenanceInspectionResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with('equipment')->visibleTo(auth()->user());
+        return parent::getEloquentQuery()->with(['equipment', 'workOrder'])->visibleTo(auth()->user());
+    }
+
+    /**
+     * The page of the work order raised from this inspection, or null when the number cannot be opened:
+     * no work order, the work order no longer exists, or the user is not allowed to view it.
+     */
+    public static function workOrderUrl(MaintenanceInspection $inspection): ?string
+    {
+        $workOrder = $inspection->workOrder;
+
+        if ($workOrder === null || ! (auth()->user()?->can('view', $workOrder) ?? false)) {
+            return null;
+        }
+
+        return WorkOrderResource::getUrl('view', ['record' => $workOrder]);
     }
 
     public static function canCreate(): bool

@@ -152,6 +152,60 @@ class ActivityLogging
         }
     }
 
+    /** The task name stored on the activity rows (and used to filter the sync manager's log table). */
+    public static function inspectionSyncTask(string $kind): string
+    {
+        return $kind === 'aims' ? 'AIMS inspection sync' : 'Maintenance inspection sync';
+    }
+
+    /**
+     * One row per inspection sync run, whoever started it: the daily schedule or a person pressing "Sync Now".
+     * Manual runs are credited to the logged-in user.
+     *
+     * @param  'maintenance'|'aims'  $kind
+     * @param  'Manual'|'Scheduled'  $trigger
+     * @param  'success'|'failed'  $status
+     * @param  array{rows?: int, open?: int, closed?: int, skipped?: int, imported?: int, unresolved_equipment?: int, failed?: int}  $counts
+     */
+    public static function inspectionSync(string $kind, string $trigger, string $status, array $counts = [], ?string $error = null, ?float $startedAt = null): void
+    {
+        $task = self::inspectionSyncTask($kind);
+        $duration = $startedAt !== null ? round(microtime(true) - $startedAt, 1) : null;
+        $took = $duration !== null ? " in {$duration}s" : '';
+
+        $result = $status === 'success'
+            ? ($counts['imported'] ?? 0).' imported, '.($counts['skipped'] ?? 0).' already imported, '.($counts['open'] ?? 0).' still open'
+                .(($counts['failed'] ?? 0) > 0 ? ', '.$counts['failed'].' failed' : '')
+                .(($counts['unresolved_equipment'] ?? 0) > 0 ? ', '.$counts['unresolved_equipment'].' with equipment not found' : '')
+                .$took
+            : 'failed'.$took.($error ? ' — '.Str::limit($error, 300) : '');
+
+        $summary = "{$task} ({$trigger}): {$result}";
+
+        $properties = [
+            'trigger' => $trigger,
+            'status' => $status,
+            ...array_intersect_key($counts, array_flip(['rows', 'open', 'closed', 'skipped', 'imported', 'unresolved_equipment', 'failed'])),
+            ...($duration !== null ? ['duration_seconds' => $duration] : []),
+            ...($error ? ['error' => Str::limit($error, 500)] : []),
+        ];
+
+        if ($trigger === 'Scheduled') {
+            self::scheduled($task, $summary, $properties);
+
+            return;
+        }
+
+        try {
+            activity('Sync')
+                ->event($status === 'failed' ? 'sync_failed' : 'synced')
+                ->withProperties(['task' => $task, ...$properties])
+                ->log($summary);
+        } catch (Throwable $e) {
+            report($e);
+        }
+    }
+
     private static function enrich(Activity $activity): void
     {
         try {

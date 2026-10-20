@@ -7,7 +7,9 @@ use App\Console\Commands\SyncInspections;
 use App\Jobs\ProcessDueDateChecks;
 use App\Jobs\SyncEquipmentFromSap;
 use App\Models\AppSetting;
+use App\Services\Inspections\InspectionSyncRunner;
 use App\Support\Activity\ActivityLogging;
+use App\Support\InspectionSyncSettings;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
@@ -46,9 +48,14 @@ Schedule::command(SyncGoogleWorkOrderReplies::class)
     ->everyMinute()
     ->withoutOverlapping();
 
-// Copies closed (Completed / Cancelled) AppSheet inspections into the maintenance_inspections / aims_inspections tables.
-Schedule::command(SyncInspections::class)
-    ->dailyAt('01:00')
+// Copy closed (Completed / Cancelled) AppSheet inspections into the maintenance_inspections / aims_inspections
+// tables. Each has its own daily time, changed from its sync manager page (defaults: 01:00 and 01:15).
+Schedule::command(SyncInspections::class, ['--only' => InspectionSyncRunner::MAINTENANCE])
+    ->dailyAt(InspectionSyncSettings::time(InspectionSyncRunner::MAINTENANCE))
+    ->withoutOverlapping();
+
+Schedule::command(SyncInspections::class, ['--only' => InspectionSyncRunner::AIMS])
+    ->dailyAt(InspectionSyncSettings::time(InspectionSyncRunner::AIMS))
     ->withoutOverlapping();
 
 Schedule::command(CheckDueMaintenanceCommand::class)

@@ -32,6 +32,7 @@ class MaintenanceInspection extends Model
         'equipment_prc_code',
         'equipment_name',
         'checklist_name',
+        'work_order_no',
         'requested_by',
         'requested_at',
         'asset_admin_manager_note',
@@ -56,6 +57,20 @@ class MaintenanceInspection extends Model
             'requested_at' => 'datetime',
             'closed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Whether the user's role alone gives access: super admins, and managers of a maintenance department
+     * (Mechanical, Electrical or Preventive). Other roles need the Shield permission.
+     */
+    public static function roleGrantsAccess(?AppUser $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        return $user->hasRole('super_admin')
+            || ($user->hasRole('manager') && (bool) $user->department?->is_maintenance);
     }
 
     /**
@@ -89,6 +104,15 @@ class MaintenanceInspection extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(MaintenanceInspectionLog::class)->orderBy('logged_at')->orderBy('id');
+    }
+
+    /**
+     * The work order raised from this inspection, matched by work order number. This is not a database foreign
+     * key: it is null when the work order does not exist (any more), while work_order_no keeps the number.
+     */
+    public function workOrder(): BelongsTo
+    {
+        return $this->belongsTo(WorkOrder::class, 'work_order_no', 'wo_no');
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\MaintenanceInspections\Schemas;
 
 use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Filament\Resources\MaintenanceInspections\MaintenanceInspectionResource;
 use App\Models\MaintenanceInspection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -40,6 +41,12 @@ class MaintenanceInspectionInfolist
                             ->placeholder('—'),
                         TextEntry::make('checklist_name')
                             ->label('Checklist')
+                            ->placeholder('—'),
+                        TextEntry::make('work_order_no')
+                            ->label('Work Order')
+                            ->url(fn (MaintenanceInspection $record): ?string => MaintenanceInspectionResource::workOrderUrl($record))
+                            ->icon(fn (MaintenanceInspection $record): ?string => MaintenanceInspectionResource::workOrderUrl($record) ? 'heroicon-o-arrow-top-right-on-square' : null)
+                            ->iconPosition(IconPosition::After)
                             ->placeholder('—'),
                         TextEntry::make('requested_by')
                             ->label('Requested By')

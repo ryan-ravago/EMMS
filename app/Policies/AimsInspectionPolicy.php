@@ -9,7 +9,8 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Foundation\Auth\User as AuthUser;
 
 /**
- * AIMS inspections are copied from AppSheet and are read-only in EMMS.
+ * AIMS inspections are copied from AppSheet and are read-only in EMMS. Only super admins, Asset Admins and Asset
+ * Managers can see them; this is decided by role, not by a Shield permission.
  */
 class AimsInspectionPolicy
 {
@@ -17,12 +18,12 @@ class AimsInspectionPolicy
 
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ViewAny:AimsInspectionResource');
+        return AimsInspection::isVisibleTo($authUser);
     }
 
     public function view(AuthUser $authUser, AimsInspection $aimsInspection): bool
     {
-        return $authUser->can('View:AimsInspectionResource');
+        return AimsInspection::isVisibleTo($authUser);
     }
 
     public function create(AuthUser $authUser): bool

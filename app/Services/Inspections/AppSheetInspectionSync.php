@@ -42,7 +42,7 @@ class AppSheetInspectionSync
     private const FALLBACK_STATUS_TEXT = ['clrd' => 'Completed', 'cncld' => 'Cancelled'];
 
     public const MAINTENANCE_COLUMNS = [
-        'insp_id', 'insp_no', 'insp_status_id', 'insp_dep_id', 'insp_eqm_id', 'insp_checklist_temp_id',
+        'insp_id', 'insp_no', 'insp_status_id', 'insp_dep_id', 'insp_eqm_id', 'insp_checklist_temp_id', 'insp_wo_id',
         'insp_asset_admin_manager_note', 'insp_req_by', 'insp_req_at', 'insp_manager_action_id',
         'insp_manager_action_by', 'insp_manager_technicians', 'insp_manager_verifiers', 'insp_manager_remarks',
         'insp_tech_action_id', 'insp_tech_action_by', 'insp_tech_remarks', 'insp_verifier_action_id',
@@ -147,6 +147,7 @@ class AppSheetInspectionSync
                 'equipment_prc_code' => $equipment['prc'],
                 'equipment_name' => $equipment['name'],
                 'checklist_name' => $this->lookup($lookups['checklists'], $row['insp_checklist_temp_id']),
+                'work_order_no' => $row['insp_wo_id'],
                 'requested_by' => $row['insp_req_by'],
                 'requested_at' => $this->formatDate($row['insp_req_at']),
                 'asset_admin_manager_note' => $row['insp_asset_admin_manager_note'],
