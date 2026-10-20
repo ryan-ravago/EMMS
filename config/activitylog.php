@@ -1,6 +1,6 @@
 <?php
 
-use Spatie\Activitylog\Models\Activity;
+use App\Models\Activity;
 
 return [
 
@@ -10,10 +10,11 @@ return [
     'enabled' => env('ACTIVITY_LOGGER_ENABLED', true),
 
     /*
-     * When the clean-command is executed, all recording activities older than
-     * the number of days specified here will be deleted.
+     * When the package's own activitylog:clean command is executed, all recorded activities older than
+     * the number of days specified here will be deleted. Kept equal to the app-wide log retention
+     * (config/log_retention.php), which the scheduled model:prune run uses.
      */
-    'delete_records_older_than_days' => 365,
+    'delete_records_older_than_days' => (int) env('LOG_RETENTION_DAYS', 30),
 
     /*
      * If no log name is passed to the activity() helper

@@ -6,7 +6,10 @@ use App\Console\Commands\SyncGoogleWorkOrderReplies;
 use App\Console\Commands\SyncInspections;
 use App\Jobs\ProcessDueDateChecks;
 use App\Jobs\SyncEquipmentFromSap;
+use App\Models\Activity;
+use App\Models\AimsInspectionLog;
 use App\Models\AppSetting;
+use App\Models\MaintenanceInspectionLog;
 use App\Services\Inspections\InspectionSyncRunner;
 use App\Support\Activity\ActivityLogging;
 use App\Support\InspectionSyncSettings;
@@ -57,6 +60,18 @@ Schedule::command(SyncInspections::class, ['--only' => InspectionSyncRunner::MAI
 Schedule::command(SyncInspections::class, ['--only' => InspectionSyncRunner::AIMS])
     ->dailyAt(InspectionSyncSettings::time(InspectionSyncRunner::AIMS))
     ->withoutOverlapping();
+
+// Log retention: once a day, delete log rows older than config('log_retention.days') days (default 30).
+// Only these three tables are pruned (the activity log, which also holds the SAP and inspection sync history,
+// and the maintenance and AIMS inspection logs). Naming the models keeps any other model that later becomes
+// prunable out of this run.
+Schedule::command('model:prune', [
+    '--model' => [Activity::class, MaintenanceInspectionLog::class, AimsInspectionLog::class],
+    '--chunk' => config('log_retention.chunk'),
+])
+    ->dailyAt(config('log_retention.run_at'))
+    ->withoutOverlapping()
+    ->name('log-retention');
 
 Schedule::command(CheckDueMaintenanceCommand::class)
     ->daily()
