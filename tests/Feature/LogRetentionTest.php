@@ -98,16 +98,16 @@ class LogRetentionTest extends TestCase
         $this->assertSame(['exactly 30 days old', '29 days old', 'today'], $this->remainingActivity());
     }
 
-    public function test_sap_and_inspection_sync_history_in_the_activity_log_is_pruned_too(): void
+    public function test_inspection_sync_history_in_the_activity_log_is_pruned_too(): void
     {
-        $this->activity('old SAP sync', '2026-08-01 01:00:00', 'SAP equipment sync');
         $this->activity('old maintenance sync', '2026-08-01 01:00:00', 'Maintenance inspection sync');
         $this->activity('old AIMS sync', '2026-08-01 01:00:00', 'AIMS inspection sync');
-        $this->activity('recent SAP sync', '2026-10-19 01:00:00', 'SAP equipment sync');
+        $this->activity('recent maintenance sync', '2026-10-19 01:00:00', 'Maintenance inspection sync');
+        $this->activity('recent AIMS sync', '2026-10-19 01:15:00', 'AIMS inspection sync');
 
         $this->prune();
 
-        $this->assertSame(['recent SAP sync'], $this->remainingActivity());
+        $this->assertSame(['recent maintenance sync', 'recent AIMS sync'], $this->remainingActivity());
     }
 
     public function test_inspection_logs_are_pruned_by_logged_at(): void

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Equipment\RelationManagers;
 
+use App\Models\AssetType;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\ViewAction;
@@ -77,25 +78,25 @@ class LifecycleLogsRelationManager extends RelationManager
                         TextEntry::make('action.a_present_tense')
                             ->label('Action')
                             ->badge()
-                            ->color(fn($record) => match ($record->action_id) {
+                            ->color(fn ($record) => match ($record->action_id) {
                                 'dep', 'alc' => 'success',
                                 'sidle' => 'danger',
                                 'smt' => 'warning',
                                 default => 'gray',
                             })
-                            ->icon(fn($record) => $record->action?->a_icon),
+                            ->icon(fn ($record) => $record->action?->a_icon),
                         TextEntry::make('status.status_title')
                             ->label('Status')
                             ->badge()
-                            ->color(fn($record) => $record->status->status_color)
-                            ->icon(fn($record) => $record->status->status_icon),
+                            ->color(fn ($record) => $record->status->status_color)
+                            ->icon(fn ($record) => $record->status->status_icon),
                         TextEntry::make('deploy_to_loc_name')
                             ->label('Location')
-                            ->visible(fn(): bool => $this->ownerHasAssetType(1))
+                            ->visible(fn (): bool => $this->ownerHasAssetType(AssetType::EQUIPMENT))
                             ->placeholder('—'),
                         TextEntry::make('allocate_to_equipment_name')
                             ->label('Allocated To Equipment')
-                            ->visible(fn(): bool => $this->ownerHasAssetType(2))
+                            ->visible(fn (): bool => $this->ownerHasAssetType(AssetType::ACCESSORY))
                             ->placeholder('—'),
                         TextEntry::make('remarks')
                             ->label('Remarks')
@@ -111,9 +112,10 @@ class LifecycleLogsRelationManager extends RelationManager
             ])->columns(1);
     }
 
-    protected function ownerHasAssetType(int $assetTypeId): bool
+    protected function ownerHasAssetType(string $assetTypeCode): bool
     {
-        return (int) $this->getOwnerRecord()->asset_type_id === $assetTypeId;
+        return $this->getOwnerRecord()->asset_type_id !== null
+            && (int) $this->getOwnerRecord()->asset_type_id === AssetType::idFor($assetTypeCode);
     }
 
     public function table(Table $table): Table
@@ -125,37 +127,37 @@ class LifecycleLogsRelationManager extends RelationManager
                 TextColumn::make('action.a_past_tense')
                     ->label('Action')
                     ->badge()
-                    ->color(fn($record) => match ($record->action_id) {
+                    ->color(fn ($record) => match ($record->action_id) {
                         'dep', 'alc' => 'success',
                         'sidle' => 'danger',
                         'smt' => 'warning',
                         default => 'gray',
                     })
-                    ->icon(fn($record) => $record->action?->a_icon)
+                    ->icon(fn ($record) => $record->action?->a_icon)
                     ->searchable(),
 
                 TextColumn::make('status.status_title')
                     ->label('Status')
                     ->badge()
-                    ->color(fn($record) => $record->status?->status_color)
+                    ->color(fn ($record) => $record->status?->status_color)
                     ->searchable(),
 
                 TextColumn::make('deploy_to_loc_name')
                     ->label('Location')
                     ->placeholder('—')
-                    ->visible(fn(): bool => $this->ownerHasAssetType(1))
+                    ->visible(fn (): bool => $this->ownerHasAssetType(AssetType::EQUIPMENT))
                     ->searchable(),
 
                 TextColumn::make('allocate_to_equipment_name')
                     ->label('Allocated To')
                     ->placeholder('—')
-                    ->visible(fn(): bool => $this->ownerHasAssetType(2))
+                    ->visible(fn (): bool => $this->ownerHasAssetType(AssetType::ACCESSORY))
                     ->searchable(),
 
                 TextColumn::make('remarks')
                     ->label('Remarks')
                     ->limit(40)
-                    ->tooltip(fn($record) => $record->remarks)
+                    ->tooltip(fn ($record) => $record->remarks)
                     ->placeholder('—'),
 
                 TextColumn::make('performed_by_name')

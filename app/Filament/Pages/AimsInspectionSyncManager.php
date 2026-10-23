@@ -28,7 +28,7 @@ class AimsInspectionSyncManager extends Page implements HasTable
 
     protected static ?int $navigationSort = 6;
 
-    protected string $view = 'filament.pages.sap-sync-manager';
+    protected string $view = 'filament.pages.sync-manager';
 
     public static function canAccess(): bool
     {

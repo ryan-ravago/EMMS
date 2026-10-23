@@ -82,10 +82,7 @@ class EquipmentsRelationManager extends RelationManager
                 ->label('Asset Type')
                 ->inline()
                 ->options(AssetType::orderBy('name')->pluck('name', 'id'))
-                ->colors([
-                    1 => 'warning',
-                    2 => 'success',
-                ])
+                ->colors(fn (): array => AssetType::colorsById())
                 ->required(),
             Select::make('eqm_eqmm_id')
                 ->label('Model')

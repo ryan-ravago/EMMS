@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Equipment\Schemas;
 
+use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Models\AssetType;
 use App\Models\Equipment;
 use App\Models\EquipmentModel;
@@ -23,6 +24,15 @@ use Illuminate\Database\Eloquent\Builder;
 
 class EquipmentForm
 {
+    /**
+     * The code, name and active status are typed in when an asset is created
+     * (by whoever may create assets); after that only a super admin may change them.
+     */
+    public static function canEditAssetIdentity(string $operation): bool
+    {
+        return $operation === 'create' || (bool) auth()->user()?->hasRole('super_admin');
+    }
+
     public static function configure(Schema $schema): Schema
     {
         // Closures for PM calculations
@@ -64,29 +74,40 @@ class EquipmentForm
                     'xl' => 2,
                 ])
                     ->schema([
-                        Section::make('SAP Information')
-                            ->description('Data synced from SAP. These fields are read-only.')
+                        Section::make('Asset Information')
+                            ->description(fn (string $operation): string => $operation === 'create'
+                                ? 'Enter the asset code and name.'
+                                : (self::canEditAssetIdentity($operation)
+                                    ? 'Only a super admin can change these fields.'
+                                    : 'These fields are read-only. Only a super admin can change them.'))
                             ->icon('heroicon-o-server')
                             ->schema([
+                                // Entered when the asset is created; afterwards only a super admin can change them.
                                 TextInput::make('eqm_prc_code')
                                     ->label('Equipment Code')
-                                    ->disabled()
-                                    ->dehydrated(), // Occupies half-width on the first row,
+                                    ->required()
+                                    ->maxLength(30)
+                                    ->unique(ignoreRecord: true)
+                                    ->disabled(fn (string $operation): bool => ! self::canEditAssetIdentity($operation))
+                                    ->dehydrated(fn (string $operation): bool => self::canEditAssetIdentity($operation)),
                                 TextInput::make('eqm_name')
                                     ->label('Equipment Name')
-                                    ->disabled()
-                                    ->dehydrated(),
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->disabled(fn (string $operation): bool => ! self::canEditAssetIdentity($operation))
+                                    ->dehydrated(fn (string $operation): bool => self::canEditAssetIdentity($operation)),
                                 Toggle::make('eqm_is_active')
                                     ->label('Active')
-                                    ->disabled()
-                                    ->dehydrated()
+                                    ->default(true)
+                                    ->disabled(fn (string $operation): bool => ! self::canEditAssetIdentity($operation))
+                                    ->dehydrated(fn (string $operation): bool => self::canEditAssetIdentity($operation))
                                     ->columnSpan(1),
                             ]),
 
                         Section::make('Preventive Maintenance Schedule')
                             ->description('Set up automatic maintenance reminders')
                             ->icon('heroicon-o-bell-alert')
-                            ->visible(fn(Get $get): bool => (int) $get('asset_type_id') === (int) AssetType::equipmentId())
+                            ->visible(fn (Get $get): bool => (int) $get('asset_type_id') === (int) AssetType::equipmentId())
                             ->columnSpan(1)
                             ->columns(2)
                             ->schema([
@@ -117,12 +138,12 @@ class EquipmentForm
                                         }
                                     })
                                     ->suffix(
-                                        fn(Get $get) => $get('eqm_pm_itrv_type')
+                                        fn (Get $get) => $get('eqm_pm_itrv_type')
                                             ? ($get('eqm_pm_itrv_type') === 'monthly' ? 'month(s)' : 'week(s)')
                                             : ''
                                     )
                                     ->live()
-                                    ->required(fn(Get $get): bool => filled($get('eqm_pm_itrv_type')))
+                                    ->required(fn (Get $get): bool => filled($get('eqm_pm_itrv_type')))
                                     ->afterStateUpdated(function ($state, Set $set, Get $get) use ($clearDueDate, $calculateNextPMDue) {
                                         if (! $state || $state < 1) {
                                             $clearDueDate($set);
@@ -136,7 +157,7 @@ class EquipmentForm
                                     ->native(false)
                                     ->live()
                                     ->columnStart(1)
-                                    ->required(fn(Get $get): bool => filled($get('eqm_pm_itrv_type')))
+                                    ->required(fn (Get $get): bool => filled($get('eqm_pm_itrv_type')))
                                     ->afterStateUpdated(function ($state, Set $set, Get $get) use ($clearDueDate, $calculateNextPMDue) {
                                         if (! $state) {
                                             $clearDueDate($set);
@@ -175,10 +196,8 @@ class EquipmentForm
                                     ->label('Asset Type')
                                     ->inline()
                                     ->options(AssetType::orderBy('name')->pluck('name', 'id'))
-                                    ->colors([
-                                        1 => 'warning',
-                                        2 => 'success',
-                                    ])
+                                    ->colors(fn (): array => AssetType::colorsById())
+                                    ->default(fn (): ?int => ($code = EquipmentResource::currentAssetTypeCode()) ? AssetType::idFor($code) : null)
                                     ->live()
                                     ->afterStateUpdated(function (mixed $state, Set $set) use ($clearAllPM): void {
                                         if ((int) $state !== (int) AssetType::accessoryId()) {
@@ -290,7 +309,7 @@ class EquipmentForm
                                     ->native(false)
                                     ->searchable()
                                     ->preload()
-                                    ->disabled(fn(Get $get): bool => filled($get('eqm_eqmm_id')) && filled($get('eqm_brand_id')))
+                                    ->disabled(fn (Get $get): bool => filled($get('eqm_eqmm_id')) && filled($get('eqm_brand_id')))
                                     ->dehydrated()
                                     ->createOptionForm([
                                         TextInput::make('eqmb_name')
@@ -309,7 +328,7 @@ class EquipmentForm
                                     ->native(false)
                                     ->searchable()
                                     ->preload()
-                                    ->disabled(fn(Get $get): bool => filled($get('eqm_eqmm_id')) && filled($get('eqm_eqmt_id')))
+                                    ->disabled(fn (Get $get): bool => filled($get('eqm_eqmm_id')) && filled($get('eqm_eqmt_id')))
                                     ->dehydrated()
                                     ->createOptionForm([
                                         TextInput::make('eqmt_name')

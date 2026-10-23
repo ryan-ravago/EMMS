@@ -22,16 +22,19 @@ use App\Filament\Resources\Equipment\Schemas\EquipmentForm;
 use App\Filament\Resources\Equipment\Schemas\EquipmentInfolist;
 use App\Filament\Resources\Equipment\Tables\EquipmentTable;
 use App\Models\AppUser;
+use App\Models\AssetType;
 use App\Models\Equipment;
 use BackedEnum;
+use Closure;
+use Filament\Panel;
 use Filament\Resources\Resource;
 use Filament\Resources\ResourceConfiguration;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-use UnitEnum;
 
 class EquipmentResource extends Resource
 {
@@ -53,23 +56,133 @@ class EquipmentResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
-    protected static bool $shouldRegisterNavigation = false;
+    /**
+     * The asset pages. Each is one configuration of this resource, shows the assets of one
+     * asset type (matched by code) and has its own Shield permission (the policy ability).
+     *
+     * @var array<string, array{type: string, ability: string, label: string, plural: string}>
+     */
+    public const PAGES = [
+        'equipment' => [
+            'type' => AssetType::EQUIPMENT,
+            'ability' => 'viewEquipmentList',
+            'label' => 'Equipment',
+            'plural' => 'Equipment',
+        ],
+        'accessories' => [
+            'type' => AssetType::ACCESSORY,
+            'ability' => 'viewAccessoryList',
+            'label' => 'Accessory',
+            'plural' => 'Accessories',
+        ],
+        'service-vehicles' => [
+            'type' => AssetType::SERVICE_VEHICLE,
+            'ability' => 'viewServiceVehicleList',
+            'label' => 'Service Vehicle',
+            'plural' => 'Service Vehicles',
+        ],
+    ];
 
-    // protected static string|UnitEnum|null $navigationGroup = 'Asset Details';
+    /**
+     * The panel menu items for the asset pages are added in the panel provider, so the
+     * resource does not register a menu item of its own.
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 
-    // public static function getNavigationBadge(): ?string
-    // {
-    //     return cache()->remember('equipment_count', 60, fn() => static::getModel()::count());
-    // }
+    /**
+     * The "Assets" page that listed every type no longer exists: only the pages in PAGES are routed.
+     */
+    public static function registerRoutes(Panel $panel, ?Closure $registerPageRoutes = null, ?ResourceConfiguration $configuration = null): void
+    {
+        if ($configuration === null && $registerPageRoutes === null) {
+            return;
+        }
+
+        parent::registerRoutes($panel, $registerPageRoutes, $configuration);
+    }
+
+    public static function currentPageKey(): ?string
+    {
+        $key = static::getConfiguration()?->getKey();
+
+        return isset(self::PAGES[$key]) ? $key : null;
+    }
+
+    public static function currentAssetTypeCode(): ?string
+    {
+        $key = static::currentPageKey();
+
+        return $key === null ? null : self::PAGES[$key]['type'];
+    }
+
+    /**
+     * Whether the signed-in user may open one of the asset pages (a Shield permission per page).
+     */
+    public static function canViewPage(string $key): bool
+    {
+        $user = Auth::user();
+
+        return $user !== null
+            && isset(self::PAGES[$key])
+            && $user->can(self::PAGES[$key]['ability'], Equipment::class);
+    }
+
+    public static function canViewAny(): bool
+    {
+        $key = static::currentPageKey();
+
+        return $key === null ? parent::canViewAny() : static::canViewPage($key);
+    }
+
+    /**
+     * The page a record belongs to, from its asset type.
+     */
+    public static function pageKeyForRecord(mixed $record): ?string
+    {
+        if (! $record instanceof Equipment) {
+            $record = is_scalar($record) ? Equipment::query()->withoutEagerLoads()->find($record, ['eqm_id', 'asset_type_id']) : null;
+        }
+
+        $code = AssetType::codeFor($record?->asset_type_id === null ? null : (int) $record->asset_type_id);
+
+        foreach (self::PAGES as $key => $page) {
+            if ($page['type'] === $code) {
+                return $key;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * There is no page without a configuration, so a link built outside one (a dashboard card, another
+     * resource) goes to the page of the record's asset type, or to the Equipment page.
+     */
+    public static function getUrl(?string $name = null, array $parameters = [], bool $isAbsolute = true, ?string $panel = null, ?Model $tenant = null, bool $shouldGuessMissingParameters = false, ?string $configuration = null): string
+    {
+        if (blank($configuration)) {
+            $configuration = (array_key_exists('record', $parameters) ? static::pageKeyForRecord($parameters['record']) : null)
+                ?? static::currentPageKey()
+                ?? 'equipment';
+
+            // Already inside that page's configuration: nothing to switch (and switching again would loop).
+            if ($configuration === static::currentPageKey()) {
+                $configuration = null;
+            }
+        }
+
+        return parent::getUrl($name, $parameters, $isAbsolute, $panel, $tenant, $shouldGuessMissingParameters, $configuration);
+    }
 
     public static function getNavigationBadge(): ?string
     {
         $query = static::getModel()::query();
 
-        if (static::isAccessoriesConfiguration()) {
-            $query->accessories();
-        } elseif (static::isEquipmentConfiguration()) {
-            $query->equipmentAssets();
+        if ($type = static::currentAssetTypeCode()) {
+            $query->ofAssetType($type);
         }
 
         return (string) $query->count();
@@ -77,39 +190,17 @@ class EquipmentResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return match (true) {
-            static::isAccessoriesConfiguration() => 'Accessories',
-            static::isEquipmentConfiguration() => 'Equipment',
-            default => 'Assets',
-        };
+        return self::PAGES[static::currentPageKey()]['plural'] ?? 'Assets';
     }
 
     public static function getModelLabel(): string
     {
-        return match (true) {
-            static::isAccessoriesConfiguration() => 'Accessory',
-            static::isEquipmentConfiguration() => 'Equipment',
-            default => 'Asset',
-        };
+        return self::PAGES[static::currentPageKey()]['label'] ?? 'Asset';
     }
 
     public static function getPluralModelLabel(): string
     {
-        return match (true) {
-            static::isAccessoriesConfiguration() => 'Accessories',
-            static::isEquipmentConfiguration() => 'Equipment',
-            default => 'Assets',
-        };
-    }
-
-    protected static function isAccessoriesConfiguration(): bool
-    {
-        return static::getConfiguration()?->getKey() === 'accessories';
-    }
-
-    protected static function isEquipmentConfiguration(): bool
-    {
-        return static::getConfiguration()?->getKey() === 'equipment';
+        return self::PAGES[static::currentPageKey()]['plural'] ?? 'Assets';
     }
 
     public static function form(Schema $schema): Schema
@@ -127,10 +218,8 @@ class EquipmentResource extends Resource
         $query = parent::getEloquentQuery()
             ->with(['equipmentModel', 'type', 'brand', 'assetType', 'parent.location', 'location.parent', 'lifecycleStatus']);
 
-        if (static::isAccessoriesConfiguration()) {
-            $query->accessories();
-        } elseif (static::isEquipmentConfiguration()) {
-            $query->equipmentAssets();
+        if ($type = static::currentAssetTypeCode()) {
+            $query->ofAssetType($type);
         }
 
         return $query;

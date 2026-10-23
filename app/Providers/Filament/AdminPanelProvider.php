@@ -148,21 +148,24 @@ class AdminPanelProvider extends PanelProvider
             // ->font(SiteSetting::instance()->site_font_family ?? 'Inter', provider: GoogleFontProvider::class)
             ->maxContentWidth(Width::SevenExtraLarge)
             ->navigationItems([
-                NavigationItem::make('Assets')
-                    ->icon(Heroicon::OutlinedSquares2x2)
-                    ->badge(fn (): string => (string) Equipment::query()->count())
-                    ->url(fn (): string => route('filament.admin.resources.asset.index'))
-                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.asset.*')),
                 NavigationItem::make('Equipment')
                     ->icon(Heroicon::OutlinedTruck)
                     ->badge(fn (): string => (string) Equipment::query()->equipmentAssets()->count())
                     ->url(fn (): string => route('filament.admin.resources.equipment.index'))
+                    ->visible(fn (): bool => EquipmentResource::canViewPage('equipment'))
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.equipment.*')),
                 NavigationItem::make('Accessories')
                     ->icon(Heroicon::OutlinedCog)
                     ->badge(fn (): string => (string) Equipment::query()->accessories()->count())
                     ->url(fn (): string => route('filament.admin.resources.accessories.index'))
+                    ->visible(fn (): bool => EquipmentResource::canViewPage('accessories'))
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.accessories.*')),
+                NavigationItem::make('Service Vehicles')
+                    ->icon(Heroicon::OutlinedWrenchScrewdriver)
+                    ->badge(fn (): string => (string) Equipment::query()->serviceVehicles()->count())
+                    ->url(fn (): string => route('filament.admin.resources.service-vehicles.index'))
+                    ->visible(fn (): bool => EquipmentResource::canViewPage('service-vehicles'))
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.service-vehicles.*')),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->resources([
@@ -170,13 +173,19 @@ class AdminPanelProvider extends PanelProvider
                     ->slug('equipment'),
                 EquipmentResource::make('accessories')
                     ->slug('accessories'),
+                EquipmentResource::make('service-vehicles')
+                    ->slug('service-vehicles'),
                 WorkOrderResource::make('equipment')
                     ->slug('work-orders'),
                 WorkOrderResource::make('accessories')
                     ->slug('work-orders'),
+                WorkOrderResource::make('service-vehicles')
+                    ->slug('work-orders'),
                 AssetTagResource::make('equipment')
                     ->slug('tags'),
                 AssetTagResource::make('accessories')
+                    ->slug('tags'),
+                AssetTagResource::make('service-vehicles')
                     ->slug('tags'),
             ])
             // ->navigationGroups([

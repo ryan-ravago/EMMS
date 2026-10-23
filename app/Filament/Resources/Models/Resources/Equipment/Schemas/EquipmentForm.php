@@ -19,8 +19,8 @@ class EquipmentForm
             ->components([
                 Grid::make(3)
                     ->schema([
-                        Section::make('SAP Information')
-                            ->description('Data synced from SAP. These fields are read-only.')
+                        Section::make('Asset Information')
+                            ->description('These fields are read-only.')
                             ->icon('heroicon-o-server')
                             ->schema([
                                 TextInput::make('eqm_prc_code')

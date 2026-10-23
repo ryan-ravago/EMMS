@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Equipment\Schemas;
 
+use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Filament\Resources\EquipmentTypes\EquipmentTypeResource;
 use App\Models\Equipment;
 use Carbon\Carbon;
@@ -22,7 +23,7 @@ class EquipmentInfolist
         return $schema
             ->components([
                 Section::make('Asset Details')
-                    ->description('Name, code and status are synced from SAP and cannot be edited here.')
+                    ->description('Name, code and status cannot be edited here.')
                     ->icon('heroicon-o-cube')
                     ->columns(['default' => 1, 'xl' => 2])
                     ->inlineLabel()
@@ -34,30 +35,30 @@ class EquipmentInfolist
                         TextEntry::make('eqm_is_active')
                             ->label('Status')
                             ->badge()
-                            ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
-                            ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
+                            ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
+                            ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
                         TextEntry::make('assetType.name')
                             ->label('Asset Type')
                             ->placeholder('—'),
                         TextEntry::make('lifecycleStatus.status_title')
                             ->label('Lifecycle Status')
                             ->badge()
-                            ->color(fn(Equipment $record) => $record->lifecycleStatus?->status_color)
-                            ->icon(fn(Equipment $record) => $record->lifecycleStatus?->status_icon)
+                            ->color(fn (Equipment $record) => $record->lifecycleStatus?->status_color)
+                            ->icon(fn (Equipment $record) => $record->lifecycleStatus?->status_icon)
                             ->placeholder('—'),
                         TextEntry::make('location.full_path')
                             ->label('Location')
                             // Allocated accessories show their parent equipment's location.
-                            ->state(fn(Equipment $record): ?string => $record->effectiveLocation()?->full_path)
-                            ->helperText(fn(Equipment $record): ?string => $record->isAllocatedAccessory()
+                            ->state(fn (Equipment $record): ?string => $record->effectiveLocation()?->full_path)
+                            ->helperText(fn (Equipment $record): ?string => $record->isAllocatedAccessory()
                                 ? "Inherited from {$record->parent?->eqm_name}"
                                 : null)
                             ->placeholder('—'),
                         TextEntry::make('parent.eqm_name')
                             ->label('Allocated to')
-                            ->visible(fn(Equipment $record): bool => $record->isAccessory())
-                            ->url(fn(Equipment $record): ?string => $record->parent_id
-                                ? route('filament.admin.resources.asset.view', ['record' => $record->parent_id])
+                            ->visible(fn (Equipment $record): bool => $record->isAccessory())
+                            ->url(fn (Equipment $record): ?string => $record->parent_id
+                                ? EquipmentResource::getUrl('view', ['record' => $record->parent_id], configuration: 'equipment')
                                 : null)
                             ->placeholder('Unallocated'),
                         TextEntry::make('brand.eqmb_name')
@@ -69,7 +70,7 @@ class EquipmentInfolist
                         TextEntry::make('type.eqmt_name')
                             // "Asset Type" is equipment vs accessory; this is the kind of machine.
                             ->label('Equipment Type')
-                            ->url(fn(Equipment $record): ?string => $record->eqm_eqmt_id
+                            ->url(fn (Equipment $record): ?string => $record->eqm_eqmt_id
                                 ? EquipmentTypeResource::getUrl('view', ['record' => $record->eqm_eqmt_id])
                                 : null)
                             ->placeholder('—'),
@@ -102,12 +103,12 @@ class EquipmentInfolist
                                 TextEntry::make('eqm_pm_itrv_type')
                                     ->label('Interval Type')
                                     ->badge()
-                                    ->formatStateUsing(fn($state) => match ($state) {
+                                    ->formatStateUsing(fn ($state) => match ($state) {
                                         'monthly' => 'Monthly',
                                         'weekly' => 'Weekly',
                                         default => '—',
                                     })
-                                    ->color(fn($state) => match ($state) {
+                                    ->color(fn ($state) => match ($state) {
                                         'monthly' => 'info',
                                         'weekly' => 'warning',
                                         default => 'gray',
@@ -115,8 +116,8 @@ class EquipmentInfolist
                                 TextEntry::make('eqm_pm_itrv_value')
                                     ->label('Every')
                                     ->formatStateUsing(
-                                        fn($state, $record) => $state && $record->eqm_pm_itrv_type
-                                            ? "{$state} " . ($record->eqm_pm_itrv_type === 'monthly' ? 'month(s)' : 'week(s)')
+                                        fn ($state, $record) => $state && $record->eqm_pm_itrv_type
+                                            ? "{$state} ".($record->eqm_pm_itrv_type === 'monthly' ? 'month(s)' : 'week(s)')
                                             : '—'
                                     ),
                                 TextEntry::make('eqm_pm_itrv_start_date')
@@ -127,7 +128,7 @@ class EquipmentInfolist
                                     ->label('Next PM Due')
                                     ->date('M d, Y')
                                     ->badge()
-                                    ->color(fn($state) => $state && Carbon::parse($state)->isPast() ? 'danger' : 'info')
+                                    ->color(fn ($state) => $state && Carbon::parse($state)->isPast() ? 'danger' : 'info')
                                     ->placeholder('—'),
                                 TextEntry::make('eqm_last_pm_notified_at')
                                     ->label('Last Notified')

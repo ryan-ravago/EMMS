@@ -29,7 +29,23 @@ class EquipmentFactory extends Factory
     {
         return $this->state(function (array $attributes): array {
             $type = AssetType::query()->firstOrCreate(
-                ['name' => AssetType::EQUIPMENT],
+                ['code' => AssetType::EQUIPMENT],
+                ['name' => 'Equipment'],
+            );
+            AssetType::flushIdCache();
+
+            return [
+                'asset_type_id' => $type->id,
+            ];
+        });
+    }
+
+    public function serviceVehicle(): static
+    {
+        return $this->state(function (array $attributes): array {
+            $type = AssetType::query()->firstOrCreate(
+                ['code' => AssetType::SERVICE_VEHICLE],
+                ['name' => 'Service Vehicle'],
             );
             AssetType::flushIdCache();
 
@@ -43,7 +59,8 @@ class EquipmentFactory extends Factory
     {
         return $this->state(function (array $attributes) use ($parent): array {
             $type = AssetType::query()->firstOrCreate(
-                ['name' => AssetType::ACCESSORY],
+                ['code' => AssetType::ACCESSORY],
+                ['name' => 'Accessory'],
             );
             AssetType::flushIdCache();
 

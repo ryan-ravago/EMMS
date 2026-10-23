@@ -6,6 +6,7 @@ use App\Filament\Concerns\HasDetailsTab;
 use App\Filament\Concerns\HasRecordNavigation;
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Models\Action as ModelsAction;
+use App\Models\AssetType;
 use App\Models\Equipment;
 use CodeWithDennis\FilamentSelectTree\SelectTree;
 use Filament\Actions\Action;
@@ -73,7 +74,7 @@ class ViewEquipment extends ViewRecord
                     ->schema([
                         Select::make('allocate_to_equipment_id')
                             ->label('Allocate To Equipment')
-                            ->options(fn () => Equipment::where('asset_type_id', 1)->pluck('eqm_name', 'eqm_id'))
+                            ->options(fn () => Equipment::where('asset_type_id', AssetType::equipmentId())->pluck('eqm_name', 'eqm_id'))
                             ->searchable()
                             ->preload()
                             ->required(),

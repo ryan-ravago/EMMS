@@ -16,6 +16,7 @@ class AssetTypeFactory extends Factory
     public function definition(): array
     {
         return [
+            'code' => strtoupper(fake()->unique()->lexify('????')),
             'name' => fake()->unique()->word(),
         ];
     }
@@ -23,14 +24,24 @@ class AssetTypeFactory extends Factory
     public function equipment(): static
     {
         return $this->state(fn (array $attributes): array => [
-            'name' => AssetType::EQUIPMENT,
+            'code' => AssetType::EQUIPMENT,
+            'name' => 'Equipment',
         ]);
     }
 
     public function accessory(): static
     {
         return $this->state(fn (array $attributes): array => [
-            'name' => AssetType::ACCESSORY,
+            'code' => AssetType::ACCESSORY,
+            'name' => 'Accessory',
+        ]);
+    }
+
+    public function serviceVehicle(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'code' => AssetType::SERVICE_VEHICLE,
+            'name' => 'Service Vehicle',
         ]);
     }
 }

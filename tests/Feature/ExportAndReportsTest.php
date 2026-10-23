@@ -273,14 +273,20 @@ class ExportAndReportsTest extends TestCase
             ->assertActionVisible('export');
     }
 
-    public function test_asset_list_tab_counts_follow_the_assets_equipment_and_accessories_pages(): void
+    public function test_asset_list_tab_counts_follow_the_equipment_accessories_and_service_vehicle_pages(): void
     {
-        $this->actingAs($this->makeUser('manager', ['ViewAny:EquipmentResource']));
+        $this->actingAs($this->makeUser('manager', [
+            'ViewAny:EquipmentResource',
+            'ViewEquipmentList:EquipmentResource',
+            'ViewAccessoryList:EquipmentResource',
+            'ViewServiceVehicleList:EquipmentResource',
+        ]));
 
         Equipment::factory()->equipment()->count(3)->create(['eqm_is_active' => true]);
         Equipment::factory()->equipment()->create(['eqm_is_active' => false]);
         Equipment::factory()->accessory()->count(2)->create(['eqm_is_active' => true]);
         Equipment::factory()->accessory()->count(2)->create(['eqm_is_active' => false]);
+        Equipment::factory()->serviceVehicle()->create(['eqm_is_active' => true]);
 
         $badges = function (?string $configuration): array {
             Filament::setCurrentResourceConfigurationKey($configuration);
@@ -290,9 +296,9 @@ class ExportAndReportsTest extends TestCase
             return array_map(fn ($tab): int => (int) $tab->getBadge(), $tabs);
         };
 
-        $this->assertSame(['all' => 8, 'active' => 5, 'inactive' => 3], $badges(null));
         $this->assertSame(['all' => 4, 'active' => 3, 'inactive' => 1], $badges('equipment'));
         $this->assertSame(['all' => 4, 'active' => 2, 'inactive' => 2], $badges('accessories'));
+        $this->assertSame(['all' => 1, 'active' => 1, 'inactive' => 0], $badges('service-vehicles'));
     }
 
     public function test_export_only_includes_rows_in_the_users_department(): void
@@ -411,6 +417,7 @@ class ExportAndReportsTest extends TestCase
 
         Schema::create('asset_types', function (Blueprint $table): void {
             $table->id();
+            $table->string('code', 10)->unique();
             $table->string('name')->unique();
         });
 

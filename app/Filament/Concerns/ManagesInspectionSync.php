@@ -20,8 +20,6 @@ use Throwable;
 /**
  * The body of an inspection sync manager page: a "Sync Now" button, the daily schedule time, and the log of
  * recent syncs. The page decides which sync it manages (maintenance or AIMS) and who may use it.
- *
- * Mirrors the SAP Sync Manager.
  */
 trait ManagesInspectionSync
 {

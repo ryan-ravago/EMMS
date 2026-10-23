@@ -57,6 +57,7 @@ class EquipmentWorkOrdersExecomTest extends TestCase
 
         Schema::create('asset_types', function (Blueprint $table): void {
             $table->id();
+            $table->string('code', 10)->unique();
             $table->string('name')->unique();
         });
 

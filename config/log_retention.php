@@ -9,7 +9,7 @@ return [
     |
     | Log rows older than this many days are deleted once a day by the scheduled
     | "model:prune" run (see routes/console.php). It applies to the activity log
-    | (which also holds the SAP and inspection sync logs), the maintenance inspection
+    | (which also holds the inspection sync logs), the maintenance inspection
     | logs and the AIMS inspection logs, and nothing else.
     |
     | A row is deleted only when it is older than the limit: a row exactly this many

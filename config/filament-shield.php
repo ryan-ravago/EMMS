@@ -194,9 +194,11 @@ return [
                 'delete',
             ],
             EquipmentResource::class => [
+                'viewEquipmentList',
+                'viewAccessoryList',
+                'viewServiceVehicleList',
                 'export',
                 'previewExport',
-                'sync',
                 'allocate',
                 'deploy',
                 'setToIdle',

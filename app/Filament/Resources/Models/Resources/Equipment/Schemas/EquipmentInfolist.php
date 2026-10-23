@@ -19,8 +19,8 @@ class EquipmentInfolist
                 ])
                     ->inlineLabel()
                     ->schema([
-                        Section::make('SAP Information')
-                            ->description('Data synced from SAP. These fields are read-only.')
+                        Section::make('Asset Information')
+                            ->description('These fields are read-only.')
                             ->icon('heroicon-o-server')
                             ->schema([
                                 TextEntry::make('eqm_prc_code')

@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Database\Factories\EquipmentFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,7 +16,6 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class Equipment extends Model
@@ -126,7 +126,7 @@ class Equipment extends Model
             return parent::save($options);
         }
 
-        return DB::transaction(fn(): bool => parent::save($options));
+        return DB::transaction(fn (): bool => parent::save($options));
     }
 
     protected static function booted(): void
@@ -137,7 +137,7 @@ class Equipment extends Model
         static::updated(function (self $equipment): void {
             $diff = collect($equipment->getChanges())
                 ->except('eqm_updated_at')
-                ->mapWithKeys(fn($new, $field) => [
+                ->mapWithKeys(fn ($new, $field) => [
                     // Locations are stored by path so the log stays readable after the location is renamed or deleted.
                     $field => $field === 'location_id'
                         ? [
@@ -222,16 +222,34 @@ class Equipment extends Model
         return (int) $this->asset_type_id === (int) AssetType::accessoryId();
     }
 
+    public function isServiceVehicle(): bool
+    {
+        if ($this->relationLoaded('assetType')) {
+            return $this->assetType?->isServiceVehicle() === true;
+        }
+
+        return (int) $this->asset_type_id === (int) AssetType::serviceVehicleId();
+    }
+
+    /**
+     * @param  Builder<Equipment>  $query
+     * @return Builder<Equipment>
+     */
+    public function scopeOfAssetType(Builder $query, string $code): Builder
+    {
+        return $query->whereHas(
+            'assetType',
+            fn (Builder $assetTypeQuery) => $assetTypeQuery->where('code', $code)
+        );
+    }
+
     /**
      * @param  Builder<Equipment>  $query
      * @return Builder<Equipment>
      */
     public function scopeEquipmentAssets(Builder $query): Builder
     {
-        return $query->whereHas(
-            'assetType',
-            fn(Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::EQUIPMENT)])
-        );
+        return $query->ofAssetType(AssetType::EQUIPMENT);
     }
 
     /**
@@ -240,10 +258,16 @@ class Equipment extends Model
      */
     public function scopeAccessories(Builder $query): Builder
     {
-        return $query->whereHas(
-            'assetType',
-            fn(Builder $assetTypeQuery) => $assetTypeQuery->whereRaw('LOWER(name) = ?', [strtolower(AssetType::ACCESSORY)])
-        );
+        return $query->ofAssetType(AssetType::ACCESSORY);
+    }
+
+    /**
+     * @param  Builder<Equipment>  $query
+     * @return Builder<Equipment>
+     */
+    public function scopeServiceVehicles(Builder $query): Builder
+    {
+        return $query->ofAssetType(AssetType::SERVICE_VEHICLE);
     }
 
     public function lifecycleStatus(): BelongsTo
@@ -318,7 +342,7 @@ class Equipment extends Model
         return $this->hasMany(EquipmentTasksSchedule::class, 'ets_eqm_id', 'eqm_id')
             ->when(
                 Auth::check() && ! Auth::user()->hasRole('super_admin'),
-                fn($query) => $query->where('ets_dep_id', Auth::user()->user_dep_id)
+                fn ($query) => $query->where('ets_dep_id', Auth::user()->user_dep_id)
             );
     }
 
