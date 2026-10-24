@@ -148,6 +148,12 @@ class AdminPanelProvider extends PanelProvider
             // ->font(SiteSetting::instance()->site_font_family ?? 'Inter', provider: GoogleFontProvider::class)
             ->maxContentWidth(Width::SevenExtraLarge)
             ->navigationItems([
+                NavigationItem::make('Assets')
+                    ->icon(Heroicon::OutlinedSquares2x2)
+                    ->badge(fn (): string => (string) Equipment::query()->count())
+                    ->url(fn (): string => route('filament.admin.resources.assets.index'))
+                    ->visible(fn (): bool => EquipmentResource::canViewPage('assets'))
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.assets.*')),
                 NavigationItem::make('Equipment')
                     ->icon(Heroicon::OutlinedTruck)
                     ->badge(fn (): string => (string) Equipment::query()->equipmentAssets()->count())
@@ -169,18 +175,24 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->resources([
+                EquipmentResource::make('assets')
+                    ->slug('assets'),
                 EquipmentResource::make('equipment')
                     ->slug('equipment'),
                 EquipmentResource::make('accessories')
                     ->slug('accessories'),
                 EquipmentResource::make('service-vehicles')
                     ->slug('service-vehicles'),
+                WorkOrderResource::make('assets')
+                    ->slug('work-orders'),
                 WorkOrderResource::make('equipment')
                     ->slug('work-orders'),
                 WorkOrderResource::make('accessories')
                     ->slug('work-orders'),
                 WorkOrderResource::make('service-vehicles')
                     ->slug('work-orders'),
+                AssetTagResource::make('assets')
+                    ->slug('tags'),
                 AssetTagResource::make('equipment')
                     ->slug('tags'),
                 AssetTagResource::make('accessories')

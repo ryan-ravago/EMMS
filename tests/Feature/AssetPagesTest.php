@@ -100,24 +100,24 @@ class AssetPagesTest extends TestCase
             ->all();
     }
 
-    public function test_the_assets_page_is_gone_and_the_three_asset_pages_are_routed(): void
+    public function test_the_four_asset_pages_are_routed_and_the_unconfigured_page_is_not(): void
     {
         Filament::setCurrentPanel('admin');
 
         $this->assertFalse(Route::has('filament.admin.resources.asset.index'));
         $this->assertFalse(Route::has('filament.admin.resources.asset.view'));
 
-        foreach (['equipment', 'accessories', 'service-vehicles'] as $page) {
+        foreach (['assets', 'equipment', 'accessories', 'service-vehicles'] as $page) {
             foreach (['index', 'create', 'view', 'edit'] as $name) {
                 $this->assertTrue(Route::has("filament.admin.resources.{$page}.{$name}"), "{$page}.{$name}");
             }
         }
     }
 
-    public function test_a_super_admin_sees_the_three_pages_and_no_assets_link(): void
+    public function test_a_super_admin_sees_all_four_pages(): void
     {
         $this->assertSame(
-            ['Equipment', 'Accessories', 'Service Vehicles'],
+            ['Assets', 'Equipment', 'Accessories', 'Service Vehicles'],
             $this->visiblePageLabels($this->makeUser('super_admin')),
         );
     }
@@ -135,6 +135,7 @@ class AssetPagesTest extends TestCase
 
     public function test_each_page_is_shown_only_with_its_own_permission(): void
     {
+        $this->assertSame(['Assets'], $this->visiblePageLabels($this->makeUser('manager', ['ViewAssetList:EquipmentResource'])));
         $this->assertSame(['Equipment'], $this->visiblePageLabels($this->makeUser('manager', ['ViewEquipmentList:EquipmentResource'])));
         $this->assertSame(['Accessories'], $this->visiblePageLabels($this->makeUser('manager', ['ViewAccessoryList:EquipmentResource'])));
         $this->assertSame(['Service Vehicles'], $this->visiblePageLabels($this->makeUser('manager', ['ViewServiceVehicleList:EquipmentResource'])));
@@ -159,6 +160,27 @@ class AssetPagesTest extends TestCase
         $this->assertTrue(Gate::forUser($manager)->allows('view', $untyped));
 
         $this->assertTrue(Gate::forUser($this->makeUser('super_admin'))->allows('view', $serviceVehicle));
+    }
+
+    public function test_the_assets_page_permission_opens_assets_of_every_type(): void
+    {
+        $manager = $this->makeUser('manager', ['View:EquipmentResource', 'ViewAssetList:EquipmentResource']);
+
+        foreach ([5, 8, 3] as $typeId) {
+            $this->assertTrue(Gate::forUser($manager)->allows('view', new Equipment(['asset_type_id' => $typeId])), (string) $typeId);
+        }
+    }
+
+    public function test_links_on_the_assets_page_stay_on_it_and_untyped_assets_link_to_it(): void
+    {
+        Filament::setCurrentPanel('admin');
+
+        $equipment = (new Equipment)->forceFill(['eqm_id' => 11, 'asset_type_id' => 5]);
+        $untyped = (new Equipment)->forceFill(['eqm_id' => 14, 'asset_type_id' => null]);
+
+        $this->assertStringEndsWith('/assets/11', EquipmentResource::withConfiguration('assets', fn (): string => EquipmentResource::getUrl('view', ['record' => $equipment])));
+        $this->assertStringEndsWith('/assets/14', EquipmentResource::getUrl('view', ['record' => $untyped]));
+        $this->assertStringEndsWith('/assets', EquipmentResource::withConfiguration('assets', fn (): string => EquipmentResource::getUrl()));
     }
 
     public function test_links_outside_a_page_go_to_the_page_of_the_assets_type(): void
@@ -189,5 +211,17 @@ class AssetPagesTest extends TestCase
             $viewer->fresh()->permissions->pluck('name')->all(),
         );
         $this->assertSame([], $other->fresh()->permissions->pluck('name')->all());
+    }
+
+    public function test_the_migration_gives_existing_asset_viewers_the_assets_page(): void
+    {
+        $viewer = Role::create(['name' => 'viewer', 'guard_name' => 'web']);
+        $viewer->givePermissionTo(Permission::findOrCreate('ViewAny:EquipmentResource', 'web'));
+        $other = Role::create(['name' => 'other', 'guard_name' => 'web']);
+
+        (require base_path('database/migrations/2026_10_24_101933_add_asset_list_page_permission.php'))->up();
+
+        $this->assertTrue($viewer->fresh()->hasPermissionTo('ViewAssetList:EquipmentResource'));
+        $this->assertFalse($other->fresh()->hasPermissionTo('ViewAssetList:EquipmentResource'));
     }
 }

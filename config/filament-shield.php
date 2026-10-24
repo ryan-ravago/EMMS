@@ -194,6 +194,7 @@ return [
                 'delete',
             ],
             EquipmentResource::class => [
+                'viewAssetList',
                 'viewEquipmentList',
                 'viewAccessoryList',
                 'viewServiceVehicleList',

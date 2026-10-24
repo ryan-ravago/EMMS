@@ -12,12 +12,16 @@ use Tests\TestCase;
 
 class AssetPurgeTest extends TestCase
 {
-    /** @var list<string> */
-    private array $reports = [];
+    private string $storage;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Reports are written under storage/app/asset-purges; keep the test's own away from the real ones.
+        $this->storage = sys_get_temp_dir().'/emms-purge-test-'.uniqid();
+        File::ensureDirectoryExists($this->storage.'/app');
+        $this->app->useStoragePath($this->storage);
 
         config(['activitylog.enabled' => false]);
 
@@ -78,9 +82,7 @@ class AssetPurgeTest extends TestCase
 
     protected function tearDown(): void
     {
-        foreach ($this->reports as $report) {
-            File::delete($report);
-        }
+        File::deleteDirectory($this->storage);
 
         parent::tearDown();
     }
@@ -143,17 +145,15 @@ class AssetPurgeTest extends TestCase
 
     private function csv(string $content): string
     {
-        $path = storage_path('framework/testing/purge_'.uniqid().'.csv');
-        File::ensureDirectoryExists(dirname($path));
+        $path = $this->storage.'/purge_'.uniqid().'.csv';
         File::put($path, $content);
-        $this->reports[] = $path;
 
         return $path;
     }
 
-    private function trackReports(): void
+    private function report(): ?string
     {
-        $this->reports = array_merge($this->reports, File::glob(storage_path('app/asset-purges/*_deleted_assets.csv')));
+        return File::glob($this->storage.'/app/asset-purges/*_deleted_assets.csv')[0] ?? null;
     }
 
     public function test_codes_are_matched_as_text_so_a_numeric_code_never_matches_a_longer_one(): void
@@ -239,7 +239,6 @@ class AssetPurgeTest extends TestCase
             ->expectsOutputToContain('are NOT deleted')
             ->expectsOutputToContain('Not found: NOPE')
             ->assertSuccessful();
-        $this->trackReports();
 
         $this->assertFalse(DB::table('equipment_units')->where('eqm_id', $untyped['asset'])->exists());
         $this->assertFalse(DB::table('work_orders')->where('wo_id', $untyped['workOrder'])->exists());
@@ -247,7 +246,7 @@ class AssetPurgeTest extends TestCase
         $this->assertTrue(DB::table('work_orders')->where('wo_id', $typed['workOrder'])->exists());
         $this->assertTrue(DB::table('equipment_units')->where('eqm_id', $unlisted)->exists());
 
-        $report = collect($this->reports)->first(fn (string $path): bool => str_contains($path, 'asset-purges'));
+        $report = $this->report();
         $this->assertNotNull($report);
         $this->assertStringContainsString('GONE', File::get($report));
         $this->assertStringContainsString('WO-GONE', File::get($report));
@@ -260,7 +259,6 @@ class AssetPurgeTest extends TestCase
 
         $this->artisan('assets:purge', ['source' => $this->csv("Asset Code\nTRUCK\n"), '--execute' => true, '--force' => true, '--include-typed' => true])
             ->assertSuccessful();
-        $this->trackReports();
 
         $this->assertFalse(DB::table('equipment_units')->where('eqm_id', $typed['asset'])->exists());
     }

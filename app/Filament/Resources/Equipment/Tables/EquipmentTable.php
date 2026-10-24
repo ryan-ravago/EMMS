@@ -88,7 +88,7 @@ class EquipmentTable
                     ->toggleable()
                     ->searchable()
                     ->visible(
-                        fn (): bool => EquipmentResource::getConfiguration()?->getKey() === 'accessories'
+                        fn (): bool => in_array(EquipmentResource::getConfiguration()?->getKey(), ['assets', 'accessories'], true)
                     ),
                 TextColumn::make('eqm_is_active')
                     ->label('Status')

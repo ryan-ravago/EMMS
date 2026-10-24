@@ -57,12 +57,18 @@ class EquipmentResource extends Resource
     protected static ?int $navigationSort = 2;
 
     /**
-     * The asset pages. Each is one configuration of this resource, shows the assets of one
-     * asset type (matched by code) and has its own Shield permission (the policy ability).
+     * The asset pages. Each is one configuration of this resource with its own Shield permission
+     * (the policy ability). "Assets" lists every asset; the others list one asset type (matched by code).
      *
-     * @var array<string, array{type: string, ability: string, label: string, plural: string}>
+     * @var array<string, array{type: ?string, ability: string, label: string, plural: string}>
      */
     public const PAGES = [
+        'assets' => [
+            'type' => null,
+            'ability' => 'viewAssetList',
+            'label' => 'Asset',
+            'plural' => 'Assets',
+        ],
         'equipment' => [
             'type' => AssetType::EQUIPMENT,
             'ability' => 'viewEquipmentList',
@@ -149,7 +155,7 @@ class EquipmentResource extends Resource
         $code = AssetType::codeFor($record?->asset_type_id === null ? null : (int) $record->asset_type_id);
 
         foreach (self::PAGES as $key => $page) {
-            if ($page['type'] === $code) {
+            if ($code !== null && $page['type'] === $code) {
                 return $key;
             }
         }
@@ -158,15 +164,20 @@ class EquipmentResource extends Resource
     }
 
     /**
-     * There is no page without a configuration, so a link built outside one (a dashboard card, another
-     * resource) goes to the page of the record's asset type, or to the Equipment page.
+     * There is no page without a configuration. On the Assets page links stay there; anywhere else a link
+     * goes to the page of the record's asset type, or to the Assets page (untyped assets, lists).
      */
     public static function getUrl(?string $name = null, array $parameters = [], bool $isAbsolute = true, ?string $panel = null, ?Model $tenant = null, bool $shouldGuessMissingParameters = false, ?string $configuration = null): string
     {
         if (blank($configuration)) {
-            $configuration = (array_key_exists('record', $parameters) ? static::pageKeyForRecord($parameters['record']) : null)
-                ?? static::currentPageKey()
-                ?? 'equipment';
+            $current = static::currentPageKey();
+            $recordPage = $current !== 'assets' && array_key_exists('record', $parameters)
+                ? static::pageKeyForRecord($parameters['record'])
+                : null;
+
+            $configuration = $recordPage
+                ?? $current
+                ?? (array_key_exists('record', $parameters) || static::canViewPage('assets') ? 'assets' : 'equipment');
 
             // Already inside that page's configuration: nothing to switch (and switching again would loop).
             if ($configuration === static::currentPageKey()) {

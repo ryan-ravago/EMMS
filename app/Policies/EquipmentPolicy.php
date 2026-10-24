@@ -21,6 +21,11 @@ class EquipmentPolicy
         return $authUser->can('ViewAny:EquipmentResource');
     }
 
+    public function viewAssetList(AuthUser $authUser): bool
+    {
+        return $authUser->hasRole('super_admin') || $authUser->can('ViewAssetList:EquipmentResource');
+    }
+
     public function viewEquipmentList(AuthUser $authUser): bool
     {
         return $authUser->hasRole('super_admin') || $authUser->can('ViewEquipmentList:EquipmentResource');
@@ -37,11 +42,12 @@ class EquipmentPolicy
     }
 
     /**
-     * Opening or editing an asset needs the permission of the page its asset type belongs to.
+     * Opening or editing an asset needs the permission of the Assets page (every asset) or of the page
+     * its asset type belongs to.
      */
     protected function canViewTypePage(AuthUser $authUser, Equipment $equipment): bool
     {
-        return match (true) {
+        return $this->viewAssetList($authUser) || match (true) {
             $equipment->isEquipmentAsset() => $this->viewEquipmentList($authUser),
             $equipment->isAccessory() => $this->viewAccessoryList($authUser),
             $equipment->isServiceVehicle() => $this->viewServiceVehicleList($authUser),

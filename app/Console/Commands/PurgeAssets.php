@@ -167,7 +167,7 @@ class PurgeAssets extends Command
         }
 
         $lines = preg_split('/\r\n|\n|\r/', trim((string) preg_replace('/^\xEF\xBB\xBF/', '', $csv)));
-        $header = array_map('trim', str_getcsv((string) array_shift($lines)));
+        $header = array_map('trim', str_getcsv((string) array_shift($lines), escape: ''));
         $column = (string) $this->option('column');
 
         if (! in_array($column, $header, true)) {
@@ -176,7 +176,7 @@ class PurgeAssets extends Command
 
         return collect($lines)
             ->filter(fn (string $line): bool => trim($line) !== '')
-            ->map(fn (string $line): array => array_combine($header, array_pad(array_map('trim', str_getcsv($line)), count($header), '')))
+            ->map(fn (string $line): array => array_combine($header, array_pad(array_map('trim', str_getcsv($line, escape: '')), count($header), '')))
             ->filter(fn (array $row): bool => $row[$column] !== '')
             ->values();
     }
@@ -193,7 +193,7 @@ class PurgeAssets extends Command
         $path = $directory.'/'.now()->format('Ymd_His').'_deleted_assets.csv';
 
         $handle = fopen($path, 'w');
-        fputcsv($handle, ['eqm_id', 'asset_code', 'asset_name', 'asset_type', 'active', 'reason', 'match', 'deleted_work_orders']);
+        fputcsv($handle, ['eqm_id', 'asset_code', 'asset_name', 'asset_type', 'active', 'reason', 'match', 'deleted_work_orders'], escape: '');
 
         foreach ($assets as $asset) {
             fputcsv($handle, [
@@ -205,7 +205,7 @@ class PurgeAssets extends Command
                 $asset['reason'],
                 $asset['match'],
                 $workOrders->where('wo_eqm_id', $asset['id'])->pluck('wo_no')->implode(' '),
-            ]);
+            ], escape: '');
         }
 
         fclose($handle);
