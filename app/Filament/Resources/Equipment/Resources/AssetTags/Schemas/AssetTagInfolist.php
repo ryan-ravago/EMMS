@@ -13,9 +13,9 @@ class AssetTagInfolist
     {
         return $schema
             ->components([
-                Section::make('Tag')
+                Section::make('RFID Tag')
                     ->icon('heroicon-o-tag')
-                    ->columns(['default' => 1, 'xl' => 2])
+                    ->columns(['default' => 1, 'md' => 2])
                     ->inlineLabel()
                     ->schema([
                         TextEntry::make('tag_id')
@@ -24,8 +24,8 @@ class AssetTagInfolist
                         TextEntry::make('is_deleted')
                             ->label('Status')
                             ->badge()
-                            ->formatStateUsing(fn (bool $state): string => $state ? 'Deleted' : 'Active')
-                            ->color(fn (bool $state): string => $state ? 'danger' : 'success'),
+                            ->formatStateUsing(fn(bool $state): string => $state ? 'Deleted' : 'Active')
+                            ->color(fn(bool $state): string => $state ? 'danger' : 'success'),
                         TextEntry::make('asset.eqm_name')
                             ->label('Asset')
                             ->placeholder('—'),
@@ -34,18 +34,11 @@ class AssetTagInfolist
                             ->placeholder('—'),
                         TextEntry::make('logs_count')
                             ->label('Total Logs')
-                            ->state(fn (AssetTag $record): int => $record->logs()->count())
+                            ->state(fn(AssetTag $record): int => $record->logs()->count())
                             ->badge(),
-                    ]),
-                Section::make('Assignment')
-                    ->icon('heroicon-o-user')
-                    ->description('Who tagged the asset and when. Tags imported from AIMS keep their original details.')
-                    ->columns(['default' => 1, 'xl' => 2])
-                    ->inlineLabel()
-                    ->schema([
                         TextEntry::make('assigned_by')
                             ->label('Assigned By')
-                            ->state(fn (AssetTag $record): ?string => $record->assignedBy?->activityLabel())
+                            ->state(fn(AssetTag $record): ?string => $record->assignedBy?->activityLabel())
                             ->placeholder('—'),
                         TextEntry::make('assigned_date')
                             ->label('Assigned On')
@@ -53,13 +46,13 @@ class AssetTagInfolist
                             ->placeholder('—'),
                         TextEntry::make('scanned_by')
                             ->label('Scanned By')
-                            ->state(fn (AssetTag $record): ?string => $record->scannedBy?->activityLabel())
+                            ->state(fn(AssetTag $record): ?string => $record->scannedBy?->activityLabel())
                             ->placeholder('—'),
                         TextEntry::make('scanned_date')
                             ->label('Scanned On')
                             ->dateTime('M d, Y h:i A')
                             ->placeholder('—'),
                     ]),
-            ]);
+            ])->columns(1);
     }
 }
