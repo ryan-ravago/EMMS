@@ -1,0 +1,476 @@
+"Asset Code","Asset Name","Reason to Delete"
+1010,"RAVAGO EQUIPMENT RENTALS INC.",Company
+1020,"SMART RIGS CRANE CORP",Company
+1030,"LIFTRITE, INC.",Company
+1040,"TELROSA HOLDINGS",Company
+1110,"CANLUBANG GATEWAY INC",Company
+CGI,"CANLUBANG GATEWAY INC",Company
+DCDC,"DAVAO CRANE DEPOT CORP",Company
+ILOHEAVY,"ILOILO HEAVYLIFT",Company
+LRI,"LIFTRITE, INC",Company
+RAPAVIA,"RAPAVIA ENTERPRISES",Company
+RCPI,"ROYALE CAVITE PROPERTIES INC.",Company
+RERI,"RAVAGO EQUIPMENT RENTALS INC",Company
+SRCC,"SMART RIGS CRANE CORP",Company
+TELROSA,"TELROSA HOLDINGS",Company
+VHI,"VALENZIA HOLDINGS INC",Company
+"700-G CR","EX-700-G crawler",Generic
+AC650,"Demag 700 tonner",Generic
+BEAM,Beam,Generic
+CANTER,"Canter Trucks",Generic
+"CWT 10","Counterweight 10T",Generic
+"CWT 15","Counterweight 15T",Generic
+"CWT 30","Counterweight 30T",Generic
+"CWT 32","Counterweight 32T",Generic
+"CWT 40","Counterweight 40T",Generic
+"CWT 50","Counterweight 50T",Generic
+"DDECK SL","Drop Deck Trailer SL",Generic
+"DDECK UT","Drop Deck Trailer UT",Generic
+EQ011,AC650,Generic
+"GE 204","Forklift 3 tons",Generic
+GE001,"TM Telescopic CR 8T",Generic
+GE002,"TM Telescopic CR 30 T",Generic
+GE003,"TM Telescopic CR 70 T",Generic
+GE004,"TM Telescopic CR 80 T",Generic
+GE005,"AT Telescopic CR 100 T",Generic
+GE006,"AT Telescopic CR 130 T",Generic
+GE007,"AT Telescopic CR 150 T",Generic
+GE008,"AT Telescopic CR 150T LONGBOOM",Generic
+GE009,"AT Telescopic CR 160 T",Generic
+GE010,"AT Telescopic CR 170 T",Generic
+GE011,"AT Telescopic CR 180 T",Generic
+GE012,"AT Telescopic CR 200 T",Generic
+GE013,"AT Telescopic CR 220 T",Generic
+GE014,"AT Telescopic CR 300 T",Generic
+GE015,"AT Telescopic CR 300T LONGBOOM",Generic
+GE016,"AT Telescopic CR 500 T",Generic
+GE017,"AT Telescopic CR 700 T",Generic
+GE018,"Crawler CR Lattice Boom 55 T",Generic
+GE019,"Crawler CR Lattice Boom 85 T",Generic
+GE020,"Crawler CR Lattice Boom 130 T",Generic
+GE021,"Crawler CR Lattice Boom 180 T",Generic
+GE022,"Crawler CR Lattice Boom 300 T",Generic
+GE023,"Crawler CR Lattice Boom 600 T",Generic
+GE024,"Crawler CR Lattice Boom 280 T",Generic
+GE025,"Crawler CR Lattice Boom 230 T",Generic
+GE026,"RT Crane 8 tons",Generic
+GE027,"RT Telescopic CR 25 T",Generic
+GE028,"RT Telescopic CR 35 T",Generic
+GE029,"RT Telescopic CR 45 T",Generic
+GE030,"RT Telescopic CR 30 T",Generic
+GE031,"RT Telescopic CR 55 T",Generic
+GE032,"RT Telescopic CR 60 T",Generic
+GE033,"RT Telescopic CR 70 T",Generic
+GE034,"RT Telescopic CR 80 T",Generic
+GE035,"RT Telescopic CR 90 T",Generic
+GE036,"RT Telescopic CR 145 T",Generic
+GE037,"Forklift 2.5 tons",Generic
+GE038,"Forklift 3.5 tons",Generic
+GE039,"Forklift 5 tons",Generic
+GE040,"Forklift 6 tons",Generic
+GE041,"Forklift 7 tons",Generic
+GE042,"Forklift 7.5 tons",Generic
+GE043,"Forklift 8 tons",Generic
+GE044,"Forklift 10 tons",Generic
+GE045,"Forklift 11.5 tons",Generic
+GE046,"Forklift 12 tons",Generic
+GE047,"Forklift 15 tons",Generic
+GE048,"Forklift 18 tons",Generic
+GE049,"Forklift 25 tons",Generic
+GE050,"Forklift 28 tons",Generic
+GE051,"Telehandler 3 tons",Generic
+GE052,"Telehandler 4.5 tons",Generic
+GE053,"Telehandler 4 tons",Generic
+GE054,"Telehandler 5 tons",Generic
+GE055,"Manlift Articulated Boom 12.9",Generic
+GE056,"Manlift Straight Boom 12 m",Generic
+GE057,"Manlift Straight Boom 15 m",Generic
+GE058,"Manlift Articulated Boom 18 m",Generic
+GE059,"Manlift Straight Boom 19 m",Generic
+GE060,"Manlift Straight Boom 21 m",Generic
+GE061,"Manlift Articulated Boom 24 m",Generic
+GE062,"Manlift Straight Boom 25 m",Generic
+GE063,"Manlift Straight Boom 26 m",Generic
+GE064,"Manlift Articulated Boom 25 m",Generic
+GE065,"Manlift Straight Boom 30 m",Generic
+GE066,"Manlift Straight Boom 36 m",Generic
+GE067,"Manlift Articulated Boom 38 m",Generic
+GE068,"Scissor Lift 7.92 meters",Generic
+GE069,"Scissor Lift 9.68 meters",Generic
+GE070,"Scissor Lift 12 meters",Generic
+GE071,"Scissor Lift 14 meters",Generic
+GE072,"ScissorLift 16m RT,Dsl Driven",Generic
+GE073,"Truck Mounted Manlift 9 meters",Generic
+GE074,"Backhoe 0.7 cubic meter bucket",Generic
+GE075,"Backhoe 0.9 cubic meter bucket",Generic
+GE076,"Backhoe 0.8 cubic meter bucket",Generic
+GE077,"Backhoe 0.6 cu m Long Arm",Generic
+GE078,"""Wheel Loader 5T, 3.6 cu. M""",Generic
+GE079,"Road Roller",Generic
+GE080,"Grader  170HP",Generic
+GE081,"Bulldozer Str8tilt Blade 4.5m3",Generic
+GE082,"Welding Machine 400 Amperes",Generic
+GE083,"Boomtruck 16 tons",Generic
+GE084,"6 wheeler Truck",Generic
+GE085,"10 wheeler Truck",Generic
+GE086,"12 wheeler Truck",Generic
+GE087,"Army Tractor Head",Generic
+GE088,"Tractor Head",Generic
+GE089,"Low Bed Trailer",Generic
+GE090,"Extendable Low Bed Trailer",Generic
+GE091,"High Bed Trailer",Generic
+GE092,"Multi Axle 4 Lines",Generic
+GE093,"Multi Axle 6 Lines",Generic
+GE094,"Extendable Semi-LowBed Trailer",Generic
+GE095,"Ballast Trailer",Generic
+GE096,Dumptruck,Generic
+GE097,"Skid Loader/Bobcat 0.4 cu m",Generic
+GE098,"Generator Set 75 kva",Generic
+GE099,"Generator Set 150 kva",Generic
+GE100,"Generator Set 220 kva",Generic
+GE101,"Generator Set 400 kva",Generic
+GE102,"Tower Light 5 kva",Generic
+GE103,"Fuel Tanker",Generic
+GE104,"Vessel Bridge Trailer",Generic
+GE106,"Drop Deck UT",Generic
+GE108,"Self-Propelled Trailer 6-Lines",Generic
+GE111,"Rough Terrain Crane 50 tons",Generic
+GE112,"TM Telescopic CR 50 T",Generic
+GE113,"TM Telescopic CR 25 T",Generic
+GE114,"AT Telescopic CR 120T",Generic
+GE115,"TM Telescopic CR 35T",Generic
+GE116,"Crawler CR Lattice Boom 150T",Generic
+GE117,"TM Telescopic CR 55T",Generic
+GE118,"Crawler CR (Mini Spider), 3T",Generic
+GE119,"Crawler CR Lattice Boom 80T",Generic
+GE120,"Scissor Lift 18 meters",Generic
+GE121,"Manlift Articulated Boom 20m",Generic
+GE122,"Scissor Lift 10 meters",Generic
+GE123,"TM Telescopic CR 45T",Generic
+GE124,"Multi Axle Trailer 10 Lines",Generic
+GE125,"Forklift 20 tons",Generic
+GE126,"Generator Set 62.5 kva",Generic
+GE127,"Self-Propelled Trailer 10Lines",Generic
+GE128,"Stool Support",Generic
+GE129,Beams,Generic
+GE130,"Lashing Equipment",Generic
+GE131,"Boomtruck 10 tons",Generic
+GE132,"Spreader Bar",Generic
+GE133,"Multi Axle 8 Lines",Generic
+GE134,"Multi Axle 12 Lines",Generic
+GE135,"Crawler CR Telescopic Boom120T",Generic
+GE136,"Crawler CR Telescopic Boom 55T",Generic
+GE137,"AT Telescopic CR 125T",Generic
+GE138,"AT Telescopic CR 250T",Generic
+GE139,"Boomtruck 6 tons",Generic
+GE140,"RT Telescopic CR 65 T",Generic
+GE141,"Manlift Articulated Boom 14m",Generic
+GE142,"RT Telescopic CR 120 T",Generic
+GE143,"TM Telescopic CR 75 T",Generic
+GE144,"Manlift Articulated Boom 32 m",Generic
+GE145,"Crawler CR Lattice Boom 50T",Generic
+GE146,"Self-Propelled Trailer 12Lines",Generic
+GE147,"Self-Propelled Trailer 16Lines",Generic
+GE148,"Self-Propelled Trailer 8 Lines",Generic
+GE149,"Self-Propelled Trailer 9 Lines",Generic
+GE150,Counterweight,Generic
+GE151,"Manlift Articulated Boom 26 m",Generic
+GE152,"Tools - Jacking & Skidding",Generic
+GE153,"Generator Set 60 kva",Generic
+GE154,"Crawler CR Lattice Boom 800T",Generic
+GE155,"PST 48 Lines",Generic
+GE156,"Manlift Articulated Boom 10 m",Generic
+GE157,"Manlift Straight Boom 10 m",Generic
+GE158,"RT Telescopic CR 75 T",Generic
+GE159,"Crawler CR Lattice Boom 100 T",Generic
+GE160,"Crawler CR Lattice Boom 250 T",Generic
+GE161,"Generator Set 250 kva",Generic
+GE162,"Multi-Axle Trailer",Generic
+GE163,Roller,Generic
+GE164,"AT Telescopic 450 T",Generic
+GE165,"Crawler CR Lattice Boom 650 T",Generic
+GE166,"Manlift Articulated Boom 36 m",Generic
+GE167,"Spine Deck",Generic
+GE168,"Goose Neck",Generic
+GE169,Turntable,Generic
+GE170,SPT,Generic
+GE171,SPMT,Generic
+GE172,"SPMT Side-by-side",Generic
+GE173,"Multi-axle Trailer with Split",Generic
+GE174,"Vessel Bridge",Generic
+GE175,"Vessel Bridge - Telescopic",Generic
+GE176,"Drop Deck",Generic
+GE177,"Tower Light 11.2 kva",Generic
+GE178,"Multi-axle Trailer UT",Generic
+GE179,"Backhoe 1.2 cu. meter bucket",Generic
+GE180,"Crawler CR Telescopic Boom 90T",Generic
+GE181,"Generator Set 750 kva",Generic
+GE182,"Tower Light 2.2KVA",Generic
+GE183,"Semi Lowbed Trailer",Generic
+GE184,"Crawler CR Telescopic Boom150T",Generic
+GE185,"Forklift 4 tons",Generic
+GE186,"Manlift Articulated Boom 41 m",Generic
+GE187,"Crawler CR Lattice Boom 750T",Generic
+GE188,"Manlift Articulated Boom 16 m",Generic
+GE189,"TM Telescopic CR 60T",Generic
+GE190,"Generator Set 300 kva",Generic
+GE191,"Boomtruck 15 tons",Generic
+GE192,"AT Telescopic CR 600 T",Generic
+GE193,"AT Telescopic CR 800T",Generic
+GE194,"Manlift Straight Boom 27 m",Generic
+GE195,"Telehandler 3.5 tons",Generic
+GE196,"Crawler CR Lattice Boom 1250T",Generic
+GE197,"Forklift 16 tons",Generic
+GE199,"AT Telescopic CR 260 T",Generic
+GE200,"Generator Set 200 kva",Generic
+GE201,"Manlift Articulated Boom 15m",Generic
+GE202,"Boomtruck 5 tons",Generic
+GE203,"Backhoe 1 cu. meter bucket",Generic
+GE204,"Blade Carrier",Generic
+GE205,"Blade Lifter",Generic
+GE206,"Forklift 3 tons",Generic
+GE207,"AT Telescopic CR 400T",Generic
+GE208,"Manlift Articulated Boom 45m",Generic
+GE209,"Knuckle Boom 90T",Generic
+GE210,"Forklift 35 tons",Generic
+GE211,"Crawler CR Lattice Boom 350T",Generic
+L300,"L300 Vans",Generic
+LASHEQ,"Lashing Equipment",Generic
+MIT-18T,"FL-Mitsubishi 18T",Generic
+"MOD 110","Spreader Bar",Generic
+"MOD 110H","Spreader Bar",Generic
+"MOD 34","""Spreader Bar, Mod 34, 1m-10m""",Generic
+"MOD 50","""Spreader Bar, Mod 50, 1m-13m""",Generic
+"MOD 70","""Spreader Bar, Mod 70, 1m-14m""",Generic
+NONE,NONE,Generic
+Omega28,"FL-Omega 28C",Generic
+RDT639,"Dumptruck - Blue",Generic
+SERVICE,"Service Vehicles",Generic
+SKIDDING,"Jacking and Skidding",Generic
+SP-120,"AP-Aichi SP-120",Generic
+SP-181,"AP Aichi SP-181",Generic
+SP-300,"AP-Aichi SP-300",Generic
+"SPREAD 5","""Spreader Bar, 5m""",Generic
+"SPREAD 9","""Spreader Bar, 9m""",Generic
+STOOL,"Stool support",Generic
+"THPSL 10","Multi Axle Trailer SL 1-10L",Generic
+"THPSL 20","Multi Axle Trailer SL 11-20L",Generic
+"THPSL 30","Multi Axle Trailer SL 21-30L",Generic
+"THPSL 40","Multi Axle Trailer SL 31-40L",Generic
+"THPSL 50","Multi Axle Trailer SL 41-50L",Generic
+"THPSL 60","Multi Axle Trailer SL 51-60L",Generic
+"THPSL 70","Multi Axle Trailer SL 61-70L",Generic
+"THPSL 80","Multi Axle Trailer SL 71-80L",Generic
+"THPSL 90","Multi Axle Trailer SL 81-90L",Generic
+THPSL100,"Multi Axle Trailer SL 91-100L",Generic
+THPSL110,"Multi Axle Trailer SL 101-110L",Generic
+THPSL120,"Multi Axle Trailer SL 111-120L",Generic
+"THPUT 10","Multi Axle Trailer UT 1-10L",Generic
+"THPUT 20","Multi Axle Trailer UT 11-20L",Generic
+TM-9m,"TM - 9M Boom",Generic
+50,"50 NBB",Location
+52,"52 NBB (Texwood)",Location
+64,"64 NBB",Location
+70,"70 C3 Road (Outlast 2)",Location
+72,"72 C-3",Location
+73,"73 C-3",Location
+75,"75 C3 Rd",Location
+88,"88 C-3",Location
+BAGOMBNG,"Bagombong Caloocan Lot",Location
+BATAAN,BATAAN,Location
+BENSAN,"Bensan Valyard",Location
+BLAST,"Blastmaster Yard 78 C3",Location
+CDO,"CDO Yard",Location
+CDOEQPT,"CDO EQUIPMENT DEPOT",Location
+CEBU,"Cebu Yard",Location
+Centr_z,"General Centre",Location
+Centr_z2,"General Centre 2",Location
+Centr_z3,"General Centre 3",Location
+Centr_z4,"General Centre 4",Location
+Centr_z5,"General Centre 5",Location
+CGH,"CGH LOT",Location
+DAVAO,"Davao Yard",Location
+ESPINO,"Espino Lot in Makiling",Location
+FESTIVAL,"FESTIVAL LOT",Location
+HARBOR,"HARBOR CENTER (LRI)",Location
+ILOILO,"Iloilo Yard",Location
+L01,Abra,Location
+L010,Batangas-Bauan,Location
+L011,Batangas-Mabini,Location
+L012,Batangas-Simlong,Location
+L013,Benguet,Location
+L014,Bulacan,Location
+L015,Cagayan,Location
+L016,"Cagayan-Port Irene",Location
+L017,"Camarines Norte",Location
+L018,"Camarines Sur",Location
+L019,Catanduanes,Location
+L02,Albay,Location
+L020,Cavite,Location
+L021,Cavite-Bacoor,Location
+L022,Cavite-Imus,Location
+L023,Cavite-Dasmarinas,Location
+L024,Cavite-Silang,Location
+L025,Cavite-Rosario,Location
+L026,Cavite-Kawit,Location
+L027,Cavite-Noveleta,Location
+L028,Cavite-Carmona,Location
+L029,"Cavite-Gen. Trias",Location
+L03,Apayao,Location
+L030,Cavite-Amadeo,Location
+L031,Cavite-Naic,Location
+L032,Cavite-Ternate,Location
+L033,"Cavite-Trece Martires",Location
+L034,Cavite-Tanza,Location
+L035,Ifugao,Location
+L036,"Ilocos Norte",Location
+L037,"Ilocos Norte-Currimao",Location
+L038,"Ilocos Norte-Bangui",Location
+L039,"Ilocos Norte-Burgos",Location
+L04,Aurora,Location
+L040,"Ilocos Sur",Location
+L041,Isabela,Location
+L042,Kalinga,Location
+L043,"La Union",Location
+L044,"La Union-San Fernando",Location
+L045,"La Union-Poro Pt.",Location
+L046,Laguna,Location
+L047,Laguna-Calamba,Location
+L048,"Laguna-Sta. Rosa",Location
+L049,Laguna-Binan,Location
+L05,Bataan,Location
+L050,"Laguna-San Pablo",Location
+L051,Laguna-Cabuyao,Location
+L052,"Laguna-San Pedro",Location
+L053,"Laguna-Los Banos",Location
+L054,"Laguna-Santa Cruz",Location
+L055,Laguna-Canlubang,Location
+L056,Laguna-Liliw,Location
+L057,Marinduque,Location
+L058,Masbate,Location
+L059,"Mountain Province",Location
+L06,Bataan-Limay,Location
+L060,"Nueva Ecija",Location
+L061,"Occidental Mindoro",Location
+L062,"Oriental Mindoro",Location
+L063,Palawan,Location
+L064,Pampanga,Location
+L065,Pampanga-Clark,Location
+L066,Pangasinan,Location
+L067,Quezon,Location
+L068,Quezon-Pagbilao,Location
+L069,Quezon-Lucban,Location
+L07,Bataan-Mariveles,Location
+L070,Quirino,Location
+L071,Rizal,Location
+L072,Sorsogon,Location
+L073,Tarlac,Location
+L074,Zambales,Location
+L075,Zambales-Subic,Location
+L076,"Nueva Vizcaya",Location
+L08,Batanes,Location
+L09,Batangas,Location
+M01,"Agusan del Norte",Location
+M010,"Davao Oriental",Location
+M011,"Dinagat Islands",Location
+M012,"Lanao del Norte",Location
+M013,"Lanao del Norte-Iligan",Location
+M014,"Lanao del Sur",Location
+M015,Maguindanao,Location
+M016,"Misamis Occidental",Location
+M017,"Misamis Oriental",Location
+M018,"Misamis Oriental-CDO",Location
+M019,"Misamis Oriental-Lugait",Location
+M02,"Agusan del Sur",Location
+M020,"Misamis Oriental-Tagoloan",Location
+M021,Sarangani,Location
+M022,"South Cotabato",Location
+M023,"Sultan Kudarat",Location
+M024,Sulu,Location
+M025,"Surigao del Norte",Location
+M026,"Surigao del Sur",Location
+M027,Tawi-Tawi,Location
+M028,"Zamboanga del Norte",Location
+M029,"Zamboanga del Sur",Location
+M03,Basilan,Location
+M030,"Zamboanga Sibugay",Location
+M04,Bukidnon,Location
+M05,"Compostela Valley",Location
+M06,Cotabato,Location
+M07,"Davao del Norte",Location
+M08,"Davao del Sur",Location
+M09,"Davao Occidental",Location
+Mandaue,"Cebu Mandaue Yard",Location
+MY,"ASIAN MANDAUE YARD",Location
+NCR01,"Metro Manila",Location
+NCR010,Makati,Location
+NCR011,Manila,Location
+NCR012,Mandaluyong,Location
+NCR013,"San Juan",Location
+NCR014,Pasay,Location
+NCR015,Paranaque,Location
+NCR016,"Las Pinas",Location
+NCR017,Muntinlupa,Location
+NCR02,Caloocan,Location
+NCR03,Malabon,Location
+NCR04,Navotas,Location
+NCR05,Valenzuela,Location
+NCR06,"Quezon City",Location
+NCR07,Marikina,Location
+NCR08,Pasig,Location
+NCR09,Taguig,Location
+PADACO,PADACO,Location
+PB,"Puting Bato",Location
+SILANG1,"SILANG LOT 1 (CGI)",Location
+SILANG2,"SILANGAN LOT 2 (CGI)",Location
+SRY,"STA ROSA",Location
+"TANZA 1","Tanza RCPI Lot",Location
+TURBINA,"Turbina Makiling Calamba Lot",Location
+V01,Aklan,Location
+V010,Cebu-Toledo,Location
+V011,"Cebu-San Fernando",Location
+V012,"Eastern Samar",Location
+V013,Guimaras,Location
+V014,Iloilo,Location
+V015,Leyte,Location
+V016,Leyte-Ormoc,Location
+V017,Leyte-Isabel,Location
+V018,"Negros Occidental",Location
+V019,"Negros Occidental-Bacolod",Location
+V02,Antique,Location
+V020,"Negros Oriental",Location
+V021,"Negros Oriental-Manjuyod",Location
+V022,"Negros Oriental-Ayungon",Location
+V023,"Negros Oriental-Dumaguete",Location
+V024,"Northern Samar",Location
+V025,Romblon,Location
+V026,Samar,Location
+V027,Siquijor,Location
+V028,"Southern Leyte",Location
+V03,Biliran,Location
+V04,Bohol,Location
+V05,Camiguin,Location
+V06,Capiz,Location
+V07,Cebu,Location
+V08,Cebu-Mandaue,Location
+V09,Cebu-Naga,Location
+V1,"VITAS 1",Location
+V2,"VITAS 2",Location
+V3,"Vitas 3 - Fortune",Location
+V4,"VITAS 4 - Cold Storage",Location
+VAL,"VALENZUELA YARD",Location
+Y01,"50 NBB",Location
+Y02,"64 NBB",Location
+Y03,"73 C-3",Location
+Y04,Bataan,Location
+Y05,"CGH Lot",Location
+Y06,"Festival lot",Location
+Y07,"Asian Mandaue Yard",Location
+Y08,"Silangan Lot 1 (CGI)",Location
+Y09,"Silangan Lot 2 (CGI)",Location
+Y10,"Valenzuela Yard",Location
+Y11,"VITAS 1",Location
+Y12,"VITAS 2",Location
+Y13,"88 C-3",Location
+Y14,"Sta Rosa",Location
+Y15,"Harbour Center (LRI)",Location

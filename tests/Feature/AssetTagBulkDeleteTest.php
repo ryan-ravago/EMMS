@@ -57,6 +57,11 @@ class AssetTagBulkDeleteTest extends TestCase
         Schema::create('asset_tags', function (Blueprint $table): void {
             $table->string('tag_id')->primary();
             $table->unsignedBigInteger('asset_parent_id');
+            $table->unsignedBigInteger('assigned_by')->nullable();
+            $table->dateTime('assigned_date')->nullable();
+            $table->dateTime('scanned_date')->nullable();
+            $table->unsignedBigInteger('scanned_by')->nullable();
+            $table->boolean('is_deleted')->default(false);
         });
 
         Schema::create('asset_tag_logs', function (Blueprint $table): void {

@@ -11,9 +11,12 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
@@ -29,27 +32,22 @@ class EditLogsRelationManager extends RelationManager
         return (string) $count;
     }
 
-    protected static function renderValue(string $field, mixed $value): string
+    /**
+     * A logged value as plain text, or a list of texts for multi-value fields such as Tags.
+     *
+     * @return string|list<string>
+     */
+    protected static function plainValue(string $field, mixed $value): string|array
     {
         if (is_array($value)) {
-            if (empty($value)) {
-                return '-';
-            }
-
-            return collect($value)
-                ->map(fn ($item) => '<span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-white/10 dark:text-gray-300">'.e((string) $item).'</span>')
-                ->implode(' ');
-        }
-
-        if ($field === 'specifications') {
-            return empty($value) ? '-' : (string) $value;
+            return $value === [] ? '-' : array_values(array_map('strval', $value));
         }
 
         if ($field === 'eqm_date_purchased' && filled($value)) {
-            return e(Carbon::parse($value)->format('F d, Y'));
+            return Carbon::parse($value)->format('F d, Y');
         }
 
-        return e(AssetEditLog::resolveFieldValue($field, $value));
+        return AssetEditLog::resolveFieldValue($field, $value);
     }
 
     public function form(Schema $schema): Schema
@@ -71,55 +69,41 @@ class EditLogsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                TextEntry::make('changes')
+                RepeatableEntry::make('change_rows')
                     ->label('Changes')
-                    ->state(function ($record) {
-                        // Build the full HTML string upfront: TextEntry treats array state as a
-                        // comma-joined list of values and would call this per field otherwise.
-                        $state = $record->changes;
+                    ->state(fn (AssetEditLog $record): array => collect($record->changes ?? [])
+                        ->map(function (mixed $value, string $field): array {
+                            if (! is_array($value) || ! array_key_exists('new', $value)) {
+                                $value = ['old' => null, 'new' => $value];
+                            }
 
-                        if (empty($state)) {
-                            return '-';
-                        }
-
-                        $rows = collect($state)
-                            ->map(function ($value, string $field): string {
-                                if (! is_array($value)) {
-                                    $value = ['old' => null, 'new' => $value];
-                                }
-
-                                $column = e(AssetEditLog::fieldLabel($field));
-                                $old = self::renderValue($field, $value['old'] ?? null);
-                                $new = self::renderValue($field, $value['new'] ?? null);
-
-                                return <<<HTML
-                                    <tr class="border-b border-gray-200 last:border-b-0 dark:border-white/10">
-                                        <td class="px-4 py-3 align-top text-sm font-medium text-gray-900 dark:text-white">{$column}</td>
-                                        <td class="px-4 py-3 align-top text-sm whitespace-pre-wrap text-danger-600 dark:text-danger-400">{$old}</td>
-                                        <td class="px-4 py-3 align-top text-sm whitespace-pre-wrap text-success-600 dark:text-success-400">{$new}</td>
-                                    </tr>
-                                HTML;
-                            })
-                            ->implode('');
-
-                        return <<<HTML
-                            <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-white/10">
-                                <table class="w-full text-left">
-                                    <thead class="bg-gray-50 dark:bg-white/5">
-                                        <tr>
-                                            <th class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Column</th>
-                                            <th class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Old Value</th>
-                                            <th class="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">New Value</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {$rows}
-                                    </tbody>
-                                </table>
-                            </div>
-                        HTML;
-                    })
-                    ->html()
+                            return [
+                                'column' => AssetEditLog::fieldLabel($field),
+                                'old' => self::plainValue($field, $value['old'] ?? null),
+                                'new' => self::plainValue($field, $value['new'] ?? null),
+                            ];
+                        })
+                        ->values()
+                        ->all())
+                    ->table([
+                        TableColumn::make('Column'),
+                        TableColumn::make('Old Value'),
+                        TableColumn::make('New Value'),
+                    ])
+                    ->schema([
+                        TextEntry::make('column')
+                            ->hiddenLabel()
+                            ->weight(FontWeight::Medium),
+                        TextEntry::make('old')
+                            ->hiddenLabel()
+                            ->color('danger')
+                            ->listWithLineBreaks(),
+                        TextEntry::make('new')
+                            ->hiddenLabel()
+                            ->color('success')
+                            ->listWithLineBreaks(),
+                    ])
+                    ->placeholder('No changes recorded')
                     ->columnSpanFull(),
                 TextEntry::make('performedBy.user_email')
                     ->label('Performed By')

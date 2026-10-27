@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsChanges;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Concerns\LogsChanges;
 
 class AssetTag extends Model
 {
@@ -20,9 +20,33 @@ class AssetTag extends Model
     protected $fillable = [
         'tag_id',
         'asset_parent_id',
+        'assigned_by',
+        'assigned_date',
+        'scanned_date',
+        'scanned_by',
+        'is_deleted',
     ];
 
     public $timestamps = false;
+
+    protected function casts(): array
+    {
+        return [
+            'assigned_date' => 'datetime',
+            'scanned_date' => 'datetime',
+            'is_deleted' => 'boolean',
+        ];
+    }
+
+    public function assignedBy(): BelongsTo
+    {
+        return $this->belongsTo(AppUser::class, 'assigned_by', 'user_id');
+    }
+
+    public function scannedBy(): BelongsTo
+    {
+        return $this->belongsTo(AppUser::class, 'scanned_by', 'user_id');
+    }
 
     public function logs(): HasMany
     {

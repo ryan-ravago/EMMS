@@ -35,7 +35,7 @@ class TagsRelationManager extends RelationManager
                     ->icon('heroicon-o-plus')
                     ->modalHeading('Add tags')
                     ->modalSubmitActionLabel('Add')
-                    ->authorize(fn() => Auth::user()?->can('update', $this->getOwnerRecord()) ?? false)
+                    ->authorize(fn () => Auth::user()?->can('update', $this->getOwnerRecord()) ?? false)
                     ->schema([
                         TagsInput::make('tags')
                             ->label('Tags')
@@ -51,23 +51,27 @@ class TagsRelationManager extends RelationManager
                     ->action(function (array $data): void {
                         // Trim + drop empties + de-dupe (case-insensitive, same as DB collation)
                         $tags = collect($data['tags'])
-                            ->map(fn(string $tag): string => trim($tag))
+                            ->map(fn (string $tag): string => trim($tag))
                             ->filter()
-                            ->unique(fn(string $tag): string => mb_strtolower($tag))
+                            ->unique(fn (string $tag): string => mb_strtolower($tag))
                             ->values();
 
                         $ownerId = $this->getOwnerRecord()->getKey();
+                        $assignedBy = Auth::id();
+                        $assignedDate = now();
 
                         // Single bulk INSERT instead of one query per tag
                         AssetTag::query()->insert(
-                            $tags->map(fn(string $tag): array => [
+                            $tags->map(fn (string $tag): array => [
                                 'tag_id' => $tag,
                                 'asset_parent_id' => $ownerId,
+                                'assigned_by' => $assignedBy,
+                                'assigned_date' => $assignedDate,
                             ])->all(),
                         );
 
                         Notification::make()
-                            ->title($tags->count() . ' tag(s) added')
+                            ->title($tags->count().' tag(s) added')
                             ->success()
                             ->send();
 
