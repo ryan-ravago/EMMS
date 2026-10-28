@@ -50,11 +50,13 @@ class AppServiceProvider extends ServiceProvider
         // relation managers); a table can still override with ->paginated().
         // On phones (< 640px) rows become cards (see resources/css/mobile-tables.css);
         // a table can opt out with ->stackedOnMobile(false).
+        // Every table also refreshes itself every 30 seconds; a table can opt out with ->poll(null).
         Table::configureUsing(
             fn (Table $table) => $table
                 ->paginated([10, 25, 50, 100])
                 ->defaultPaginationPageOption(25)
                 ->stackedOnMobile()
+                ->poll('30s')
         );
 
         // Every table column shows — when empty, and long text is cut to 50 characters
