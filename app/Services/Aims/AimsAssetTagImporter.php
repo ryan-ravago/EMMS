@@ -14,8 +14,8 @@ use Throwable;
  * ACCESSORIES (the two id ranges never overlap). EMMS units are matched through the AIMS
  * NAME against equipment_units.eqm_prc_code:
  *
- *  - a tag on an accessory goes to the accessory's own EMMS unit when that accessory exists in EMMS as
- *    an asset of its own, otherwise to its parent's unit. "Its own" is decided by identity (the AIMS
+ *  - every asset keeps only its own tags: a tag on an accessory goes to the accessory's own EMMS unit when
+ *    that accessory exists in EMMS as an asset of its own, and is skipped otherwise (never moved to its parent). "Its own" is decided by identity (the AIMS
  *    accessory id it was created from), or by name only when no other AIMS accessory has that name:
  *    many cranes have a "CWT #2 (10T)", and their tags must not land on one crane's counterweight;
  *  - an alias (AIMS code => EMMS code) is used for assets renamed in EMMS, e.g. KLT80V#1 => KLT80V01;
@@ -37,6 +37,8 @@ class AimsAssetTagImporter
 
     public const string SKIP_BLANK_TAG = 'blank RFID';
 
+    public const string SKIP_ACCESSORY_NOT_ASSET = 'tag belongs to an accessory that is not an asset in EMMS';
+
     /** @var array<string, list<int>> normalized eqm_prc_code => eqm_ids */
     private array $unitsByCode = [];
 
@@ -54,7 +56,7 @@ class AimsAssetTagImporter
      * @param  array<string, int>  $unitsByExactCode  trimmed lower-case eqm_prc_code => eqm_id
      * @param  array<string, string>  $aliases  AIMS code => EMMS code (both as written; normalized here)
      * @param  array<int, int>  $accessoryUnits  AIMS accessory id => eqm_id, for accessories that were added to EMMS as assets
-     * @return array{rows: array<string, int>, meta: array<string, array{assigned_by: ?int, assigned_date: ?string, scanned_by: ?int, scanned_date: ?string, is_deleted: bool}>, skipped: list<array{aims_id: int, rfid: string, assigned_to: int, reason: string}>, duplicates: int, from_accessories: int, from_accessory_records: int}
+     * @return array{rows: array<string, int>, meta: array<string, array{assigned_by: ?int, assigned_date: ?string, scanned_by: ?int, scanned_date: ?string, is_deleted: bool}>, skipped: list<array{aims_id: int, rfid: string, assigned_to: int, reason: string}>, duplicates: int, from_accessory_records: int}
      */
     public function plan(Collection $tags, Collection $parents, Collection $accessories, array $unitsByCode, array $unitsByExactCode = [], array $aliases = [], array $accessoryUnits = []): array
     {
@@ -76,7 +78,6 @@ class AimsAssetTagImporter
         $conflicted = [];
         $firstSeen = [];
         $duplicates = 0;
-        $fromAccessories = 0;
         $fromAccessoryRecords = 0;
 
         foreach ($tags as $tag) {
@@ -117,13 +118,16 @@ class AimsAssetTagImporter
                     [$ownUnit] = $this->resolveUnit($name);
                 }
 
-                if ($ownUnit !== null) {
-                    $unitId = $ownUnit;
-                    $via = 'accessory record';
-                } else {
-                    $parent = $parentsById->get($accessory->PARENT_ID);
-                    $via = 'accessory parent';
+                // Every asset keeps only its own tags. An accessory that is not an asset in EMMS has no record
+                // to hold its tags, and they are never pushed up onto its parent.
+                if ($ownUnit === null) {
+                    $skip(self::SKIP_ACCESSORY_NOT_ASSET);
+
+                    continue;
                 }
+
+                $unitId = $ownUnit;
+                $via = 'accessory record';
             }
 
             if ($unitId === null) {
@@ -176,7 +180,6 @@ class AimsAssetTagImporter
                 'is_deleted' => (bool) (int) ($tag->IS_DELETE ?? 0),
             ];
             $firstSeen[$tagId] = $source;
-            $fromAccessories += $via === 'accessory parent' ? 1 : 0;
             $fromAccessoryRecords += $via === 'accessory record' ? 1 : 0;
         }
 
@@ -185,7 +188,6 @@ class AimsAssetTagImporter
             'meta' => $meta,
             'skipped' => $skipped,
             'duplicates' => $duplicates,
-            'from_accessories' => $fromAccessories,
             'from_accessory_records' => $fromAccessoryRecords,
         ];
     }

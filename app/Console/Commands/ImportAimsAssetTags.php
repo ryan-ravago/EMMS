@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\File;
 class ImportAimsAssetTags extends Command
 {
     protected $signature = 'asset-tags:import-aims
-        {--dry-run : Show what would be imported without writing anything}
+        {--dry-run : Show what would be imported (and removed) without writing anything}
+        {--remove-misplaced : Also remove tags that sit on a parent but belong to an accessory that is not an asset in EMMS (tags with scan logs are never removed)}
         {--aliases=database/data/aims_code_aliases.csv : CSV of AIMS codes that have a different code in EMMS (AIMS Code, EMMS Code)}
         {--assets=database/data/aims_assets_to_add.csv : CSV of AIMS assets added to EMMS (Asset Code, AIMS Table, AIMS ID): their accessories keep their own tags}
         {--report=aims-asset-tags-skipped.csv : CSV (inside storage/app) listing every skipped tag}';
@@ -66,6 +67,20 @@ class ImportAimsAssetTags extends Command
         );
         $toInsert = array_diff_key($plan['rows'], $alreadyPresent);
 
+        // Tags an earlier run attached to a parent although they belong to an accessory that is not an asset in EMMS.
+        $misplaced = collect($plan['skipped'])
+            ->where('reason', AimsAssetTagImporter::SKIP_ACCESSORY_NOT_ASSET)
+            ->pluck('rfid')
+            ->map(fn (string $rfid): string => $importer->normalizeTag($rfid))
+            ->unique()
+            ->filter(fn (string $tagId): bool => $existing->has($tagId))
+            ->values();
+        $misplacedWithLogs = $misplaced->chunk(500)
+            ->flatMap(fn ($chunk) => DB::table('asset_tag_logs')->whereIn('tag_id', $chunk->all())->distinct()->pluck('tag_id'))
+            ->map(fn (string $tagId): string => $importer->normalizeTag($tagId))
+            ->unique();
+        $toRemove = $misplaced->reject(fn (string $tagId): bool => $misplacedWithLogs->contains($tagId))->values();
+
         $reportPath = storage_path('app/'.ltrim((string) $this->option('report'), '/\\'));
         $this->writeReport($reportPath, $plan['skipped']);
 
@@ -73,7 +88,6 @@ class ImportAimsAssetTags extends Command
             ['AIMS tags read', $tags->count()],
             ['Mapped to an EMMS unit', count($plan['rows'])],
             ['  of which on the accessory\'s own EMMS record', $plan['from_accessory_records']],
-            ['  of which via an accessory\'s parent', $plan['from_accessories']],
             ['Aliases read from '.$this->option('aliases'), count($aliases)],
             ['Accessories added as assets (from '.$this->option('assets').')', count($accessoryUnits)],
             ['Exact duplicates in AIMS (merged)', $plan['duplicates']],
@@ -81,6 +95,9 @@ class ImportAimsAssetTags extends Command
             ['  of which on a different unit than AIMS suggests', count($differentUnit)],
             ['Will be inserted', count($toInsert)],
             ['Skipped (see report)', count($plan['skipped'])],
+            ['Wrongly on a parent already (accessory tags)', $misplaced->count()],
+            ['  of which have scan logs (always kept)', $misplacedWithLogs->count()],
+            ['  to remove with --remove-misplaced', $toRemove->count()],
         ]);
 
         collect($plan['skipped'])->countBy('reason')->each(
@@ -128,18 +145,33 @@ class ImportAimsAssetTags extends Command
             return self::SUCCESS;
         }
 
-        [$created, $inserted] = DB::transaction(function () use ($userMapper, $importer, $users, $departmentId, $toInsert, $plan): array {
-            $created = $userMapper->create($users['create'], (int) $departmentId);
+        $removeMisplaced = (bool) $this->option('remove-misplaced');
 
-            return [$created, $importer->persist($toInsert, $plan['meta'], $users['map'] + $created)];
+        [$created, $inserted, $removed] = DB::transaction(function () use ($userMapper, $importer, $users, $departmentId, $toInsert, $plan, $removeMisplaced, $toRemove): array {
+            $created = $userMapper->create($users['create'], (int) $departmentId);
+            $inserted = $importer->persist($toInsert, $plan['meta'], $users['map'] + $created);
+            $removed = 0;
+
+            // Query builder on purpose: the tags have no logs (checked above) and the foreign key backs that up.
+            if ($removeMisplaced) {
+                foreach ($toRemove->chunk(500) as $chunk) {
+                    $removed += DB::table('asset_tags')->whereIn('tag_id', $chunk->all())->delete();
+                }
+            }
+
+            return [$created, $inserted, $removed];
         });
 
         activity()
             ->event('created')
-            ->withProperties(['tags_inserted' => $inserted, 'users_created' => array_values($created), 'skipped' => count($plan['skipped'])])
-            ->log("Imported {$inserted} RFID tags from AIMS");
+            ->withProperties(['tags_inserted' => $inserted, 'tags_removed' => $removed, 'users_created' => array_values($created), 'skipped' => count($plan['skipped'])])
+            ->log("Imported {$inserted} RFID tags from AIMS".($removed > 0 ? " and removed {$removed} that belong to accessories" : ''));
 
-        $this->info('Created '.count($created).' AIMS user(s) in EMMS and inserted '.$inserted.' tag(s) into asset_tags.');
+        $this->info('Created '.count($created).' AIMS user(s) in EMMS, inserted '.$inserted.' tag(s) into asset_tags and removed '.$removed.' misplaced tag(s).');
+
+        if (! $removeMisplaced && $toRemove->isNotEmpty()) {
+            $this->warn($toRemove->count().' tags still sit on a parent although they belong to accessories. Run again with --remove-misplaced to remove them.');
+        }
 
         return self::SUCCESS;
     }

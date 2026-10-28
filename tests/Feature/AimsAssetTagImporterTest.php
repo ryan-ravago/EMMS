@@ -30,7 +30,7 @@ class AimsAssetTagImporterTest extends TestCase
     }
 
     /**
-     * @return array{rows: array<string, int>, skipped: list<array<string, mixed>>, duplicates: int, from_accessories: int}
+     * @return array{rows: array<string, int>, skipped: list<array<string, mixed>>, duplicates: int, from_accessory_records: int}
      */
     private function plan(array $tags, array $parents = [], array $accessories = [], array $units = []): array
     {
@@ -63,20 +63,20 @@ class AimsAssetTagImporterTest extends TestCase
 
         $this->assertSame(['e2800abc' => 7], $plan['rows']);
         $this->assertSame([], $plan['skipped']);
-        $this->assertSame(0, $plan['from_accessories']);
+        $this->assertSame(0, $plan['from_accessory_records']);
     }
 
-    public function test_tag_assigned_to_accessory_attaches_to_the_accessorys_parent_unit(): void
+    public function test_a_tag_on_an_accessory_that_is_not_an_asset_in_emms_is_skipped_and_never_given_to_the_parent(): void
     {
         $plan = $this->plan(
             [$this->tag(1, 'AAA1', 500)],
             [$this->parent(10, 'KR45H#1')],
-            [['ID' => 500, 'PARENT_ID' => 10, 'IS_DELETE' => null]],
+            [['ID' => 500, 'PARENT_ID' => 10, 'NAME' => 'JIB', 'IS_DELETE' => null]],
             ['kr45h#1' => [3]],
         );
 
-        $this->assertSame(['aaa1' => 3], $plan['rows']);
-        $this->assertSame(1, $plan['from_accessories']);
+        $this->assertSame([], $plan['rows'], 'the parent crane must not receive its parts\' tags');
+        $this->assertSame(AimsAssetTagImporter::SKIP_ACCESSORY_NOT_ASSET, $plan['skipped'][0]['reason']);
     }
 
     public function test_unknown_assignment_is_skipped_as_orphan(): void
@@ -191,9 +191,10 @@ class AimsAssetTagImporterTest extends TestCase
             ['mpp03' => [801], 'transportequipment' => [5]],
         );
 
-        $this->assertSame(['own' => 801, 'component' => 5], $plan['rows']);
+        // MPP 03 is an asset of its own and keeps its tag; the JIB is only a part of the crane and is left out.
+        $this->assertSame(['own' => 801], $plan['rows']);
         $this->assertSame(1, $plan['from_accessory_records']);
-        $this->assertSame(1, $plan['from_accessories']);
+        $this->assertSame([AimsAssetTagImporter::SKIP_ACCESSORY_NOT_ASSET], array_column($plan['skipped'], 'reason'));
     }
 
     public function test_a_shared_accessory_name_never_takes_the_tags_of_another_cranes_accessory(): void
@@ -211,10 +212,11 @@ class AimsAssetTagImporterTest extends TestCase
             [501 => 900],
         );
 
-        // 501 was added to EMMS as its own asset (900); 502 belongs to another crane and goes to that crane.
-        $this->assertSame(['mine' => 900, 'other' => 2], $plan['rows']);
+        // 501 was added to EMMS as its own asset (900). 502 is another crane's part: it never takes 900, and it is
+        // not pushed up onto its crane either.
+        $this->assertSame(['mine' => 900], $plan['rows']);
         $this->assertSame(1, $plan['from_accessory_records']);
-        $this->assertSame(1, $plan['from_accessories']);
+        $this->assertSame(['OTHER'], array_column($plan['skipped'], 'rfid'));
     }
 
     public function test_an_alias_also_resolves_an_accessory_recorded_twice_in_aims(): void
