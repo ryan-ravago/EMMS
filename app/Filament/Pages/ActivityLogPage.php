@@ -2,12 +2,15 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Exports\ActivityExporter;
+use App\Filament\Support\ExportPreviewAction;
 use App\Models\AppUser;
 use App\Support\Activity\ActivityLabels;
 use BackedEnum;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
 use Filament\Actions\Action;
+use Filament\Actions\ExportAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
@@ -19,6 +22,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\Models\Activity;
 use UnitEnum;
 
@@ -35,6 +39,24 @@ class ActivityLogPage extends Page implements HasTable
     protected static ?int $navigationSort = 97;
 
     protected string $view = 'filament.pages.activity-log';
+
+    /**
+     * Preview and Export run on the table's own query, so they follow the filters, search and sort on screen.
+     *
+     * @return array<int, Action>
+     */
+    protected function getHeaderActions(): array
+    {
+        return [
+            ExportPreviewAction::make()
+                ->exporter(ActivityExporter::class)
+                ->authorize(fn (): bool => Auth::user()?->can('PreviewActivityLog') ?? false),
+            ExportAction::make()
+                ->exporter(ActivityExporter::class)
+                ->color('gray')
+                ->authorize(fn (): bool => Auth::user()?->can('ExportActivityLog') ?? false),
+        ];
+    }
 
     public function table(Table $table): Table
     {

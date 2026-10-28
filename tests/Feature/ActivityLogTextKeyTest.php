@@ -39,6 +39,12 @@ class ActivityLogTextKeyTest extends TestCase
             $table->boolean('is_deleted')->default(false);
         });
 
+        // Deleting a tag checks that it has no scan logs first.
+        Schema::create('asset_tag_logs', function (Blueprint $table): void {
+            $table->id();
+            $table->string('tag_id');
+        });
+
         config(['activitylog.enabled' => true]);
     }
 

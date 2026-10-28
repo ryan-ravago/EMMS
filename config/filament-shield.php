@@ -296,6 +296,8 @@ return [
     'custom_permissions' => [
         'PreviewReports' => 'Preview Reports',
         'ExportReports' => 'Export Reports',
+        'PreviewActivityLog' => 'Preview Activity Log',
+        'ExportActivityLog' => 'Export Activity Log',
     ],
 
     /*
