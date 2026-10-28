@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Schema as DatabaseSchema;
 use Livewire\Component;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
@@ -130,7 +131,7 @@ class AssetTagUiTest extends TestCase
             ->assertTableColumnStateSet('assigned_by', 'Janica Murillo', 'TAG-1')
             ->assertTableColumnStateSet('assigned_by', null, 'TAG-2')
             ->assertTableColumnFormattedStateSet('is_deleted', 'Active', 'TAG-1')
-            ->assertTableColumnFormattedStateSet('is_deleted', 'Deleted', 'TAG-2')
+            ->assertTableColumnFormattedStateSet('is_deleted', 'Retired', 'TAG-2')
             ->assertTableColumnFormattedStateSet('assigned_date', 'Jul 18, 2026 04:50 PM', 'TAG-1');
     }
 
@@ -204,6 +205,71 @@ class AssetTagUiTest extends TestCase
         $this->assertTrue($tags->every(fn (AssetTag $tag): bool => $tag->scanned_by === null && $tag->scanned_date === null && ! $tag->is_deleted));
     }
 
+    public function test_a_tag_can_be_retired_and_reactivated_and_keeps_its_logs(): void
+    {
+        AssetTag::query()->insert(['tag_id' => 'TAG-1', 'asset_parent_id' => $this->equipment->eqm_id]);
+        DatabaseSchema::getConnection()->table('asset_tag_logs')->insert(['tag_id' => 'TAG-1']);
+
+        $this->relationManager()
+            ->assertTableActionVisible('retire', 'TAG-1')
+            ->assertTableActionHidden('reactivate', 'TAG-1')
+            ->callAction(TestAction::make('retire')->table('TAG-1'))
+            ->assertNotified('Tag retired');
+
+        $tag = AssetTag::query()->find('TAG-1');
+        $this->assertTrue($tag->is_deleted);
+        $this->assertSame($this->equipment->eqm_id, $tag->asset_parent_id, 'a retired tag stays on its asset');
+        $this->assertSame(1, $tag->logs()->count());
+
+        $this->relationManager()
+            ->assertTableActionHidden('retire', 'TAG-1')
+            ->assertTableActionVisible('reactivate', 'TAG-1')
+            ->callAction(TestAction::make('reactivate')->table('TAG-1'))
+            ->assertNotified('Tag reactivated');
+
+        $this->assertFalse(AssetTag::query()->find('TAG-1')->is_deleted);
+    }
+
+    public function test_selected_tags_can_be_retired_and_reactivated_together(): void
+    {
+        AssetTag::query()->insert([
+            ['tag_id' => 'TAG-1', 'asset_parent_id' => $this->equipment->eqm_id, 'is_deleted' => false],
+            ['tag_id' => 'TAG-2', 'asset_parent_id' => $this->equipment->eqm_id, 'is_deleted' => false],
+            ['tag_id' => 'TAG-3', 'asset_parent_id' => $this->equipment->eqm_id, 'is_deleted' => true],
+        ]);
+
+        $this->relationManager()
+            ->selectTableRecords(['TAG-1', 'TAG-2'])
+            ->callAction(TestAction::make('retire')->table()->bulk())
+            ->assertNotified('Tags retired');
+
+        $this->assertSame(3, AssetTag::query()->where('is_deleted', true)->count());
+
+        $this->relationManager()
+            ->selectTableRecords(['TAG-1', 'TAG-3'])
+            ->callAction(TestAction::make('reactivate')->table()->bulk())
+            ->assertNotified('Tags reactivated');
+
+        $this->assertSame(['TAG-2'], AssetTag::query()->where('is_deleted', true)->pluck('tag_id')->all());
+    }
+
+    public function test_only_users_who_may_update_tags_can_retire_them(): void
+    {
+        $viewer = $this->makeUser('View', 'Only');
+        Permission::findOrCreate('View:EquipmentResource', 'web');
+        Permission::findOrCreate('ViewAny:AssetTagResource', 'web');
+        $viewer->givePermissionTo(['View:EquipmentResource', 'ViewAny:AssetTagResource']);
+        $this->actingAs($viewer);
+
+        AssetTag::query()->insert(['tag_id' => 'TAG-1', 'asset_parent_id' => $this->equipment->eqm_id]);
+
+        $this->relationManager()
+            ->selectTableRecords(['TAG-1'])
+            ->callAction(TestAction::make('retire')->table()->bulk());
+
+        $this->assertFalse(AssetTag::query()->find('TAG-1')->is_deleted);
+    }
+
     public function test_the_tag_detail_shows_the_assignment_and_the_status(): void
     {
         $janica = $this->makeUser('Janica', 'Murillo');
@@ -252,7 +318,7 @@ class AssetTagUiTest extends TestCase
 
         $html = AssetTagInfolist::configure(Schema::make($host))->record($tag)->toHtml();
 
-        $this->assertStringContainsString('Deleted', $html);
+        $this->assertStringContainsString('Retired', $html);
         $this->assertStringContainsString('—', $html);
     }
 }

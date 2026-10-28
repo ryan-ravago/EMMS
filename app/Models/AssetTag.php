@@ -29,6 +29,19 @@ class AssetTag extends Model
 
     public $timestamps = false;
 
+    /**
+     * Scan logs are the tag's children and are permanent history: a tag that has any cannot be deleted
+     * (retire it instead). The database enforces the same rule for anything that bypasses the model.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (AssetTag $tag): void {
+            if ($tag->logs()->exists()) {
+                throw new \RuntimeException("Tag {$tag->tag_id} has scan logs and cannot be deleted. Retire it instead.");
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [

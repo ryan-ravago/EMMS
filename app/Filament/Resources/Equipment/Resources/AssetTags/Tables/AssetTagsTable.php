@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Equipment\Resources\AssetTags\Tables;
 
 use App\Models\AppUser;
 use App\Models\AssetTag;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -32,8 +34,8 @@ class AssetTagsTable
                 TextColumn::make('is_deleted')
                     ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn (bool $state): string => $state ? 'Deleted' : 'Active')
-                    ->color(fn (bool $state): string => $state ? 'danger' : 'success')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Retired' : 'Active')
+                    ->color(fn (bool $state): string => $state ? 'gray' : 'success')
                     ->sortable()
                     ->toggleable(),
                 TextColumn::make('assigned_by')
@@ -78,11 +80,39 @@ class AssetTagsTable
                 TernaryFilter::make('is_deleted')
                     ->label('Status')
                     ->placeholder('All')
-                    ->trueLabel('Deleted')
+                    ->trueLabel('Retired')
                     ->falseLabel('Active'),
             ])
             ->recordActions([
                 ViewAction::make(),
+                // A retired tag stays on its asset with all its logs; it is only marked as no longer in use.
+                Action::make('retire')
+                    ->label('Retire')
+                    ->icon('heroicon-o-archive-box')
+                    ->color('gray')
+                    ->visible(fn (AssetTag $record): bool => ! $record->is_deleted)
+                    ->authorize(fn (AssetTag $record): bool => Auth::user()?->can('update', $record) ?? false)
+                    ->requiresConfirmation()
+                    ->modalHeading('Retire this tag?')
+                    ->modalDescription('The tag stays on the asset and keeps its logs, but is marked as no longer in use. You can reactivate it later.')
+                    ->action(function (AssetTag $record): void {
+                        $record->update(['is_deleted' => true]);
+
+                        Notification::make()->title('Tag retired')->success()->send();
+                    }),
+                Action::make('reactivate')
+                    ->label('Reactivate')
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->color('success')
+                    ->visible(fn (AssetTag $record): bool => $record->is_deleted)
+                    ->authorize(fn (AssetTag $record): bool => Auth::user()?->can('update', $record) ?? false)
+                    ->requiresConfirmation()
+                    ->modalHeading('Reactivate this tag?')
+                    ->action(function (AssetTag $record): void {
+                        $record->update(['is_deleted' => false]);
+
+                        Notification::make()->title('Tag reactivated')->success()->send();
+                    }),
                 DeleteAction::make()
                     ->authorize(fn (AssetTag $record) => Auth::user()?->can('update', $record) ?? false)
                     ->visible(fn (AssetTag $record): bool => $record->logs_count === 0)
@@ -91,6 +121,32 @@ class AssetTagsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('retire')
+                        ->label('Retire selected')
+                        ->icon('heroicon-o-archive-box')
+                        ->authorizeIndividualRecords('update')
+                        ->requiresConfirmation()
+                        ->modalHeading('Retire the selected tags?')
+                        ->modalDescription('The tags stay on their assets and keep their logs, but are marked as no longer in use.')
+                        ->action(function (Collection $records): void {
+                            // One save per tag, so each change is written to the activity log.
+                            $records->reject(fn (AssetTag $tag): bool => $tag->is_deleted)->each->update(['is_deleted' => true]);
+
+                            Notification::make()->title('Tags retired')->success()->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                    BulkAction::make('reactivate')
+                        ->label('Reactivate selected')
+                        ->icon('heroicon-o-arrow-uturn-left')
+                        ->authorizeIndividualRecords('update')
+                        ->requiresConfirmation()
+                        ->modalHeading('Reactivate the selected tags?')
+                        ->action(function (Collection $records): void {
+                            $records->filter(fn (AssetTag $tag): bool => $tag->is_deleted)->each->update(['is_deleted' => false]);
+
+                            Notification::make()->title('Tags reactivated')->success()->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
                     DeleteBulkAction::make()
                         ->authorizeIndividualRecords('update')
                         ->modalDescription('Only tags without logs can be deleted.')
