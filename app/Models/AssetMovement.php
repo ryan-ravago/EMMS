@@ -84,6 +84,36 @@ class AssetMovement extends Model
         ];
     }
 
+    /**
+     * How many trips are in each state, from one query. "attention" is every trip nobody has acknowledged or
+     * disregarded; the next three split it up. Used by the list tabs and the dashboard.
+     *
+     * @return array{attention: int, pending: int, missing_out: int, missing_in: int, acknowledged: int, disregarded: int}
+     */
+    public static function statusCounts(): array
+    {
+        $open = 'disregarded_at IS NULL AND acknowledged_at IS NULL';
+
+        $row = (array) self::query()
+            ->selectRaw("SUM({$open}) as attention")
+            ->selectRaw("SUM({$open} AND time_out IS NOT NULL AND time_in IS NOT NULL) as pending")
+            ->selectRaw("SUM({$open} AND time_out IS NULL) as missing_out")
+            ->selectRaw("SUM({$open} AND time_in IS NULL) as missing_in")
+            ->selectRaw('SUM(disregarded_at IS NULL AND acknowledged_at IS NOT NULL) as acknowledged')
+            ->selectRaw('SUM(disregarded_at IS NOT NULL) as disregarded')
+            ->toBase()
+            ->first();
+
+        return [
+            'attention' => (int) ($row['attention'] ?? 0),
+            'pending' => (int) ($row['pending'] ?? 0),
+            'missing_out' => (int) ($row['missing_out'] ?? 0),
+            'missing_in' => (int) ($row['missing_in'] ?? 0),
+            'acknowledged' => (int) ($row['acknowledged'] ?? 0),
+            'disregarded' => (int) ($row['disregarded'] ?? 0),
+        ];
+    }
+
     public function asset(): BelongsTo
     {
         return $this->belongsTo(Equipment::class, 'asset_id', 'eqm_id');

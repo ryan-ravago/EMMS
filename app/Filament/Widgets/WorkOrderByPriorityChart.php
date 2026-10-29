@@ -14,7 +14,7 @@ use Illuminate\Support\HtmlString;
 
 class WorkOrderByPriorityChart extends ChartWidget
 {
-    protected static ?int $sort = 5;
+    protected static ?int $sort = 15;
 
     public static function canView(): bool
     {

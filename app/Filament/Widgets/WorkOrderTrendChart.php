@@ -14,7 +14,7 @@ use Illuminate\Support\HtmlString;
 
 class WorkOrderTrendChart extends ChartWidget
 {
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 12;
 
     public static function canView(): bool
     {

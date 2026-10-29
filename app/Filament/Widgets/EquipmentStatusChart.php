@@ -10,7 +10,7 @@ use Illuminate\Support\HtmlString;
 
 class EquipmentStatusChart extends ChartWidget
 {
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 13;
 
     public function getHeading(): string|HtmlString|null
     {

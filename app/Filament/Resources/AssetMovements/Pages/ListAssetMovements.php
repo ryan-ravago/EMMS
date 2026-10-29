@@ -28,23 +28,7 @@ class ListAssetMovements extends ListRecords
      */
     protected function tabCounts(): array
     {
-        if ($this->tabCounts === null) {
-            $open = 'disregarded_at IS NULL AND acknowledged_at IS NULL';
-
-            $row = AssetMovement::query()
-                ->selectRaw("SUM({$open}) as attention")
-                ->selectRaw("SUM({$open} AND time_out IS NOT NULL AND time_in IS NOT NULL) as pending")
-                ->selectRaw("SUM({$open} AND time_out IS NULL) as missing_out")
-                ->selectRaw("SUM({$open} AND time_in IS NULL) as missing_in")
-                ->selectRaw('SUM(disregarded_at IS NULL AND acknowledged_at IS NOT NULL) as acknowledged')
-                ->selectRaw('SUM(disregarded_at IS NOT NULL) as disregarded')
-                ->toBase()
-                ->first();
-
-            $this->tabCounts = collect((array) $row)->map(fn (mixed $count): int => (int) $count)->all();
-        }
-
-        return $this->tabCounts;
+        return $this->tabCounts ??= AssetMovement::statusCounts();
     }
 
     public function getTabs(): array

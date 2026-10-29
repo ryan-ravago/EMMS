@@ -13,7 +13,7 @@ use Illuminate\Support\HtmlString;
 
 class MaintenanceScheduleWidget extends BaseWidget
 {
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 14;
 
     protected int|string|array $columnSpan = 'full';
 

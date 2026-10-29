@@ -34,6 +34,22 @@ class DashboardStatsOverview extends StatsOverviewWidget
 
     protected ?string $description = 'Quick insights for your role and department.';
 
+    /**
+     * The executive committee and asset manager have their own sections; the two generic tiles below are only the
+     * fallback for a person who has none of the roles this widget knows.
+     */
+    public static function canView(): bool
+    {
+        $user = Auth::user();
+
+        if ($user === null) {
+            return false;
+        }
+
+        return ! $user->hasAnyRole(['execom', 'asset_manager'])
+            || $user->hasAnyRole(['super_admin', 'asset_admin', 'manager', 'technician', 'requestor']);
+    }
+
     protected function getStats(): array
     {
         if (! Auth::check()) {
@@ -129,6 +145,17 @@ class DashboardStatsOverview extends StatsOverviewWidget
                 ->description('Requested by requestor')
                 ->color($pendingApproval > 0 ? 'info' : 'gray')
                 ->url(WorkOrderResource::getUrl('index', ['tableFilters[wo_status_id][value]' => 'pndwor', 'tab' => 'pndwor']));
+
+            $overdueTasks = MaintenanceTask::where('mt_dep_id', $user->user_dep_id)
+                ->where('mt_due_dt', '<', now())
+                ->where('mt_status_id', '!=', 'cmp')
+                ->count();
+            $stats[] = Stat::make('Overdue Tasks', $overdueTasks)
+                ->icon(Heroicon::ExclamationTriangle)
+                ->description($overdueTasks > 0 ? 'Past due in your department' : 'Department is clear')
+                ->descriptionIcon($overdueTasks > 0 ? Heroicon::ShieldExclamation : Heroicon::CheckCircle)
+                ->color($overdueTasks > 0 ? 'danger' : 'success')
+                ->url(MaintenanceTaskResource::canViewAny() ? MaintenanceTaskResource::getUrl() : null);
 
             $stats[] = Stat::make('Technicians', AppUser::role('technician')->where('user_dep_id', $user->user_dep_id)->count())
                 ->icon(Heroicon::Users)

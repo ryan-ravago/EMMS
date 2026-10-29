@@ -13,6 +13,21 @@ class WorkOrder extends Model
 {
     use LogsActivity;
 
+    /**
+     * Work orders still being worked on: not completed, cancelled or rejected. A rejected completion goes back to the
+     * technician, so it is still open.
+     *
+     * @var list<string>
+     */
+    public const OPEN_STATUSES = ['pnd', 'pndwor', 'inprog', 'pca', 'rca'];
+
+    /**
+     * Work orders waiting for the department manager: new requests and completion requests.
+     *
+     * @var list<string>
+     */
+    public const AWAITING_MANAGER_STATUSES = ['pndwor', 'pca'];
+
     protected $table = 'work_orders';
 
     protected $primaryKey = 'wo_id';
