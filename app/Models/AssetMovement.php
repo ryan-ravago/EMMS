@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\LogsChanges;
 use Carbon\CarbonInterface;
+use Closure;
 use Database\Factories\AssetMovementFactory;
 use DomainException;
 use Illuminate\Database\Eloquent\Builder;
@@ -389,6 +390,87 @@ class AssetMovement extends Model
                 'disregarded_at' => now(),
                 'disregard_remarks' => $remarks,
             ]);
+        });
+    }
+
+    /**
+     * Acknowledges many trips with one locked read and one UPDATE. Only the selected trips that are still waiting
+     * for acknowledgement are changed, so a trip someone else has just dealt with is left alone.
+     *
+     * @param  array<int, int|string>  $ids
+     * @return int how many trips were acknowledged
+     */
+    public static function acknowledgeMany(array $ids, int $userId, string $remarks): int
+    {
+        return self::changeMany(
+            $ids,
+            fn (Builder $query): Builder => $query->pendingAcknowledgement(),
+            [
+                'acknowledged_by' => $userId,
+                'acknowledged_at' => now(),
+                'acknowledgement_remarks' => $remarks,
+            ],
+        );
+    }
+
+    /**
+     * Disregards many trips with one locked read and one UPDATE. Trips that are already acknowledged or
+     * disregarded are left alone.
+     *
+     * @param  array<int, int|string>  $ids
+     * @return int how many trips were disregarded
+     */
+    public static function disregardMany(array $ids, int $userId, string $remarks): int
+    {
+        return self::changeMany(
+            $ids,
+            fn (Builder $query): Builder => $query->needingAttention(),
+            [
+                'disregarded_by' => $userId,
+                'disregarded_at' => now(),
+                'disregard_remarks' => $remarks,
+            ],
+        );
+    }
+
+    /**
+     * Applies the same change to every selected trip that is still eligible. The UPDATE skips model events, so each
+     * changed trip is written to the activity log here, in the same shape a model update would have produced,
+     * and the cached counts are cleared once.
+     *
+     * @param  array<int, int|string>  $ids
+     * @param  Closure(Builder<self>): Builder<self>  $eligible
+     * @param  array<string, mixed>  $changes
+     */
+    private static function changeMany(array $ids, Closure $eligible, array $changes): int
+    {
+        if ($ids === []) {
+            return 0;
+        }
+
+        return DB::transaction(function () use ($ids, $eligible, $changes): int {
+            $trips = $eligible(self::query()->whereIn('id', $ids))->lockForUpdate()->get();
+
+            if ($trips->isEmpty()) {
+                return 0;
+            }
+
+            self::query()->whereIn('id', $trips->modelKeys())->update($changes + ['updated_at' => now()]);
+
+            $new = collect($changes)->map(fn (mixed $value): mixed => $value instanceof CarbonInterface ? $value->format('Y-m-d H:i:s') : $value)->all();
+            $old = array_map(fn (): mixed => null, $new);
+
+            foreach ($trips as $trip) {
+                activity()
+                    ->performedOn($trip)
+                    ->event('updated')
+                    ->withProperties(['attributes' => $new, 'old' => $old])
+                    ->log('updated');
+            }
+
+            Cache::forget(self::STATUS_COUNTS_CACHE_KEY);
+
+            return $trips->count();
         });
     }
 

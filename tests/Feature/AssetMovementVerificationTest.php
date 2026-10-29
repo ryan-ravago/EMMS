@@ -18,6 +18,7 @@ use DomainException;
 use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
@@ -544,6 +545,193 @@ class AssetMovementVerificationTest extends AssetMovementTestCase
 
         $this->actingAs($this->makeUser('No', 'Role'));
         $this->assertFalse(MovementsRelationManager::canViewForRecord($this->equipment, ViewEquipment::class));
+    }
+
+    public function test_several_trips_can_be_acknowledged_at_once_and_the_ones_that_cannot_are_skipped(): void
+    {
+        $ready = collect([$this->trip(), $this->trip(), $this->trip()]);
+        $missingIn = $this->trip('missing_in');
+        $missingOut = $this->trip('missing_out');
+
+        $this->list($this->manager)
+            ->selectTableRecords([...$ready->pluck('id')->all(), $missingIn->id, $missingOut->id])
+            ->callAction(TestAction::make('bulkAcknowledge')->table()->bulk(), ['remarks' => 'Checked against the gate sheet'])
+            ->assertHasNoFormErrors()
+            ->assertNotified('3 trips acknowledged');
+
+        foreach ($ready as $trip) {
+            $trip->refresh();
+            $this->assertSame('acknowledged', $trip->status);
+            $this->assertSame($this->manager->user_id, $trip->acknowledged_by);
+            $this->assertSame('Checked against the gate sheet', $trip->acknowledgement_remarks);
+        }
+
+        // A trip missing a time cannot be acknowledged: it stays as it was.
+        $this->assertSame('missing_time_in', $missingIn->fresh()->status);
+        $this->assertSame('missing_time_out', $missingOut->fresh()->status);
+    }
+
+    public function test_several_trips_can_be_disregarded_at_once_and_verified_ones_are_left_alone(): void
+    {
+        $open = collect([$this->trip('missing_in'), $this->trip('missing_out'), $this->trip()]);
+        $acknowledged = $this->trip('acknowledged');
+
+        $this->list($this->manager)
+            ->set('activeTab', 'acknowledged')
+            ->selectTableRecords([$acknowledged->id])
+            ->callAction(TestAction::make('bulkDisregard')->table()->bulk(), ['remarks' => 'x'])
+            ->assertNotified('0 trips disregarded');
+
+        $this->assertSame('acknowledged', $acknowledged->fresh()->status);
+
+        $this->list($this->manager)
+            ->selectTableRecords($open->pluck('id')->all())
+            ->callAction(TestAction::make('bulkDisregard')->table()->bulk(), ['remarks' => 'Not real trips'])
+            ->assertNotified('3 trips disregarded');
+
+        foreach ($open as $trip) {
+            $trip->refresh();
+            $this->assertSame('disregarded', $trip->status);
+            $this->assertSame($this->manager->user_id, $trip->disregarded_by);
+            $this->assertSame('Not real trips', $trip->disregard_remarks);
+        }
+    }
+
+    public function test_the_bulk_actions_need_remarks_and_the_matching_permission(): void
+    {
+        $trip = $this->trip();
+
+        $this->list($this->manager)
+            ->selectTableRecords([$trip->id])
+            ->callAction(TestAction::make('bulkAcknowledge')->table()->bulk(), ['remarks' => ''])
+            ->assertHasFormErrors(['remarks' => 'required']);
+
+        $this->assertNull($trip->fresh()->acknowledged_at);
+
+        // Someone who can only look at trips is not offered either bulk action.
+        $viewer = $this->makeUser('View', 'Only');
+        $viewer->givePermissionTo('ViewAny:AssetMovementResource', 'View:AssetMovementResource');
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->list($viewer->fresh())
+            ->assertActionHidden(TestAction::make('bulkAcknowledge')->table()->bulk())
+            ->assertActionHidden(TestAction::make('bulkDisregard')->table()->bulk());
+    }
+
+    public function test_a_super_admin_gets_the_bulk_actions_too(): void
+    {
+        $superAdmin = $this->makeUser('Super', 'Admin');
+        $superAdmin->assignRole('super_admin');
+        $trips = collect([$this->trip(), $this->trip()]);
+
+        $this->list($superAdmin)
+            ->selectTableRecords($trips->pluck('id')->all())
+            ->assertActionVisible(TestAction::make('bulkDisregard')->table()->bulk())
+            ->callAction(TestAction::make('bulkAcknowledge')->table()->bulk(), ['remarks' => 'ok'])
+            ->assertNotified('2 trips acknowledged');
+    }
+
+    public function test_a_bulk_acknowledge_is_logged_per_trip_and_grouped_as_one_bulk_action(): void
+    {
+        config(['activitylog.enabled' => true]);
+        app(ActivityLogStatus::class)->enable();
+        $trips = collect([$this->trip(), $this->trip()]);
+        Activity::query()->delete();
+
+        $this->list($this->manager)
+            ->selectTableRecords($trips->pluck('id')->all())
+            ->callAction(TestAction::make('bulkAcknowledge')->table()->bulk(), ['remarks' => 'ok']);
+
+        $entries = Activity::query()->where('subject_type', AssetMovement::class)->whereIn('subject_id', $trips->pluck('id'))->get();
+
+        $this->assertCount(2, $entries);
+        $this->assertSame($this->manager->user_id, $entries->first()->causer_id);
+        $this->assertNotNull($entries->first()->batch_uuid);
+        $this->assertSame(1, $entries->pluck('batch_uuid')->unique()->count());
+    }
+
+    public function test_a_bulk_action_changes_a_chunk_with_one_update_however_many_trips_are_selected(): void
+    {
+        config(['activitylog.enabled' => true]);
+        app(ActivityLogStatus::class)->enable();
+        $trips = collect(range(1, 30))->map(fn () => $this->trip());
+        $page = $this->list($this->manager)->set('tableRecordsPerPage', 50)->selectTableRecords($trips->pluck('id')->all());
+        Activity::query()->delete();
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $page->callAction(TestAction::make('bulkAcknowledge')->table()->bulk(), ['remarks' => 'ok'])->assertNotified('30 trips acknowledged');
+        $queries = collect(DB::getQueryLog())->pluck('query');
+        DB::disableQueryLog();
+
+        $updates = $queries->filter(fn (string $sql): bool => str_starts_with($sql, 'update "asset_movements"'));
+        $reads = $queries->filter(fn (string $sql): bool => str_starts_with($sql, 'select') && str_contains($sql, 'from "asset_movements"'));
+
+        $this->assertCount(1, $updates, 'one UPDATE for the whole chunk, not one per trip');
+        // The selected ids and one locked read are the action's; the other two redraw the page (tab counts, table count).
+        $this->assertLessThanOrEqual(4, $reads->count(), 'a fixed number of reads, not one per trip: '.$reads->map(fn (string $sql): string => substr($sql, 0, 120))->implode(' | '));
+        $this->assertCount(0, $reads->filter(fn (string $sql): bool => str_contains($sql, '"id" = ?')), 'no read of a single trip');
+        $this->assertSame(30, Activity::query()->where('subject_type', AssetMovement::class)->count(), 'still one activity entry per trip');
+        $this->assertSame(30, AssetMovement::acknowledged()->count());
+    }
+
+    public function test_a_selection_bigger_than_a_chunk_is_done_in_chunks_and_counted_correctly(): void
+    {
+        $trips = collect(range(1, 120))->map(fn () => $this->trip());
+        $page = $this->list($this->manager)->set('tableRecordsPerPage', 100)->selectTableRecords($trips->pluck('id')->all());
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $page->callAction(TestAction::make('bulkDisregard')->table()->bulk(), ['remarks' => 'Test data'])->assertNotified('120 trips disregarded');
+        $updates = collect(DB::getQueryLog())->pluck('query')->filter(fn (string $sql): bool => str_starts_with($sql, 'update "asset_movements"'));
+        DB::disableQueryLog();
+
+        $this->assertCount(2, $updates, '120 trips are 2 chunks of at most 100');
+        $this->assertSame(120, AssetMovement::disregarded()->count());
+    }
+
+    public function test_the_bulk_methods_only_change_trips_that_are_still_eligible(): void
+    {
+        $ready = $this->trip();
+        $missingIn = $this->trip('missing_in');
+        $alreadyAcknowledged = $this->trip('acknowledged');
+        $ids = [$ready->id, $missingIn->id, $alreadyAcknowledged->id, 99999];
+
+        $this->assertSame(1, AssetMovement::acknowledgeMany($ids, $this->admin->user_id, 'ok'));
+        $this->assertSame('acknowledged', $ready->fresh()->status);
+        $this->assertSame('missing_time_in', $missingIn->fresh()->status);
+        // The acknowledgement already on the other trip is not overwritten.
+        $this->assertSame($this->admin->user_id, $alreadyAcknowledged->fresh()->acknowledged_by);
+        $this->assertSame('Checked', $alreadyAcknowledged->fresh()->acknowledgement_remarks);
+
+        // Disregard: the open trip goes, the two verified ones stay.
+        $this->assertSame(1, AssetMovement::disregardMany($ids, $this->admin->user_id, 'Not real'));
+        $this->assertSame('disregarded', $missingIn->fresh()->status);
+        $this->assertSame('acknowledged', $ready->fresh()->status);
+
+        $this->assertSame(0, AssetMovement::acknowledgeMany([], $this->admin->user_id, 'ok'));
+    }
+
+    public function test_the_bulk_methods_clear_the_cached_trip_counts_once_and_write_readable_log_entries(): void
+    {
+        config(['activitylog.enabled' => true]);
+        app(ActivityLogStatus::class)->enable();
+        $trips = collect([$this->trip(), $this->trip()]);
+        $this->actingAs($this->manager);
+
+        $this->assertSame(2, AssetMovement::statusCounts()['pending']);
+
+        AssetMovement::acknowledgeMany($trips->pluck('id')->all(), $this->manager->user_id, 'Looks right');
+
+        $this->assertSame(0, AssetMovement::statusCounts()['pending']);
+        $this->assertSame(2, AssetMovement::statusCounts()['acknowledged']);
+
+        $entry = Activity::query()->where('subject_type', AssetMovement::class)->latest('id')->first();
+        $this->assertSame('updated', $entry->event);
+        $this->assertSame($this->manager->user_id, $entry->causer_id);
+        $this->assertSame('Looks right', $entry->properties['attributes']['acknowledgement_remarks']);
+        $this->assertNull($entry->properties['old']['acknowledgement_remarks']);
+        $this->assertStringContainsString('Equipment Trip', $entry->description);
     }
 
     public function test_the_same_trip_cannot_be_acted_on_twice(): void

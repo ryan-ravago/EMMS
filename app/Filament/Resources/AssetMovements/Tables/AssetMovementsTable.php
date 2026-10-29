@@ -6,6 +6,7 @@ use App\Filament\Resources\AssetMovements\Actions\VerificationActions;
 use App\Filament\Resources\AssetMovements\AssetMovementResource;
 use App\Models\AssetMovement;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -72,6 +73,12 @@ class AssetMovementsTable
                     ->icon(Heroicon::OutlinedShieldCheck)
                     ->button()
                     ->color('gray'),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    VerificationActions::bulkAcknowledge(),
+                    VerificationActions::bulkDisregard(),
+                ]),
             ]);
     }
 }

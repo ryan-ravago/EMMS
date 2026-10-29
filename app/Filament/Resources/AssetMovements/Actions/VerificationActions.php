@@ -7,10 +7,12 @@ use Carbon\Carbon;
 use Closure;
 use DomainException;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Contracts\HasTable;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -114,6 +116,83 @@ class VerificationActions
                 fn () => $record->disregard((int) Auth::id(), $data['remarks']),
                 'Trip disregarded',
             ));
+    }
+
+    /**
+     * Acknowledge many trips at once, with one set of remarks. Trips that cannot be acknowledged (a time is
+     * missing, or someone already dealt with them) are skipped and counted, never forced.
+     */
+    public static function bulkAcknowledge(): BulkAction
+    {
+        return BulkAction::make('bulkAcknowledge')
+            ->label('Acknowledge selected')
+            ->icon(Heroicon::OutlinedCheckCircle)
+            ->color('success')
+            ->modalHeading('Acknowledge the selected trips')
+            ->modalDescription('Confirm that the time out and time in of every selected trip were recorded correctly. Trips that are missing a time, or already verified, are skipped.')
+            ->modalSubmitActionLabel('Acknowledge')
+            ->authorize(fn (): bool => Auth::user()?->can('acknowledgeAny', AssetMovement::class) ?? false)
+            ->schema([self::remarks('Remarks')])
+            ->fetchSelectedRecords(false)
+            ->deselectRecordsAfterCompletion()
+            ->action(fn (HasTable $livewire, array $data) => self::performMany(
+                $livewire,
+                fn (array $ids): int => AssetMovement::acknowledgeMany($ids, (int) Auth::id(), $data['remarks']),
+                'acknowledged',
+            ));
+    }
+
+    /**
+     * Disregard many trips at once, with one reason. Trips that are already acknowledged or disregarded are skipped.
+     */
+    public static function bulkDisregard(): BulkAction
+    {
+        return BulkAction::make('bulkDisregard')
+            ->label('Disregard selected')
+            ->icon(Heroicon::OutlinedNoSymbol)
+            ->color('danger')
+            ->requiresConfirmation()
+            ->modalHeading('Disregard the selected trips')
+            ->modalDescription('Use this when the scans do not describe real trips. Disregarded trips cannot be changed afterwards. Trips that are already acknowledged or disregarded are skipped.')
+            ->modalSubmitActionLabel('Disregard')
+            ->authorize(fn (): bool => Auth::user()?->can('disregardAny', AssetMovement::class) ?? false)
+            ->schema([self::remarks('Reason')])
+            ->fetchSelectedRecords(false)
+            ->deselectRecordsAfterCompletion()
+            ->action(fn (HasTable $livewire, array $data) => self::performMany(
+                $livewire,
+                fn (array $ids): int => AssetMovement::disregardMany($ids, (int) Auth::id(), $data['remarks']),
+                'disregarded',
+            ));
+    }
+
+    /**
+     * Applies a bulk change to the selected trips, 100 at a time, and reports how many went through and how many
+     * were skipped. Only the selected ids are read here: the trips themselves are never loaded into memory, and
+     * each chunk is one locked read and one UPDATE (see AssetMovement::acknowledgeMany / disregardMany).
+     *
+     * @param  Closure(array<int, int|string>): int  $changeChunk  changes one chunk of ids and returns how many it changed
+     */
+    private static function performMany(HasTable $livewire, Closure $changeChunk, string $doneWord): void
+    {
+        $ids = $livewire->getSelectedTableRecordsQuery(shouldFetchSelectedRecords: false)->pluck('asset_movements.id');
+
+        $done = 0;
+
+        foreach ($ids->chunk(100) as $chunk) {
+            $done += $changeChunk($chunk->values()->all());
+        }
+
+        $skipped = $ids->count() - $done;
+
+        $notification = Notification::make()
+            ->title($done === 1 ? "1 trip {$doneWord}" : "{$done} trips {$doneWord}");
+
+        if ($skipped > 0) {
+            $notification->body($skipped === 1 ? '1 trip was skipped because it is not in a state that allows this.' : "{$skipped} trips were skipped because they are not in a state that allows this.");
+        }
+
+        ($done > 0 ? $notification->success() : $notification->warning())->send();
     }
 
     private static function remarks(string $label): Textarea

@@ -69,6 +69,20 @@ class AssetMovementPolicy
     }
 
     /**
+     * The bulk Acknowledge / Disregard buttons: shown to anyone who may do the action at all. Each selected trip
+     * is still checked on its own when the action runs.
+     */
+    public function acknowledgeAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('Acknowledge:AssetMovementResource');
+    }
+
+    public function disregardAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('Disregard:AssetMovementResource');
+    }
+
+    /**
      * The "Add test scan" button. Not tied to a trip, and granted to no role by default.
      */
     public function addTestLog(AuthUser $authUser): bool
