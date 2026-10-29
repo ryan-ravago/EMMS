@@ -5,10 +5,13 @@ namespace Tests\Feature;
 use App\Filament\Resources\AssetMovements\Pages\ListAssetMovements;
 use App\Filament\Resources\AssetMovements\Pages\ViewAssetMovement;
 use App\Filament\Resources\Equipment\EquipmentResource;
+use App\Filament\Resources\Equipment\Pages\ViewEquipment;
+use App\Filament\Resources\Equipment\RelationManagers\MovementsRelationManager;
 use App\Filament\Resources\Equipment\Resources\AssetTags\AssetTagResource;
 use App\Models\Activity;
 use App\Models\AppUser;
 use App\Models\AssetMovement;
+use App\Models\AssetTagLog;
 use App\Models\Equipment;
 use Carbon\Carbon;
 use DomainException;
@@ -57,6 +60,7 @@ class AssetMovementVerificationTest extends AssetMovementTestCase
 
         // The migration that grants the permissions to the two roles is part of what is tested.
         (require base_path('database/migrations/2026_10_29_121723_add_asset_movement_permissions.php'))->up();
+        (require base_path('database/migrations/2026_10_29_140855_add_asset_movement_test_log_permission.php'))->up();
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         Filament::setCurrentPanel('admin');
@@ -405,6 +409,141 @@ class AssetMovementVerificationTest extends AssetMovementTestCase
             ->assertSee('AAA1')
             ->assertDontSeeHtml('href="'.$equipmentUrl.'"')
             ->assertDontSeeHtml('/tags/AAA1');
+    }
+
+    public function test_the_test_scan_permission_exists_but_no_role_has_it_until_it_is_ticked(): void
+    {
+        $this->assertTrue(Permission::where('name', 'AddTestLog:AssetMovementResource')->exists());
+        $this->assertFalse($this->admin->can('AddTestLog:AssetMovementResource'));
+        $this->assertFalse($this->manager->can('AddTestLog:AssetMovementResource'));
+
+        $this->manager->givePermissionTo('AddTestLog:AssetMovementResource');
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->assertTrue($this->manager->fresh()->can('AddTestLog:AssetMovementResource'));
+    }
+
+    public function test_the_add_test_scan_button_is_only_shown_to_those_who_have_the_permission(): void
+    {
+        $superAdmin = $this->makeUser('Super', 'Admin');
+        $superAdmin->assignRole('super_admin');
+
+        $this->list($this->manager)->assertActionHidden('addTestLog');
+        $this->list($this->admin)->assertActionHidden('addTestLog');
+        $this->list($superAdmin)->assertActionVisible('addTestLog');
+
+        $this->manager->givePermissionTo('AddTestLog:AssetMovementResource');
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->list($this->manager->fresh())->assertActionVisible('addTestLog');
+    }
+
+    public function test_a_test_scan_is_stored_and_paired_into_a_trip_like_a_reader_scan(): void
+    {
+        $this->manager->givePermissionTo('AddTestLog:AssetMovementResource');
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $values = fn (string $status, string $at): array => ['tag_id' => 'AAA1', 'status' => $status, 'detected_at' => $at, 'yard_id' => $this->yard->id];
+
+        $this->list($this->manager->fresh())
+            ->callAction('addTestLog', $values('OUT', '2026-10-28 08:00:00'))
+            ->assertHasNoFormErrors()
+            ->assertNotified('Test scan added');
+
+        $this->assertSame(AssetMovement::STATUS_MISSING_TIME_IN, AssetMovement::sole()->status);
+
+        $this->list($this->manager->fresh())
+            ->callAction('addTestLog', $values('IN', '2026-10-28 17:30:00'))
+            ->assertHasNoFormErrors();
+
+        $trip = AssetMovement::sole();
+        $this->assertSame(AssetMovement::STATUS_PENDING_ACKNOWLEDGEMENT, $trip->status);
+        $this->assertSame(2, AssetTagLog::count());
+        $this->assertSame($this->yard->id, $trip->yard_in_id);
+    }
+
+    public function test_the_same_test_scan_is_not_stored_twice(): void
+    {
+        $this->manager->givePermissionTo('AddTestLog:AssetMovementResource');
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $values = ['tag_id' => 'AAA1', 'status' => 'OUT', 'detected_at' => '2026-10-28 08:00:00', 'yard_id' => $this->yard->id];
+
+        $this->list($this->manager->fresh())->callAction('addTestLog', $values);
+        $this->list($this->manager->fresh())->callAction('addTestLog', $values)->assertNotified('That scan already exists');
+
+        $this->assertSame(1, AssetTagLog::count());
+    }
+
+    public function test_a_test_scan_cannot_be_in_the_future_or_for_an_unknown_tag(): void
+    {
+        $this->manager->givePermissionTo('AddTestLog:AssetMovementResource');
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->list($this->manager->fresh())
+            ->callAction('addTestLog', ['tag_id' => 'AAA1', 'status' => 'OUT', 'detected_at' => '2026-11-05 08:00:00', 'yard_id' => $this->yard->id])
+            ->assertHasFormErrors(['detected_at']);
+
+        $this->list($this->manager->fresh())
+            ->callAction('addTestLog', ['tag_id' => 'NOPE', 'status' => 'OUT', 'detected_at' => '2026-10-28 08:00:00', 'yard_id' => $this->yard->id])
+            ->assertHasFormErrors(['tag_id']);
+
+        $this->assertSame(0, AssetTagLog::count());
+    }
+
+    public function test_someone_without_the_permission_cannot_run_the_action(): void
+    {
+        // Filament refuses to run an action the person is not allowed to see, so nothing can be stored.
+        $this->list($this->manager)->assertActionHidden('addTestLog');
+
+        $this->assertFalse($this->manager->can('addTestLog', AssetMovement::class));
+        $this->assertSame(0, AssetTagLog::count());
+    }
+
+    public function test_an_equipment_page_lists_only_that_equipments_trips(): void
+    {
+        $mine = $this->trip();
+        $other = $this->makeEquipment();
+        $this->makeTag($other, 'BBB1');
+        $theirs = AssetMovement::factory()->create(['asset_id' => $other->eqm_id, 'tag_id' => 'BBB1']);
+        $this->actingAs($this->manager);
+
+        Livewire::test(MovementsRelationManager::class, ['ownerRecord' => $this->equipment, 'pageClass' => ViewEquipment::class])
+            ->assertCanSeeTableRecords([$mine])
+            ->assertCanNotSeeTableRecords([$theirs])
+            ->assertTableColumnFormattedStateSet('status', 'Pending acknowledgement', $mine);
+    }
+
+    public function test_the_trips_tab_can_be_filtered_by_status(): void
+    {
+        $pending = $this->trip();
+        $acknowledged = $this->trip('acknowledged');
+        $missingIn = $this->trip('missing_in');
+        $this->actingAs($this->manager);
+
+        Livewire::test(MovementsRelationManager::class, ['ownerRecord' => $this->equipment, 'pageClass' => ViewEquipment::class])
+            ->filterTable('status', AssetMovement::STATUS_ACKNOWLEDGED)
+            ->assertCanSeeTableRecords([$acknowledged])
+            ->assertCanNotSeeTableRecords([$pending, $missingIn])
+            ->filterTable('status', AssetMovement::STATUS_MISSING_TIME_IN)
+            ->assertCanSeeTableRecords([$missingIn])
+            ->assertCanNotSeeTableRecords([$pending, $acknowledged]);
+    }
+
+    public function test_the_trips_tab_shows_only_for_equipment_and_only_to_those_who_may_see_trips(): void
+    {
+        $accessory = $this->makeAccessory();
+        $this->actingAs($this->manager);
+
+        $this->assertTrue(MovementsRelationManager::canViewForRecord($this->equipment, ViewEquipment::class));
+        $this->assertFalse(MovementsRelationManager::canViewForRecord($accessory, ViewEquipment::class));
+        $this->assertSame('0', MovementsRelationManager::getBadge($this->equipment, ViewEquipment::class) ?? '0');
+
+        $this->trip();
+        $this->trip('missing_in');
+        $this->trip('acknowledged');
+        $this->assertSame('2', MovementsRelationManager::getBadge($this->equipment, ViewEquipment::class));
+
+        $this->actingAs($this->makeUser('No', 'Role'));
+        $this->assertFalse(MovementsRelationManager::canViewForRecord($this->equipment, ViewEquipment::class));
     }
 
     public function test_the_same_trip_cannot_be_acted_on_twice(): void

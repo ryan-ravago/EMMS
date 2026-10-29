@@ -111,6 +111,14 @@ class Equipment extends Model
         );
     }
 
+    /**
+     * The equipment's trips (time out / time in) built from its tag scans.
+     */
+    public function movements(): HasMany
+    {
+        return $this->hasMany(AssetMovement::class, 'asset_id', 'eqm_id');
+    }
+
     public function editLogs(): HasMany
     {
         return $this->hasMany(AssetEditLog::class, 'asset_id', 'eqm_id');

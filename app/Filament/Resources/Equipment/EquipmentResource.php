@@ -14,6 +14,7 @@ use App\Filament\Resources\Equipment\RelationManagers\EquipmentTasksSchedulesRel
 use App\Filament\Resources\Equipment\RelationManagers\LifecycleLogsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\MaintenanceInspectionsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\MaintenanceTasksRelationManager;
+use App\Filament\Resources\Equipment\RelationManagers\MovementsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\RequestorWorkOrdersRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\TagLogsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\TagsRelationManager;
@@ -241,6 +242,7 @@ class EquipmentResource extends Resource
             AccessoriesRelationManager::class,
             TagsRelationManager::class,
             TagLogsRelationManager::class,
+            MovementsRelationManager::class,
             LifecycleLogsRelationManager::class,
             WorkOrdersRelationManager::class,
             MaintenanceTasksRelationManager::class,

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AssetMovements\Pages;
 
+use App\Filament\Resources\AssetMovements\Actions\AddTestLogAction;
 use App\Filament\Resources\AssetMovements\AssetMovementResource;
 use App\Models\AssetMovement;
 use Filament\Resources\Pages\ListRecords;
@@ -11,6 +12,11 @@ use Illuminate\Database\Eloquent\Builder;
 class ListAssetMovements extends ListRecords
 {
     protected static string $resource = AssetMovementResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [AddTestLogAction::make()];
+    }
 
     /** @var array<string, int>|null */
     protected ?array $tabCounts = null;

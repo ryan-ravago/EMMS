@@ -67,4 +67,12 @@ class AssetMovementPolicy
     {
         return $authUser->can('Disregard:AssetMovementResource');
     }
+
+    /**
+     * The "Add test scan" button. Not tied to a trip, and granted to no role by default.
+     */
+    public function addTestLog(AuthUser $authUser): bool
+    {
+        return $authUser->can('AddTestLog:AssetMovementResource');
+    }
 }

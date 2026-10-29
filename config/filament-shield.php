@@ -201,6 +201,7 @@ return [
                 'manualOut',
                 'manualIn',
                 'disregard',
+                'addTestLog',
             ],
             EquipmentResource::class => [
                 'viewAssetList',
