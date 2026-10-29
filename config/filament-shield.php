@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Filament\Resources\AssetMovements\AssetMovementResource;
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Filament\Resources\EquipmentUnitCategories\EquipmentUnitCategoryResource;
 use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
@@ -192,6 +193,14 @@ return [
                 'create',
                 'update',
                 'delete',
+            ],
+            AssetMovementResource::class => [
+                'viewAny',
+                'view',
+                'acknowledge',
+                'manualOut',
+                'manualIn',
+                'disregard',
             ],
             EquipmentResource::class => [
                 'viewAssetList',

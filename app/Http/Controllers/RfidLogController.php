@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\AssetTag;
 use App\Models\AssetTagLog;
 use App\Models\Location;
+use App\Services\Rfid\MovementRecorder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Throwable;
 
 class RfidLogController extends Controller
 {
@@ -70,11 +72,42 @@ class RfidLogController extends Controller
             ];
         }
 
+        $inserted = AssetTagLog::insertOrIgnore($rows);
+
+        $this->recordMovements($yard, $rows);
+
         return response()->json([
             'received' => $logs->count(),
-            'inserted' => AssetTagLog::insertOrIgnore($rows),
+            'inserted' => $inserted,
             'not_inserted' => $notInserted,
         ]);
+    }
+
+    /**
+     * Pairs the stored scans into equipment trips. The scans are already saved, so a failure here must not
+     * fail the reader's request; `rfid:build-movements` can catch up later.
+     *
+     * @param  list<array{detected_at: string, tag_id: string, yard_id: string, status: string}>  $rows
+     */
+    private function recordMovements(string $yard, array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+
+        try {
+            $keys = collect($rows)->mapWithKeys(fn (array $row) => [$this->logKey($row['tag_id'], $row['detected_at'], $row['status']) => true]);
+
+            $stored = AssetTagLog::where('yard_id', $yard)
+                ->whereIn('tag_id', collect($rows)->pluck('tag_id')->unique())
+                ->whereIn('detected_at', collect($rows)->pluck('detected_at')->unique())
+                ->get()
+                ->filter(fn (AssetTagLog $log) => $keys->has($this->logKey($log->tag_id, $log->detected_at->format('Y-m-d H:i:s'), $log->status)));
+
+            app(MovementRecorder::class)->record($stored);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 
     private function logKey(string $tag, string $detectedAt, string $status): string

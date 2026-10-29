@@ -3,6 +3,18 @@
 namespace App\Support\Activity;
 
 use App\Models\Action as ActionModel;
+use App\Models\AppUser;
+use App\Models\AssetType;
+use App\Models\Department;
+use App\Models\Equipment;
+use App\Models\EquipmentBrand;
+use App\Models\EquipmentCategory;
+use App\Models\EquipmentModel;
+use App\Models\EquipmentType;
+use App\Models\Location;
+use App\Models\Priority;
+use App\Models\Status;
+use App\Models\WorkOrder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -16,6 +28,7 @@ class ActivityLabels
     /** Names users know for models whose class name reads differently. */
     private const TYPE_NAMES = [
         'AppUser' => 'User',
+        'AssetMovement' => 'Equipment Trip',
         'AdminManager' => 'User',
         'Technician' => 'User',
         'EquipmentBrand' => 'Brand',
@@ -46,25 +59,32 @@ class ActivityLabels
      * Column => model class.
      */
     private const LOOKUPS = [
-        'wo_status_id' => \App\Models\Status::class,
-        'wo_prio_id' => \App\Models\Priority::class,
-        'wo_dep_id' => \App\Models\Department::class,
-        'user_dep_id' => \App\Models\Department::class,
-        'insp_dep_id' => \App\Models\Department::class,
-        'wo_eqm_id' => \App\Models\Equipment::class,
-        'insp_eqm_id' => \App\Models\Equipment::class,
-        'asset_parent_id' => \App\Models\Equipment::class,
-        'wo_created_by' => \App\Models\AppUser::class,
-        'won_created_by' => \App\Models\AppUser::class,
-        'won_wo_id' => \App\Models\WorkOrder::class,
-        'asset_type_id' => \App\Models\AssetType::class,
-        'location_id' => \App\Models\Location::class,
-        'eqm_eqmm_id' => \App\Models\EquipmentModel::class,
-        'eqm_brand_id' => \App\Models\EquipmentBrand::class,
-        'eqmm_brand_id' => \App\Models\EquipmentBrand::class,
-        'eqm_eqmt_id' => \App\Models\EquipmentType::class,
-        'eqmm_eqmt_id' => \App\Models\EquipmentType::class,
-        'eqmc_parent_id' => \App\Models\EquipmentCategory::class,
+        'wo_status_id' => Status::class,
+        'wo_prio_id' => Priority::class,
+        'wo_dep_id' => Department::class,
+        'user_dep_id' => Department::class,
+        'insp_dep_id' => Department::class,
+        'wo_eqm_id' => Equipment::class,
+        'insp_eqm_id' => Equipment::class,
+        'asset_parent_id' => Equipment::class,
+        'asset_id' => Equipment::class,
+        'yard_out_id' => Location::class,
+        'yard_in_id' => Location::class,
+        'manual_out_by' => AppUser::class,
+        'manual_in_by' => AppUser::class,
+        'acknowledged_by' => AppUser::class,
+        'disregarded_by' => AppUser::class,
+        'wo_created_by' => AppUser::class,
+        'won_created_by' => AppUser::class,
+        'won_wo_id' => WorkOrder::class,
+        'asset_type_id' => AssetType::class,
+        'location_id' => Location::class,
+        'eqm_eqmm_id' => EquipmentModel::class,
+        'eqm_brand_id' => EquipmentBrand::class,
+        'eqmm_brand_id' => EquipmentBrand::class,
+        'eqm_eqmt_id' => EquipmentType::class,
+        'eqmm_eqmt_id' => EquipmentType::class,
+        'eqmc_parent_id' => EquipmentCategory::class,
     ];
 
     /** @var array<string, ActionModel|null> */
