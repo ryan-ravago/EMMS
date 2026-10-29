@@ -38,7 +38,7 @@ class ApprovalsQueueWidget extends BaseWidget
                 ->where('wo_dep_id', Auth::user()?->user_dep_id)
                 ->whereIn('wo_status_id', WorkOrder::AWAITING_MANAGER_STATUSES)
                 ->orderBy('wo_created_dt')
-                ->limit(10))
+                ->orderBy('wo_id'))
             ->columns([
                 TextColumn::make('wo_no')
                     ->label('Work Order')
@@ -61,7 +61,8 @@ class ApprovalsQueueWidget extends BaseWidget
             ->emptyStateHeading('Nothing is waiting for you')
             ->emptyStateDescription('New requests and completion requests of your department will appear here.')
             ->recordUrl(fn (WorkOrder $record): string => WorkOrderResource::getUrl('view', ['record' => $record]))
-            ->paginated(false)
-            ->poll('60s');
+            ->paginated([5, 10, 25])
+            ->defaultPaginationPageOption(5)
+            ->poll('120s');
     }
 }

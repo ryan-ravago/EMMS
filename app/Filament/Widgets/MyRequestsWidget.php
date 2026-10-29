@@ -36,7 +36,7 @@ class MyRequestsWidget extends BaseWidget
                 ->with(['equipment', 'status'])
                 ->where('wo_created_by', Auth::id())
                 ->latest('wo_created_dt')
-                ->limit(8))
+                ->orderByDesc('wo_id'))
             ->columns([
                 TextColumn::make('wo_no')
                     ->label('Work Order')
@@ -56,7 +56,8 @@ class MyRequestsWidget extends BaseWidget
             ->emptyStateHeading('No requests yet')
             ->emptyStateDescription('Work orders you create will appear here.')
             ->recordUrl(fn (WorkOrder $record): string => RequestorWorkOrderResource::getUrl('view', ['record' => $record]))
-            ->paginated(false)
-            ->poll('60s');
+            ->paginated([5, 10, 25])
+            ->defaultPaginationPageOption(5)
+            ->poll('120s');
     }
 }

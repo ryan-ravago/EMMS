@@ -8,6 +8,7 @@ use App\Models\Equipment;
 use App\Models\Status;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\HtmlString;
 
 /**
@@ -17,6 +18,9 @@ use Illuminate\Support\HtmlString;
 class AssetLifecycleChart extends ChartWidget
 {
     protected static ?int $sort = 5;
+
+    /** The dashboard does not need live numbers: every refresh re-runs this widget's queries. */
+    protected ?string $pollingInterval = '120s';
 
     /** Chart colours for the status colour names stored on statuses.status_color. */
     private const COLORS = [
@@ -45,12 +49,16 @@ class AssetLifecycleChart extends ChartWidget
         $statuses = Status::query()->pluck('status_color', 'status_id');
         $titles = Status::query()->pluck('status_title', 'status_id');
 
-        $counts = Equipment::query()
+        // Counted over every asset, so kept for a minute instead of being counted again on every refresh.
+        $counts = collect(Cache::remember('dashboard.asset_lifecycle', now()->addSeconds(60), fn (): array => Equipment::query()
             ->selectRaw('lifecycle_status_id, COUNT(*) as aggregate')
             ->groupBy('lifecycle_status_id')
             ->toBase()
             ->get()
-            ->sort(fn (object $a, object $b): int => [(int) $b->aggregate, $a->lifecycle_status_id ?? '~'] <=> [(int) $a->aggregate, $b->lifecycle_status_id ?? '~']);
+            ->map(fn (object $row): array => ['lifecycle_status_id' => $row->lifecycle_status_id, 'aggregate' => (int) $row->aggregate])
+            ->all()))
+            ->map(fn (array $row): object => (object) $row)
+            ->sort(fn (object $a, object $b): int => [$b->aggregate, $a->lifecycle_status_id ?? '~'] <=> [$a->aggregate, $b->lifecycle_status_id ?? '~']);
 
         return [
             'datasets' => [

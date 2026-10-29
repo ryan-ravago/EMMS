@@ -30,6 +30,9 @@ class DashboardStatsOverview extends StatsOverviewWidget
 {
     protected static ?int $navigationSort = 1;
 
+    /** The dashboard does not need live numbers: every refresh re-runs this widget's queries. */
+    protected ?string $pollingInterval = '120s';
+
     protected ?string $heading = 'Dashboard Summary';
 
     protected ?string $description = 'Quick insights for your role and department.';

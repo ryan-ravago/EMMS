@@ -8,6 +8,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Executive committee: is maintenance work getting done? Open, waiting on a manager, finished this month,
@@ -16,6 +17,9 @@ use Illuminate\Support\Facades\Auth;
 class WorkOrderHealthStats extends StatsOverviewWidget
 {
     protected static ?int $sort = 3;
+
+    /** The dashboard does not need live numbers: every refresh re-runs this widget's queries. */
+    protected ?string $pollingInterval = '120s';
 
     protected ?string $heading = 'Work Order Health';
 
@@ -29,12 +33,19 @@ class WorkOrderHealthStats extends StatsOverviewWidget
 
     protected function getStats(): array
     {
-        $open = WorkOrder::query()->whereIn('wo_status_id', WorkOrder::OPEN_STATUSES)->count();
-        $awaiting = WorkOrder::query()->whereIn('wo_status_id', WorkOrder::AWAITING_MANAGER_STATUSES)->count();
-        $completedThisMonth = WorkOrder::query()
-            ->where('wo_status_id', 'cmp')
-            ->where('wo_closed_dt', '>=', now()->startOfMonth())
-            ->count();
+        // Counted over every work order, so kept for a minute instead of being counted again on every refresh.
+        $figures = Cache::remember('dashboard.work_order_health', now()->addSeconds(60), fn (): array => [
+            'open' => WorkOrder::query()->whereIn('wo_status_id', WorkOrder::OPEN_STATUSES)->count(),
+            'awaiting' => WorkOrder::query()->whereIn('wo_status_id', WorkOrder::AWAITING_MANAGER_STATUSES)->count(),
+            'completed_this_month' => WorkOrder::query()
+                ->where('wo_status_id', 'cmp')
+                ->where('wo_closed_dt', '>=', now()->startOfMonth())
+                ->count(),
+            'average' => $this->averageTimeToComplete(),
+        ]);
+        $open = $figures['open'];
+        $awaiting = $figures['awaiting'];
+        $completedThisMonth = $figures['completed_this_month'];
 
         return [
             Stat::make('Open work orders', $open)
@@ -49,7 +60,7 @@ class WorkOrderHealthStats extends StatsOverviewWidget
                 ->icon(Heroicon::CheckBadge)
                 ->description(now()->format('F Y'))
                 ->color('success'),
-            Stat::make('Average time to complete', $this->averageTimeToComplete())
+            Stat::make('Average time to complete', $figures['average'])
                 ->icon(Heroicon::Bolt)
                 ->description('Work orders finished in the last '.self::AVERAGE_OVER_DAYS.' days')
                 ->color('info'),

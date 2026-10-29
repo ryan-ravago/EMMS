@@ -16,6 +16,9 @@ class WorkOrderByPriorityChart extends ChartWidget
 {
     protected static ?int $sort = 15;
 
+    /** The dashboard does not need live numbers: every refresh re-runs this widget's queries. */
+    protected ?string $pollingInterval = '120s';
+
     public static function canView(): bool
     {
         $user = Auth::user();

@@ -17,6 +17,9 @@ class TripsNeedingAttentionStats extends StatsOverviewWidget
 {
     protected static ?int $sort = 2;
 
+    /** The dashboard does not need live numbers: every refresh re-runs this widget's queries. */
+    protected ?string $pollingInterval = '120s';
+
     protected ?string $heading = 'Equipment Trips Needing Attention';
 
     protected ?string $description = 'Time out / time in records waiting for someone to verify them.';

@@ -16,6 +16,9 @@ class WorkOrderTrendChart extends ChartWidget
 {
     protected static ?int $sort = 12;
 
+    /** The dashboard does not need live numbers: every refresh re-runs this widget's queries. */
+    protected ?string $pollingInterval = '120s';
+
     public static function canView(): bool
     {
         $user = Auth::user();

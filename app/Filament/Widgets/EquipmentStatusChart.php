@@ -12,6 +12,9 @@ class EquipmentStatusChart extends ChartWidget
 {
     protected static ?int $sort = 13;
 
+    /** The dashboard does not need live numbers: every refresh re-runs this widget's queries. */
+    protected ?string $pollingInterval = '120s';
+
     public function getHeading(): string|HtmlString|null
     {
         return new LinkedHeading('Asset Status Distribution', EquipmentResource::getUrl());

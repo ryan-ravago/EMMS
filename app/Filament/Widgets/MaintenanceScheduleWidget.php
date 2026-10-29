@@ -50,7 +50,7 @@ class MaintenanceScheduleWidget extends BaseWidget
                     ->where('mt_status_id', 'pnd')
                     ->where('mt_due_dt', '>=', now())
                     ->orderBy('mt_due_dt', 'asc')
-                    ->limit(5)
+                    ->orderBy('mt_id')
             )
             ->columns([
                 Tables\Columns\TextColumn::make('equipmentUnit.eqm_name')
@@ -66,6 +66,9 @@ class MaintenanceScheduleWidget extends BaseWidget
                     ->label('Status')
                     ->badge()
                     ->color(fn (MaintenanceTask $record): string => $record->status?->status_color ?? 'gray'),
-            ]);
+            ])
+            ->paginated([5, 10, 25])
+            ->defaultPaginationPageOption(5)
+            ->poll('120s');
     }
 }

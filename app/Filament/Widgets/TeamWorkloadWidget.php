@@ -42,7 +42,7 @@ class TeamWorkloadWidget extends BaseWidget
                 ])
                 ->orderByDesc('open_work_orders_count')
                 ->orderBy('user_fname')
-                ->limit(10))
+                ->orderBy('user_id'))
             ->columns([
                 TextColumn::make('full_name')
                     ->label('Technician')
@@ -58,7 +58,8 @@ class TeamWorkloadWidget extends BaseWidget
             ])
             ->emptyStateHeading('No technicians')
             ->emptyStateDescription('There are no technicians in your department yet.')
-            ->paginated(false)
-            ->poll('60s');
+            ->paginated([5, 10, 25])
+            ->defaultPaginationPageOption(5)
+            ->poll('120s');
     }
 }

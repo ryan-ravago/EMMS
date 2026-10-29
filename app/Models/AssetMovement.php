@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -25,6 +26,9 @@ class AssetMovement extends Model
 
     use LogsChanges;
 
+    /** The counts behind the list tabs and the dashboard; cleared whenever a trip changes. */
+    public const STATUS_COUNTS_CACHE_KEY = 'asset_movements.status_counts';
+
     public const STATUS_DISREGARDED = 'disregarded';
 
     public const STATUS_ACKNOWLEDGED = 'acknowledged';
@@ -34,6 +38,12 @@ class AssetMovement extends Model
     public const STATUS_MISSING_TIME_OUT = 'missing_time_out';
 
     public const STATUS_MISSING_TIME_IN = 'missing_time_in';
+
+    protected static function booted(): void
+    {
+        static::saved(fn () => Cache::forget(self::STATUS_COUNTS_CACHE_KEY));
+        static::deleted(fn () => Cache::forget(self::STATUS_COUNTS_CACHE_KEY));
+    }
 
     protected $fillable = [
         'asset_id',
@@ -91,6 +101,14 @@ class AssetMovement extends Model
      * @return array{attention: int, pending: int, missing_out: int, missing_in: int, acknowledged: int, disregarded: int}
      */
     public static function statusCounts(): array
+    {
+        return Cache::remember(self::STATUS_COUNTS_CACHE_KEY, now()->addSeconds(60), fn (): array => self::queryStatusCounts());
+    }
+
+    /**
+     * @return array{attention: int, pending: int, missing_out: int, missing_in: int, acknowledged: int, disregarded: int}
+     */
+    private static function queryStatusCounts(): array
     {
         $open = 'disregarded_at IS NULL AND acknowledged_at IS NULL';
 

@@ -6,6 +6,7 @@ use App\Filament\Pages\ActivityLogPage;
 use App\Models\Activity;
 use App\Support\Activity\ActivityLabels;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Support\Facades\Auth;
@@ -33,7 +34,7 @@ class RecentActivityWidget extends BaseWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(fn () => Activity::query()->with('causer')->latest()->limit(10))
+            ->query(fn () => Activity::query()->with('causer')->latest()->orderByDesc('id'))
             ->columns([
                 TextColumn::make('created_at')
                     ->label('When')
@@ -47,7 +48,10 @@ class RecentActivityWidget extends BaseWidget
                     ->wrap()
                     ->limit(120),
             ])
-            ->paginated(false)
-            ->poll('60s');
+            ->paginated([5, 10, 25])
+            ->defaultPaginationPageOption(5)
+            // The activity log is the biggest table: Previous / Next paging avoids counting all of its rows.
+            ->paginationMode(PaginationMode::Simple)
+            ->poll('120s');
     }
 }

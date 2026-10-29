@@ -37,7 +37,7 @@ class EquipmentOutNowWidget extends BaseWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(fn () => AssetMovement::query()->with('asset')->open()->latest('time_out')->limit(8))
+            ->query(fn () => AssetMovement::query()->with('asset')->open()->latest('time_out')->orderByDesc('id'))
             ->columns([
                 TextColumn::make('asset.eqm_prc_code')
                     ->label('Equipment')
@@ -53,7 +53,8 @@ class EquipmentOutNowWidget extends BaseWidget
             ->emptyStateHeading('Nothing is out')
             ->emptyStateDescription('Every equipment that left has been scanned back in.')
             ->recordUrl(fn (AssetMovement $record): string => AssetMovementResource::getUrl('view', ['record' => $record]))
-            ->paginated(false)
-            ->poll('60s');
+            ->paginated([5, 10, 25])
+            ->defaultPaginationPageOption(5)
+            ->poll('120s');
     }
 }

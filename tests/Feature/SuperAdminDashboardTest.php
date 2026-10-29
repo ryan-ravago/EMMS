@@ -194,7 +194,7 @@ class SuperAdminDashboardTest extends AssetMovementTestCase
         $this->assertSame('#9ca3af', $data['datasets'][0]['backgroundColor'][2]);
     }
 
-    public function test_recent_activity_shows_the_latest_ten_entries_with_who_did_them(): void
+    public function test_recent_activity_is_paged_newest_first_with_who_did_each_thing(): void
     {
         foreach (range(1, 12) as $n) {
             DB::table('activity_log')->insert([
@@ -207,10 +207,21 @@ class SuperAdminDashboardTest extends AssetMovementTestCase
         }
         $this->actingAs($this->superAdmin);
 
+        $newest = fn (int $count) => Activity::query()->orderByDesc('id')->limit($count)->get();
+        $oldest = Activity::query()->whereIn('description', ['Did thing 1', 'Did thing 2'])->get();
+
+        // Five to a page to start with, newest first.
         Livewire::test(RecentActivityWidget::class)
-            ->assertCanSeeTableRecords(Activity::query()->orderByDesc('id')->limit(10)->get())
-            ->assertCanNotSeeTableRecords(Activity::query()->whereIn('description', ['Did thing 1', 'Did thing 2'])->get())
+            ->assertCanSeeTableRecords($newest(5), inOrder: true)
+            ->assertCanNotSeeTableRecords(Activity::query()->orderBy('id')->limit(7)->get())
             ->assertSee('Did thing 12')
-            ->assertSee('Mario Manager');
+            ->assertSee('Mario Manager')
+            // The page size can be raised, and the next page has the older entries.
+            ->set('tableRecordsPerPage', 10)
+            ->assertCanSeeTableRecords($newest(10))
+            ->assertCanNotSeeTableRecords($oldest)
+            ->set('tableRecordsPerPage', 5)
+            ->call('gotoPage', 3)
+            ->assertCanSeeTableRecords($oldest);
     }
 }

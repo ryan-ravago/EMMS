@@ -8,6 +8,7 @@ use App\Filament\Widgets\AssetLifecycleChart;
 use App\Filament\Widgets\AssetsByTypeStats;
 use App\Filament\Widgets\DashboardStatsOverview;
 use App\Filament\Widgets\EquipmentOutNowWidget;
+use App\Filament\Widgets\EquipmentStatusChart;
 use App\Filament\Widgets\ExecutiveFleetStats;
 use App\Filament\Widgets\MyRequestsWidget;
 use App\Filament\Widgets\OpenWorkOrdersByDepartmentChart;
@@ -15,7 +16,9 @@ use App\Filament\Widgets\RecentActivityWidget;
 use App\Filament\Widgets\RfidHealthStats;
 use App\Filament\Widgets\TeamWorkloadWidget;
 use App\Filament\Widgets\TripsNeedingAttentionStats;
+use App\Filament\Widgets\WorkOrderByPriorityChart;
 use App\Filament\Widgets\WorkOrderHealthStats;
+use App\Filament\Widgets\WorkOrderTrendChart;
 use App\Models\AppUser;
 use App\Models\AssetMovement;
 use App\Models\Equipment;
@@ -318,19 +321,45 @@ class RoleDashboardsTest extends AssetMovementTestCase
             ->assertSee('Rejected');
     }
 
-    public function test_a_requestors_list_is_capped_at_the_eight_latest(): void
+    public function test_a_requestors_list_is_paged_five_at_a_time_newest_first(): void
     {
         $me = $this->userWith('requestor');
-        foreach (range(1, 10) as $n) {
-            $this->workOrder('inprog', requester: $me, extra: ['wo_no' => "WO-{$n}", 'wo_created_dt' => now()->subDays(20 - $n)]);
-        }
+        $orders = collect(range(1, 12))->map(fn (int $n) => $this->workOrder('inprog', requester: $me, extra: ['wo_no' => "WO-{$n}", 'wo_created_dt' => now()->subDays(20 - $n)]));
         $this->actingAs($me);
 
         Livewire::test(MyRequestsWidget::class)
-            ->assertSee('WO-10')
-            ->assertSee('WO-3')
-            ->assertDontSee('WO-2<')
-            ->assertDontSee('WO-1<');
+            ->assertCanSeeTableRecords($orders->slice(7)->reverse()->values(), inOrder: true)
+            ->assertCanNotSeeTableRecords($orders->take(7))
+            ->call('gotoPage', 2)
+            ->assertCanSeeTableRecords($orders->slice(2, 5))
+            ->assertCanNotSeeTableRecords($orders->slice(7))
+            ->set('tableRecordsPerPage', 25)
+            ->assertCanSeeTableRecords($orders);
+    }
+
+    public function test_a_managers_queue_and_the_equipment_out_list_page_past_five_rows(): void
+    {
+        $manager = $this->userWith('manager', self::MECH);
+        $queue = collect(range(1, 7))->map(fn (int $n) => $this->workOrder('pndwor', self::MECH, extra: ['wo_created_dt' => now()->subDays(10 - $n)]));
+        $this->actingAs($manager);
+
+        Livewire::test(ApprovalsQueueWidget::class)
+            ->assertCanSeeTableRecords($queue->take(5), inOrder: true)
+            ->assertCanNotSeeTableRecords($queue->slice(5))
+            ->call('gotoPage', 2)
+            ->assertCanSeeTableRecords($queue->slice(5))
+            ->assertCanNotSeeTableRecords($queue->take(5));
+
+        $equipment = $this->makeEquipment();
+        $this->makeTag($equipment, 'AAA1');
+        $out = collect(range(1, 6))->map(fn (int $n) => AssetMovement::factory()->missingTimeIn()->create(['asset_id' => $equipment->eqm_id, 'tag_id' => 'AAA1', 'time_out' => now()->subDays(10 - $n)]));
+        $this->actingAs($this->userWith('asset_manager'));
+
+        Livewire::test(EquipmentOutNowWidget::class)
+            ->assertCanSeeTableRecords($out->slice(1)->reverse()->values(), inOrder: true)
+            ->assertCanNotSeeTableRecords($out->take(1))
+            ->call('gotoPage', 2)
+            ->assertCanSeeTableRecords($out->take(1));
     }
 
     public function test_asset_admin_sees_the_gaps_in_asset_data(): void
@@ -379,5 +408,89 @@ class RoleDashboardsTest extends AssetMovementTestCase
 
         $this->actingAs($this->userWith('super_admin'));
         Livewire::test(AssetsByTypeStats::class)->assertSeeHtml('equipment');
+    }
+
+    public function test_no_dashboard_stat_or_chart_refreshes_every_few_seconds(): void
+    {
+        // Filament refreshes stats and charts every 5 seconds unless told otherwise, and each refresh re-runs their queries.
+        $widgets = [
+            DashboardStatsOverview::class, TripsNeedingAttentionStats::class, AssetsByTypeStats::class, RfidHealthStats::class,
+            AssetDataQualityStats::class, ExecutiveFleetStats::class, WorkOrderHealthStats::class,
+            AssetLifecycleChart::class, OpenWorkOrdersByDepartmentChart::class,
+            EquipmentStatusChart::class, WorkOrderTrendChart::class, WorkOrderByPriorityChart::class,
+        ];
+
+        foreach ($widgets as $widget) {
+            $instance = new $widget;
+            $interval = (new ReflectionMethod($instance, 'getPollingInterval'))->invoke($instance);
+
+            $this->assertSame('120s', $interval, "{$widget} polling");
+        }
+    }
+
+    public function test_the_trip_counts_are_kept_for_a_minute_and_refresh_when_a_trip_changes(): void
+    {
+        $equipment = $this->makeEquipment();
+        $this->makeTag($equipment, 'AAA1');
+        $attributes = ['asset_id' => $equipment->eqm_id, 'tag_id' => 'AAA1'];
+
+        AssetMovement::factory()->create($attributes);
+        $this->assertSame(1, AssetMovement::statusCounts()['attention']);
+
+        // A write that skips model events is not seen until the minute is up...
+        DB::table('asset_movements')->insert($attributes + ['time_out' => now(), 'created_at' => now(), 'updated_at' => now()]);
+        $this->assertSame(1, AssetMovement::statusCounts()['attention']);
+
+        // ...but saving a trip the normal way clears it straight away.
+        AssetMovement::factory()->create($attributes);
+        $this->assertSame(3, AssetMovement::statusCounts()['attention']);
+
+        AssetMovement::query()->latest('id')->first()->delete();
+        $this->assertSame(2, AssetMovement::statusCounts()['attention']);
+    }
+
+    public function test_the_heavy_totals_are_counted_once_per_minute_not_on_every_refresh(): void
+    {
+        $this->actingAs($this->userWith('asset_admin'));
+
+        Livewire::test(RfidHealthStats::class);
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        Livewire::test(RfidHealthStats::class)->assertSee('Scans today');
+        $scanQueries = collect(DB::getQueryLog())->filter(fn (array $query): bool => str_contains($query['query'], 'asset_tag_logs') || str_contains($query['query'], 'asset_tags'));
+        DB::disableQueryLog();
+
+        $this->assertCount(0, $scanQueries, 'the second render should read the kept totals');
+    }
+
+    public function test_the_dashboard_index_migration_is_safe_to_run_twice_and_to_roll_back(): void
+    {
+        foreach (['asset_tag_logs', 'asset_tags', 'work_orders', 'asset_movements'] as $table) {
+            $this->assertTrue(Schema::hasTable($table));
+        }
+        Schema::create('maintenance_tasks', function (Blueprint $table): void {
+            $table->id('mt_id');
+            $table->unsignedBigInteger('mt_dep_id')->nullable();
+            $table->string('mt_status_id')->nullable();
+            $table->dateTime('mt_due_dt')->nullable();
+        });
+
+        $migration = require base_path('database/migrations/2026_10_29_152805_add_dashboard_performance_indexes.php');
+
+        $migration->up();
+        $migration->up();
+
+        $this->assertTrue(Schema::hasIndex('asset_tag_logs', 'asset_tag_logs_detected_at_index'));
+        $this->assertTrue(Schema::hasIndex('asset_tags', 'asset_tags_asset_parent_id_is_deleted_index'));
+        $this->assertTrue(Schema::hasIndex('work_orders', 'work_orders_wo_status_id_wo_dep_id_index'));
+        $this->assertTrue(Schema::hasIndex('work_orders', 'work_orders_wo_created_by_wo_created_dt_index'));
+        $this->assertTrue(Schema::hasIndex('asset_movements', 'asset_movements_time_in_time_out_index'));
+        $this->assertTrue(Schema::hasIndex('maintenance_tasks', 'maintenance_tasks_mt_dep_id_mt_status_id_mt_due_dt_index'));
+
+        $migration->down();
+
+        $this->assertFalse(Schema::hasIndex('asset_tag_logs', 'asset_tag_logs_detected_at_index'));
+        $this->assertFalse(Schema::hasIndex('work_orders', 'work_orders_wo_status_id_wo_dep_id_index'));
     }
 }
