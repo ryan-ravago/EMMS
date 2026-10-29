@@ -18,8 +18,13 @@ class Location extends Model
         'parent_id',
     ];
 
+    private const PATH_MAP_BINDING = 'location.path_map';
+
     protected static function booted(): void
     {
+        static::saved(fn () => self::flushPathMap());
+        static::deleted(fn () => self::flushPathMap());
+
         static::saving(function (self $location) {
             if ($location->parent_id === null) {
                 return;
@@ -167,6 +172,10 @@ class Location extends Model
 
     public function getParentPathAttribute(): string
     {
+        if ($this->canUsePathMap()) {
+            return $this->parent_id === null ? '' : (self::pathMap()[(int) $this->parent_id] ?? '');
+        }
+
         $names = [];
         $location = $this->parent;
 
@@ -180,6 +189,10 @@ class Location extends Model
 
     public function getFullPathAttribute(): string
     {
+        if ($this->canUsePathMap() && isset(self::pathMap()[$this->getKey()])) {
+            return self::pathMap()[$this->getKey()];
+        }
+
         $names = [];
         $location = $this;
 
@@ -189,6 +202,57 @@ class Location extends Model
         }
 
         return implode(' > ', array_reverse($names));
+    }
+
+    /**
+     * Every location's full path keyed by id, built from one query and kept for the request (or queue job).
+     * It is cleared whenever a location is saved or deleted.
+     *
+     * @return array<int, string>
+     */
+    public static function pathMap(): array
+    {
+        app()->scopedIf(self::PATH_MAP_BINDING, function (): array {
+            $rows = self::query()->toBase()->get(['id', 'name', 'parent_id'])->keyBy('id');
+            $paths = [];
+
+            $resolve = function (int $id, array $visited = []) use (&$resolve, &$paths, $rows): string {
+                if (isset($paths[$id])) {
+                    return $paths[$id];
+                }
+
+                $row = $rows[$id];
+                $parentId = $row->parent_id === null ? null : (int) $row->parent_id;
+
+                // A missing parent or a loop in bad data ends the path here instead of recursing forever.
+                $parentPath = $parentId !== null && isset($rows[$parentId]) && ! in_array($parentId, $visited, true)
+                    ? $resolve($parentId, [...$visited, $id]).' > '
+                    : '';
+
+                return $paths[$id] = $parentPath.$row->name;
+            };
+
+            foreach ($rows as $id => $row) {
+                $resolve((int) $id);
+            }
+
+            return $paths;
+        });
+
+        return app(self::PATH_MAP_BINDING);
+    }
+
+    public static function flushPathMap(): void
+    {
+        app()->forgetInstance(self::PATH_MAP_BINDING);
+    }
+
+    /**
+     * The map reflects saved data, so a location with unsaved name or parent changes walks its relations instead.
+     */
+    private function canUsePathMap(): bool
+    {
+        return $this->exists && ! $this->isDirty(['name', 'parent_id']);
     }
 
     public function equipmentUnits(): HasMany

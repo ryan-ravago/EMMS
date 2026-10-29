@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -129,8 +130,38 @@ class Equipment extends Model
         return DB::transaction(fn (): bool => parent::save($options));
     }
 
+    public const ASSET_COUNTS_CACHE_KEY = 'equipment_units.asset_counts';
+
+    /**
+     * Asset counts for the sidebar badges, keyed by asset type code plus 'total' (every asset, typed or not).
+     * One grouped query shared by all four menu items, kept for a short time and cleared when an asset
+     * is saved or deleted (bulk writes that skip model events are picked up when it expires).
+     *
+     * @return array<string, int>
+     */
+    public static function assetCounts(): array
+    {
+        return Cache::remember(self::ASSET_COUNTS_CACHE_KEY, now()->addSeconds(30), function (): array {
+            $rows = DB::table('equipment_units as eu')
+                ->leftJoin('asset_types as at', 'at.id', '=', 'eu.asset_type_id')
+                ->groupBy('at.code')
+                ->selectRaw('at.code as code, COUNT(*) as aggregate')
+                ->get();
+
+            return [
+                'total' => (int) $rows->sum('aggregate'),
+                AssetType::EQUIPMENT => (int) $rows->firstWhere('code', AssetType::EQUIPMENT)?->aggregate,
+                AssetType::ACCESSORY => (int) $rows->firstWhere('code', AssetType::ACCESSORY)?->aggregate,
+                AssetType::SERVICE_VEHICLE => (int) $rows->firstWhere('code', AssetType::SERVICE_VEHICLE)?->aggregate,
+            ];
+        });
+    }
+
     protected static function booted(): void
     {
+        static::saved(fn () => Cache::forget(self::ASSET_COUNTS_CACHE_KEY));
+        static::deleted(fn () => Cache::forget(self::ASSET_COUNTS_CACHE_KEY));
+
         // Runs after the UPDATE query and after EquipmentObserver::saving() has
         // mutated fields (parent_id, eqm_eqmt_id, eqm_next_pm_due_at), but before
         // syncOriginal() — so getChanges()/getOriginal() both reflect the true diff.

@@ -15,6 +15,7 @@ use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
@@ -37,6 +38,8 @@ class EquipmentTable
         return $table
             ->extremePaginationLinks()
             ->poll('30s')
+            // The resource query also serves the view/edit pages, which need model, type and brand; the list does not show them.
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->without(['equipmentModel', 'type', 'brand']))
             ->paginated([10, 25, 50, 100])
             ->defaultPaginationPageOption(25)
             ->columns([
@@ -57,10 +60,10 @@ class EquipmentTable
                 TextColumn::make('assetType.name')
                     ->label('Asset Type')
                     ->badge()
-                    ->color(fn($record): string => $record->isEquipmentAsset() ? 'primary' : 'success')
-                    ->icon(fn($record): Heroicon => $record->isEquipmentAsset() ? Heroicon::OutlinedTruck : Heroicon::OutlinedCog)
+                    ->color(fn ($record): string => $record->isEquipmentAsset() ? 'primary' : 'success')
+                    ->icon(fn ($record): Heroicon => $record->isEquipmentAsset() ? Heroicon::OutlinedTruck : Heroicon::OutlinedCog)
                     ->placeholder('—')
-                    ->visible(fn(): bool => ! Auth::user()->can('Update:EquipmentResource'))
+                    ->visible(fn (): bool => ! Auth::user()->can('Update:EquipmentResource'))
                     ->toggleable()
                     ->sortable()
                     ->searchable(),
@@ -89,28 +92,28 @@ class EquipmentTable
                     ->toggleable()
                     ->searchable()
                     ->visible(
-                        fn(): bool => in_array(EquipmentResource::getConfiguration()?->getKey(), ['assets', 'accessories'], true)
+                        fn (): bool => in_array(EquipmentResource::getConfiguration()?->getKey(), ['assets', 'accessories'], true)
                     ),
                 TextColumn::make('eqm_is_active')
                     ->label('Status')
                     ->toggleable()
                     ->sortable()
                     ->badge()
-                    ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
-                    ->icon(fn(bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
-                    ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
+                    ->icon(fn (bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
+                    ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
                 TextColumn::make('lifecycleStatus.status_title')
                     ->label('Lifecycle Status')
                     ->toggleable()
                     ->sortable()
                     ->badge()
-                    ->icon(fn($record) => $record->lifecycleStatus->status_icon)
-                    ->color(fn($record) => $record->lifecycleStatus->status_color),
+                    ->icon(fn ($record) => $record->lifecycleStatus->status_icon)
+                    ->color(fn ($record) => $record->lifecycleStatus->status_color),
                 TextColumn::make('location.name')
                     ->label('Location')
                     // Allocated accessories show their parent equipment's location.
-                    ->state(fn($record): ?string => $record->effectiveLocation()?->full_path)
-                    ->description(fn($record): ?string => $record->isAllocatedAccessory() ? "via {$record->parent?->eqm_name}" : null)
+                    ->state(fn ($record): ?string => $record->effectiveLocation()?->full_path)
+                    ->description(fn ($record): ?string => $record->isAllocatedAccessory() ? "via {$record->parent?->eqm_name}" : null)
                     ->toggleable()
                     ->searchable()
                     ->sortable(),
@@ -134,7 +137,7 @@ class EquipmentTable
                 //     ->multiple(),
             ])
             ->recordUrl(
-                fn(Model $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
+                fn (Model $record): string => EquipmentResource::getUrl('view', ['record' => $record]),
             )
             ->recordActions([
                 // ViewAction::make(),

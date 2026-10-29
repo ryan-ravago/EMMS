@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Equipment\RelationManagers;
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Models\Equipment;
 use App\Models\LifecycleLog;
+use App\Support\Activity\AccessoryAllocationLog;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DissociateAction;
@@ -23,6 +24,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
 use Illuminate\Validation\ValidationException;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class AccessoriesRelationManager extends RelationManager
 {
@@ -66,26 +68,31 @@ class AccessoriesRelationManager extends RelationManager
                 TextColumn::make('eqm_is_active')
                     ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn(bool $state): string => $state ? 'Active' : 'Inactive')
-                    ->icon(fn(bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
-                    ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
+                    ->icon(fn (bool $state): Heroicon => $state ? Heroicon::CheckCircle : Heroicon::XCircle)
+                    ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
             ])
             ->headerActions([
                 AssociateAction::make()
                     ->label('Allocate accessory')
                     ->modalHeading('Allocate accessory')
-                    ->authorize(fn() => Auth::user()?->can('update', $this->getOwnerRecord()) ?? false)
+                    ->authorize(fn () => Auth::user()?->can('update', $this->getOwnerRecord()) ?? false)
                     ->modalSubmitActionLabel('Allocate')
                     ->multiple()
                     ->preloadRecordSelect()
                     ->recordSelectSearchColumns(['eqm_name', 'eqm_prc_code'])
-                    ->recordSelectOptionsQuery(fn(Builder $query): Builder => $query->accessories())
+                    ->recordSelectOptionsQuery(fn (Builder $query): Builder => $query->accessories())
                     ->before(function (AssociateAction $action, array $data) {
                         $selectedIds = array_map('strval', (array) ($data['recordId'] ?? []));
                         $ownerRecord = $this->getOwnerRecord();
 
                         if (empty($selectedIds)) {
                             return;
+                        }
+
+                        // Several accessories allocated at once are grouped as one bulk action in the activity log.
+                        if (count($selectedIds) > 1 && ! LogBatch::isOpen()) {
+                            LogBatch::startBatch();
                         }
 
                         // 1. Every submitted record must pass the accessories scope
@@ -116,8 +123,13 @@ class AccessoriesRelationManager extends RelationManager
 
                         if ($alreadyAssigned->isNotEmpty()) {
                             throw ValidationException::withMessages([
-                                'recordId' => 'These accessories are already allocated to another equipment unit: ' . $alreadyAssigned->implode(', ') . '.',
+                                'recordId' => 'These accessories are already allocated to another equipment unit: '.$alreadyAssigned->implode(', ').'.',
                             ]);
+                        }
+                    })
+                    ->after(function (): void {
+                        if (LogBatch::isOpen()) {
+                            LogBatch::endBatch();
                         }
                     })
                     ->using(function (Model $record, BelongsTo $inverseRelationship, HasMany $relationship): void {
@@ -128,6 +140,7 @@ class AccessoriesRelationManager extends RelationManager
                             $record->save();
 
                             $this->createLifecycleLog($record, 'alc', 'alc', $relationship->getParent()->getKey());
+                            AccessoryAllocationLog::allocated($record, $relationship->getParent());
                         });
                     }),
             ])
@@ -169,9 +182,9 @@ class AccessoriesRelationManager extends RelationManager
                 ]),
             ])
             ->recordUrl(
-                fn(Equipment $record): string => EquipmentResource::withConfiguration(
+                fn (Equipment $record): string => EquipmentResource::withConfiguration(
                     'accessories',
-                    fn(): string => EquipmentResource::getUrl('view', ['record' => $record]),
+                    fn (): string => EquipmentResource::getUrl('view', ['record' => $record]),
                 ),
             );
     }
@@ -182,11 +195,15 @@ class AccessoriesRelationManager extends RelationManager
      */
     protected function unallocate(Model $record, Table $table): void
     {
-        $record->location_id = $this->getOwnerRecord()->location_id;
+        $formerEquipment = $this->getOwnerRecord();
+
+        $record->location_id = $formerEquipment->location_id;
         $record->lifecycle_status_id = 'idle';
 
         $table->getInverseRelationshipFor($record)->dissociate();
         $record->save();
+
+        AccessoryAllocationLog::unallocated($record, $formerEquipment);
     }
 
     protected function createLifecycleLog(
@@ -215,7 +232,7 @@ class AccessoriesRelationManager extends RelationManager
         $snapshot = LifecycleLog::withNameSnapshots(['performed_by' => Auth::id()]);
 
         LifecycleLog::query()->insert(array_map(
-            fn(int|string $accessoryId): array => [
+            fn (int|string $accessoryId): array => [
                 'asset_id' => $accessoryId,
                 'action_id' => $actionId,
                 'status_id' => $statusId,

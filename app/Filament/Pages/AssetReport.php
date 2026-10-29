@@ -41,7 +41,7 @@ class AssetReport extends ReportPage
     protected function reportTable(Table $table): Table
     {
         return $table
-            ->query(fn () => Equipment::query()->with(['assetType', 'parent.location', 'location.parent', 'lifecycleStatus']))
+            ->query(fn () => Equipment::query()->with(['assetType', 'parent.location', 'location', 'lifecycleStatus']))
             ->columns([
                 TextColumn::make('eqm_prc_code')
                     ->label('Asset Code')

@@ -8,6 +8,7 @@ use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Models\Action as ModelsAction;
 use App\Models\AssetType;
 use App\Models\Equipment;
+use App\Support\Activity\AccessoryAllocationLog;
 use CodeWithDennis\FilamentSelectTree\SelectTree;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -185,6 +186,8 @@ class ViewEquipment extends ViewRecord
                     ->lockForUpdate()
                     ->findOrFail($this->record->getKey());
 
+                $formerParentId = $record->parent_id;
+
                 $record->update([
                     'lifecycle_status_id' => $newStatusId,
                     'location_id' => match ($action->a_id) {
@@ -198,6 +201,13 @@ class ViewEquipment extends ViewRecord
                         default => $record->parent_id,
                     },
                 ]);
+
+                // Allocating to, or unallocating from, an equipment unit is recorded in the activity log by name.
+                if ((int) $formerParentId !== (int) $record->parent_id) {
+                    $record->parent_id
+                        ? AccessoryAllocationLog::allocated($record, Equipment::query()->findOrFail($record->parent_id))
+                        : AccessoryAllocationLog::unallocated($record, Equipment::query()->findOrFail($formerParentId));
+                }
 
                 $record->lifecycleLogs()->create([
                     'asset_id' => $record->eqm_id,

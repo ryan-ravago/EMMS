@@ -190,13 +190,7 @@ class EquipmentResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $query = static::getModel()::query();
-
-        if ($type = static::currentAssetTypeCode()) {
-            $query->ofAssetType($type);
-        }
-
-        return (string) $query->count();
+        return (string) Equipment::assetCounts()[static::currentAssetTypeCode() ?? 'total'];
     }
 
     public static function getNavigationLabel(): string
@@ -227,7 +221,7 @@ class EquipmentResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
-            ->with(['equipmentModel', 'type', 'brand', 'assetType', 'parent.location', 'location.parent', 'lifecycleStatus']);
+            ->with(['equipmentModel', 'type', 'brand', 'assetType', 'parent.location', 'location', 'lifecycleStatus']);
 
         if ($type = static::currentAssetTypeCode()) {
             $query->ofAssetType($type);

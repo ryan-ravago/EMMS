@@ -85,7 +85,7 @@ class EquipmentExporter extends Exporter
 
     public static function modifyQuery(Builder $query): Builder
     {
-        return $query->with(['assetType', 'parent.location', 'location.parent', 'lifecycleStatus', 'type', 'brand', 'equipmentModel']);
+        return $query->with(['assetType', 'parent.location', 'location', 'lifecycleStatus', 'type', 'brand', 'equipmentModel']);
     }
 
     public static function getCompletedNotificationBody(Export $export): string

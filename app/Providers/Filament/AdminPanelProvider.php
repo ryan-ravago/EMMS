@@ -9,6 +9,7 @@ use App\Filament\Resources\Equipment\Resources\AssetTags\AssetTagResource;
 use App\Filament\Resources\Equipment\Resources\WorkOrders\WorkOrderResource;
 use App\Filament\Widgets\DashboardStatsOverview;
 use App\Http\Middleware\EnsureUserStillHasRole;
+use App\Models\AssetType;
 use App\Models\Equipment;
 use App\Models\SiteSetting;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
@@ -59,7 +60,7 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::HEAD_END,
                 function () {
                     $font = rescue(
-                        fn() => SiteSetting::instance()->site_font_family ?? 'Inter',
+                        fn () => SiteSetting::instance()->site_font_family ?? 'Inter',
                         'Inter',
                         report: false
                     );
@@ -74,7 +75,7 @@ class AdminPanelProvider extends PanelProvider
                     $vite = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
 
                     return new HtmlString(
-                        $vite .
+                        $vite.
                             "<link href=\"https://fonts.googleapis.com/css2?family={$encoded}:wght@300;400;500;600;700&display=swap\" rel=\"stylesheet\">
                             <style>
                                 body, html { font-family: '{$font}', sans-serif !important; }
@@ -149,30 +150,24 @@ class AdminPanelProvider extends PanelProvider
             // ->font(SiteSetting::instance()->site_font_family ?? 'Inter', provider: GoogleFontProvider::class)
             ->maxContentWidth(Width::SevenExtraLarge)
             ->navigationItems([
-                NavigationItem::make('Assets')
-                    ->icon(Heroicon::OutlinedSquares2x2)
-                    ->badge(fn(): string => (string) Equipment::query()->count())
-                    ->url(fn(): string => route('filament.admin.resources.assets.index'))
-                    ->visible(fn(): bool => EquipmentResource::canViewPage('assets'))
-                    ->isActiveWhen(fn(): bool => request()->routeIs('filament.admin.resources.assets.*')),
                 NavigationItem::make('Equipment')
                     ->icon(Heroicon::OutlinedTruck)
-                    ->badge(fn(): string => (string) Equipment::query()->equipmentAssets()->count())
-                    ->url(fn(): string => route('filament.admin.resources.equipment.index'))
-                    ->visible(fn(): bool => EquipmentResource::canViewPage('equipment'))
-                    ->isActiveWhen(fn(): bool => request()->routeIs('filament.admin.resources.equipment.*')),
+                    ->badge(fn (): string => (string) Equipment::assetCounts()[AssetType::EQUIPMENT])
+                    ->url(fn (): string => route('filament.admin.resources.equipment.index'))
+                    ->visible(fn (): bool => EquipmentResource::canViewPage('equipment'))
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.equipment.*')),
                 NavigationItem::make('Accessories')
                     ->icon(Heroicon::OutlinedCog)
-                    ->badge(fn(): string => (string) Equipment::query()->accessories()->count())
-                    ->url(fn(): string => route('filament.admin.resources.accessories.index'))
-                    ->visible(fn(): bool => EquipmentResource::canViewPage('accessories'))
-                    ->isActiveWhen(fn(): bool => request()->routeIs('filament.admin.resources.accessories.*')),
+                    ->badge(fn (): string => (string) Equipment::assetCounts()[AssetType::ACCESSORY])
+                    ->url(fn (): string => route('filament.admin.resources.accessories.index'))
+                    ->visible(fn (): bool => EquipmentResource::canViewPage('accessories'))
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.accessories.*')),
                 NavigationItem::make('Service Vehicles')
                     ->icon(Heroicon::OutlinedWrenchScrewdriver)
-                    ->badge(fn(): string => (string) Equipment::query()->serviceVehicles()->count())
-                    ->url(fn(): string => route('filament.admin.resources.service-vehicles.index'))
-                    ->visible(fn(): bool => EquipmentResource::canViewPage('service-vehicles'))
-                    ->isActiveWhen(fn(): bool => request()->routeIs('filament.admin.resources.service-vehicles.*')),
+                    ->badge(fn (): string => (string) Equipment::assetCounts()[AssetType::SERVICE_VEHICLE])
+                    ->url(fn (): string => route('filament.admin.resources.service-vehicles.index'))
+                    ->visible(fn (): bool => EquipmentResource::canViewPage('service-vehicles'))
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.service-vehicles.*')),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->resources([
@@ -231,7 +226,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 'panels::auth.login.form.after',
-                fn() => view('auth.socialite.google')
+                fn () => view('auth.socialite.google')
             )
             ->plugins([
                 FilamentShieldPlugin::make()
