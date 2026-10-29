@@ -25,7 +25,7 @@ class AssetMovementResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowsRightLeft;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Equipment';
+    // protected static string|UnitEnum|null $navigationGroup = 'Equipment';
 
     protected static ?string $navigationLabel = 'Time In / Out';
 
