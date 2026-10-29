@@ -119,8 +119,8 @@ class VerificationActions
     }
 
     /**
-     * Acknowledge many trips at once, with one set of remarks. Trips that cannot be acknowledged (a time is
-     * missing, or someone already dealt with them) are skipped and counted, never forced.
+     * Acknowledge many trips at once, with one set of remarks. Only trips with the status "Pending acknowledgement"
+     * are acknowledged; every other selected trip is skipped and counted, never forced.
      */
     public static function bulkAcknowledge(): BulkAction
     {
@@ -129,7 +129,7 @@ class VerificationActions
             ->icon(Heroicon::OutlinedCheckCircle)
             ->color('success')
             ->modalHeading('Acknowledge the selected trips')
-            ->modalDescription('Confirm that the time out and time in of every selected trip were recorded correctly. Trips that are missing a time, or already verified, are skipped.')
+            ->modalDescription('Confirm that the time out and time in of every selected trip were recorded correctly. Only trips with the status "Pending acknowledgement" are acknowledged; any other selected trip is skipped.')
             ->modalSubmitActionLabel('Acknowledge')
             ->authorize(fn (): bool => Auth::user()?->can('acknowledgeAny', AssetMovement::class) ?? false)
             ->schema([self::remarks('Remarks')])
@@ -143,7 +143,8 @@ class VerificationActions
     }
 
     /**
-     * Disregard many trips at once, with one reason. Trips that are already acknowledged or disregarded are skipped.
+     * Disregard many trips at once, with one reason. Trips with the status "Pending acknowledgement", "Missing time in"
+     * or "Missing time out" are disregarded; acknowledged and disregarded trips are skipped and counted.
      */
     public static function bulkDisregard(): BulkAction
     {
@@ -153,7 +154,7 @@ class VerificationActions
             ->color('danger')
             ->requiresConfirmation()
             ->modalHeading('Disregard the selected trips')
-            ->modalDescription('Use this when the scans do not describe real trips. Disregarded trips cannot be changed afterwards. Trips that are already acknowledged or disregarded are skipped.')
+            ->modalDescription('Use this when the scans do not describe real trips. Trips with the status "Pending acknowledgement", "Missing time in" or "Missing time out" are disregarded, and they cannot be changed afterwards. Acknowledged and disregarded trips are skipped.')
             ->modalSubmitActionLabel('Disregard')
             ->authorize(fn (): bool => Auth::user()?->can('disregardAny', AssetMovement::class) ?? false)
             ->schema([self::remarks('Reason')])

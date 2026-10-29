@@ -712,6 +712,34 @@ class AssetMovementVerificationTest extends AssetMovementTestCase
         $this->assertSame(0, AssetMovement::acknowledgeMany([], $this->admin->user_id, 'ok'));
     }
 
+    public function test_bulk_acknowledge_takes_only_pending_acknowledgement_and_bulk_disregard_takes_the_three_open_statuses(): void
+    {
+        $make = fn (): array => [
+            'pending' => $this->trip(),
+            'missing_in' => $this->trip('missing_in'),
+            'missing_out' => $this->trip('missing_out'),
+            'acknowledged' => $this->trip('acknowledged'),
+            'disregarded' => $this->trip('disregarded'),
+        ];
+        $statusesAfter = fn (array $trips): array => collect($trips)->map(fn (AssetMovement $trip): string => $trip->fresh()->status)->all();
+
+        $trips = $make();
+        AssetMovement::acknowledgeMany(collect($trips)->pluck('id')->all(), $this->admin->user_id, 'ok');
+
+        $this->assertSame(
+            ['pending' => 'acknowledged', 'missing_in' => 'missing_time_in', 'missing_out' => 'missing_time_out', 'acknowledged' => 'acknowledged', 'disregarded' => 'disregarded'],
+            $statusesAfter($trips),
+        );
+
+        $trips = $make();
+        AssetMovement::disregardMany(collect($trips)->pluck('id')->all(), $this->admin->user_id, 'ok');
+
+        $this->assertSame(
+            ['pending' => 'disregarded', 'missing_in' => 'disregarded', 'missing_out' => 'disregarded', 'acknowledged' => 'acknowledged', 'disregarded' => 'disregarded'],
+            $statusesAfter($trips),
+        );
+    }
+
     public function test_the_bulk_methods_clear_the_cached_trip_counts_once_and_write_readable_log_entries(): void
     {
         config(['activitylog.enabled' => true]);
