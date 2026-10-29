@@ -32,6 +32,7 @@ abstract class AssetMovementTestCase extends TestCase
         Schema::create('app_users', function (Blueprint $table): void {
             $table->id('user_id');
             $table->string('user_fname')->nullable();
+            $table->string('user_mname')->nullable();
             $table->string('user_lname')->nullable();
             $table->string('user_email')->nullable();
             $table->unsignedBigInteger('user_dep_id')->nullable();

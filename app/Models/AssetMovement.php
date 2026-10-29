@@ -51,6 +51,7 @@ class AssetMovement extends Model
         'tag_id',
         'out_log_id',
         'in_log_id',
+        'aims_log_id',
         'time_out',
         'time_in',
         'yard_out_id',
