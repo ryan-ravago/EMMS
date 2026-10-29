@@ -21,7 +21,7 @@ class AssetMovementsTable
             ->extremePaginationLinks()
             ->paginated([10, 25, 50, 100])
             ->defaultPaginationPageOption(10)
-            ->defaultSort(fn (Builder $query): Builder => $query->orderByRaw('COALESCE(time_out, time_in) DESC'))
+            ->defaultSort(fn (Builder $query): Builder => $query->orderByRaw('COALESCE(time_out, time_in) DESC')->orderByDesc('id'))
             ->columns([
                 TextColumn::make('asset.eqm_prc_code')
                     ->label('Equipment')

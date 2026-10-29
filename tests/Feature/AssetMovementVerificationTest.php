@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\AssetMovements\AssetMovementResource;
 use App\Filament\Resources\AssetMovements\Pages\ListAssetMovements;
 use App\Filament\Resources\AssetMovements\Pages\ViewAssetMovement;
 use App\Filament\Resources\Equipment\EquipmentResource;
@@ -760,6 +761,45 @@ class AssetMovementVerificationTest extends AssetMovementTestCase
         $this->assertSame('Looks right', $entry->properties['attributes']['acknowledgement_remarks']);
         $this->assertNull($entry->properties['old']['acknowledgement_remarks']);
         $this->assertStringContainsString('Equipment Trip', $entry->description);
+    }
+
+    public function test_the_trip_page_has_previous_and_next_buttons_that_follow_the_list_order(): void
+    {
+        $make = fn (?string $out, ?string $in) => AssetMovement::factory()->create(['asset_id' => $this->equipment->eqm_id, 'tag_id' => 'AAA1', 'time_out' => $out, 'time_in' => $in]);
+
+        // The list is newest first, by the time out or, when it is missing, the time in.
+        $oldest = $make('2026-10-18 08:00:00', '2026-10-18 17:00:00');
+        $middle = $make('2026-10-19 08:00:00', '2026-10-19 17:00:00');
+        $noTimeOut = $make(null, '2026-10-19 12:00:00');
+        $newest = $make('2026-10-20 08:00:00', null);
+
+        $url = fn (AssetMovement $trip): string => AssetMovementResource::getUrl('view', ['record' => $trip]);
+
+        // List order: $newest, $noTimeOut, $middle, $oldest.
+        $this->page($this->manager, $middle)
+            ->assertActionHasUrl('previousRecord', $url($noTimeOut))
+            ->assertActionHasUrl('nextRecord', $url($oldest));
+
+        $this->page($this->manager, $noTimeOut)
+            ->assertActionHasUrl('previousRecord', $url($newest))
+            ->assertActionHasUrl('nextRecord', $url($middle));
+
+        // Nothing newer than the first trip, nothing older than the last one.
+        $this->page($this->manager, $newest)->assertActionDisabled('previousRecord')->assertActionEnabled('nextRecord');
+        $this->page($this->manager, $oldest)->assertActionDisabled('nextRecord')->assertActionEnabled('previousRecord');
+    }
+
+    public function test_trips_with_the_same_time_are_neither_skipped_nor_repeated_by_next_and_previous(): void
+    {
+        $make = fn () => AssetMovement::factory()->create(['asset_id' => $this->equipment->eqm_id, 'tag_id' => 'AAA1', 'time_out' => '2026-10-20 08:00:00', 'time_in' => '2026-10-20 17:00:00']);
+        [$first, $second, $third] = [$make(), $make(), $make()];
+
+        $url = fn (AssetMovement $trip): string => AssetMovementResource::getUrl('view', ['record' => $trip]);
+
+        // Same time: the higher id is listed first.
+        $this->page($this->manager, $second)
+            ->assertActionHasUrl('previousRecord', $url($third))
+            ->assertActionHasUrl('nextRecord', $url($first));
     }
 
     public function test_the_same_trip_cannot_be_acted_on_twice(): void
