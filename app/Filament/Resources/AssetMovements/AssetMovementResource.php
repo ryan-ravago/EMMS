@@ -33,7 +33,7 @@ class AssetMovementResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Equipment Trips';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 7;
 
     public static function getEloquentQuery(): Builder
     {
