@@ -87,6 +87,8 @@ abstract class AssetMovementTestCase extends TestCase
 
         (require base_path('database/migrations/2026_10_29_121720_create_asset_movements_table.php'))->up();
         (require base_path('database/migrations/2026_11_03_120549_create_rfid_raw_logs_table.php'))->up();
+        (require base_path('database/migrations/2026_11_03_144740_create_rfid_scanner_statuses_table.php'))->up();
+        (require base_path('database/migrations/2026_11_03_144742_create_rfid_scanner_status_logs_table.php'))->up();
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
         AssetType::flushIdCache();

@@ -9,6 +9,7 @@ use App\Models\Activity;
 use App\Models\AimsInspectionLog;
 use App\Models\MaintenanceInspectionLog;
 use App\Models\RfidRawLog;
+use App\Models\RfidScannerStatusLog;
 use App\Services\Inspections\InspectionSyncRunner;
 use App\Support\InspectionSyncSettings;
 use Illuminate\Foundation\Inspiring;
@@ -47,10 +48,11 @@ Schedule::command(SyncInspections::class, ['--only' => InspectionSyncRunner::AIM
 
 // Log retention: once a day, delete log rows older than config('log_retention.days') days (default 30).
 // Only these tables are pruned (the activity log, which also holds the inspection sync history,
-// the maintenance and AIMS inspection logs, and the raw RFID reader log, which keeps its own rfid.raw_log_retention_days). Naming the models keeps any other model that later becomes
+// the maintenance and AIMS inspection logs, and the raw RFID reader log and scanner status history, which keep their own
+// rfid.raw_log_retention_days and rfid.scanner_log_retention_days). Naming the models keeps any other model that later becomes
 // prunable out of this run.
 Schedule::command('model:prune', [
-    '--model' => [Activity::class, MaintenanceInspectionLog::class, AimsInspectionLog::class, RfidRawLog::class],
+    '--model' => [Activity::class, MaintenanceInspectionLog::class, AimsInspectionLog::class, RfidRawLog::class, RfidScannerStatusLog::class],
     '--chunk' => config('log_retention.chunk'),
 ])
     ->dailyAt(config('log_retention.run_at'))
@@ -64,6 +66,13 @@ Schedule::command(CheckDueMaintenanceCommand::class)
 // Tell IT when the RFID reader server stops getting scans to EMMS (only sends when RFID_ALERTS_ENABLED is on).
 Schedule::command('rfid:check-health')
     ->everyTenMinutes()
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Tell IT when a gate scanner is reported inactive, or the reader server stops reporting its status (reports come
+// about every 5 minutes; only sends when RFID_ALERTS_ENABLED is on).
+Schedule::command('rfid:check-scanners')
+    ->everyFiveMinutes()
     ->withoutOverlapping()
     ->onOneServer();
 

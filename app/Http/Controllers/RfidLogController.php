@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ReadsRfidToken;
 use App\Jobs\ProcessRfidRawLogs;
 use App\Models\Location;
 use App\Models\RfidRawLog;
@@ -10,7 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Laravel\Sanctum\PersonalAccessToken;
 
 /**
  * Receives the reads from the RFID reader server. It only stores them (rfid_raw_logs), whatever the tag is, and
@@ -18,6 +18,8 @@ use Laravel\Sanctum\PersonalAccessToken;
  */
 class RfidLogController extends Controller
 {
+    use ReadsRfidToken;
+
     /** 500 reads are about 60 KB; anything far bigger is not the reader. */
     private const MAX_BODY_BYTES = 262144;
 
@@ -75,12 +77,5 @@ class RfidLogController extends Controller
             'inserted' => $inserted,
             'not_inserted' => [],
         ]);
-    }
-
-    private function tokenId(Request $request): ?int
-    {
-        $token = $request->user()?->currentAccessToken();
-
-        return $token instanceof PersonalAccessToken && is_numeric($token->getKey()) ? (int) $token->getKey() : null;
     }
 }

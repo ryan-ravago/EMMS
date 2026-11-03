@@ -36,6 +36,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Scanner status
+    |--------------------------------------------------------------------------
+    |
+    | The reader server reports whether each gate scanner (IN / OUT) is active, on every change and about every
+    | 5 minutes (POST /v1/{yard}/rfid-scanner-status).
+    |
+    | scanner_stale_minutes        No report for this long: the scanner shows as "No report" instead of its last status.
+    | scanner_log_retention_days   Days to keep the history of status changes (at least 1).
+    | alerts.scanner_inactive_minutes  A scanner must stay inactive this long before people are alerted.
+    |
+    */
+
+    'scanner_stale_minutes' => (int) env('RFID_SCANNER_STALE_MINUTES', 15),
+    'scanner_log_retention_days' => (int) env('RFID_SCANNER_LOG_RETENTION_DAYS', 30),
+
+    /*
+    |--------------------------------------------------------------------------
     | Reader token
     |--------------------------------------------------------------------------
     |
@@ -73,6 +90,7 @@ return [
         'days' => env('RFID_ALERT_DAYS', '1,2,3,4,5,6'),
         'reminder_hours' => (int) env('RFID_REMINDER_HOURS', 6),
         'token_warning_days' => (int) env('RFID_TOKEN_WARNING_DAYS', 30),
+        'scanner_inactive_minutes' => (int) env('RFID_SCANNER_INACTIVE_ALERT_MINUTES', 5),
     ],
 
 ];
