@@ -19,31 +19,36 @@ class RfidScannerStatusesTable
             ->columns([
                 TextColumn::make('yard.name')
                     ->label('Yard')
+                    ->searchable()
                     ->placeholder('-'),
                 TextColumn::make('scanner_name')
                     ->label('Scanner')
                     ->badge()
-                    ->color(fn (string $state): string => $state === 'IN' ? 'success' : 'warning')
+                    ->searchable()
+                    ->color(fn(string $state): string => $state === 'IN' ? 'success' : 'warning')
                     ->sortable(),
                 TextColumn::make('state')
                     ->label('Status')
                     ->badge()
-                    ->state(fn (RfidScannerStatus $record): string => $record->state())
-                    ->formatStateUsing(fn (string $state): string => RfidScannerStatus::stateLabels()[$state] ?? $state)
-                    ->color(fn (string $state): string => RfidScannerStatus::stateColor($state)),
+                    ->searchable()
+                    ->state(fn(RfidScannerStatus $record): string => $record->state())
+                    ->formatStateUsing(fn(string $state): string => RfidScannerStatus::stateLabels()[$state] ?? $state)
+                    ->color(fn(string $state): string => RfidScannerStatus::stateColor($state)),
                 TextColumn::make('status_changed_at')
                     ->label('Status since')
                     ->dateTime()
+                    ->searchable()
                     ->sortable(),
                 TextColumn::make('last_seen_at')
                     ->label('Last report')
                     ->since()
+                    ->searchable()
                     ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('yard_id')
                     ->label('Yard')
-                    ->options(fn (): array => Location::query()->orderBy('name')->pluck('name', 'id')->all()),
+                    ->options(fn(): array => Location::query()->orderBy('name')->pluck('name', 'id')->all()),
             ])
             ->recordActions([
                 ViewAction::make(),
