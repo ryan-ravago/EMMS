@@ -7,6 +7,7 @@ use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Filament\Resources\EquipmentUnitCategories\EquipmentUnitCategoryResource;
 use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
 use App\Filament\Resources\RequestorWorkOrders\RequestorWorkOrderResource;
+use App\Filament\Resources\RfidRawLogs\RfidRawLogResource;
 use App\Filament\Resources\TechnicianWorkOrders\TechnicianWorkOrderResource;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
@@ -202,6 +203,10 @@ return [
                 'manualIn',
                 'disregard',
                 'addTestLog',
+            ],
+            RfidRawLogResource::class => [
+                'viewAny',
+                'view',
             ],
             EquipmentResource::class => [
                 'viewAssetList',

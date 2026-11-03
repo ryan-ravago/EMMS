@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * One read as the RFID reader server sent it (see RawLogProcessor for what happens to it).
@@ -34,6 +35,45 @@ class RfidRawLog extends Model
             'received_at' => 'datetime',
             'processed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function outcomeLabels(): array
+    {
+        return [
+            self::PENDING => 'Waiting',
+            self::PROCESSED => 'Processed',
+            self::DUPLICATE => 'Duplicate',
+            self::UNKNOWN_TAG => 'Unknown tag',
+            self::INVALID_TIME => 'Invalid time',
+            self::FAILED => 'Failed',
+        ];
+    }
+
+    public static function outcomeLabel(string $outcome): string
+    {
+        return self::outcomeLabels()[$outcome] ?? $outcome;
+    }
+
+    public static function outcomeColor(string $outcome): string
+    {
+        return match ($outcome) {
+            self::PROCESSED => 'success',
+            self::PENDING => 'info',
+            self::UNKNOWN_TAG, self::INVALID_TIME => 'warning',
+            self::FAILED => 'danger',
+            default => 'gray',
+        };
+    }
+
+    /**
+     * @return BelongsTo<Location, $this>
+     */
+    public function yard(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'yard_id');
     }
 
     /**
