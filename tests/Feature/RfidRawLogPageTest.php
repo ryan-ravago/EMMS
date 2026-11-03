@@ -90,6 +90,29 @@ class RfidRawLogPageTest extends AssetMovementTestCase
             ->assertSee('Unknown tag');
     }
 
+    public function test_a_read_has_previous_and_next_buttons_that_follow_the_list(): void
+    {
+        $oldest = $this->raw('AAA1');
+        $middle = $this->raw('BBB2');
+        $newest = $this->raw('CCC3');
+        $this->signInAs('super_admin');
+
+        $url = fn (RfidRawLog $log): string => RfidRawLogResource::getUrl('view', ['record' => $log]);
+
+        // The list is newest first, so "Next" goes down to the older read and "Previous" up to the newer one.
+        Livewire::test(ViewRfidRawLog::class, ['record' => $middle->getKey()])
+            ->assertActionHasUrl('previousRecord', $url($newest))
+            ->assertActionHasUrl('nextRecord', $url($oldest));
+
+        Livewire::test(ViewRfidRawLog::class, ['record' => $newest->getKey()])
+            ->assertActionDisabled('previousRecord')
+            ->assertActionEnabled('nextRecord');
+
+        Livewire::test(ViewRfidRawLog::class, ['record' => $oldest->getKey()])
+            ->assertActionEnabled('previousRecord')
+            ->assertActionDisabled('nextRecord');
+    }
+
     public function test_the_page_is_read_only(): void
     {
         $log = $this->raw('AAA1');
