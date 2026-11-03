@@ -301,7 +301,7 @@ class RfidRawLogTest extends AssetMovementTestCase
 
     // ---- retention ---------------------------------------------------------------------------------------
 
-    public function test_raw_reads_older_than_two_weeks_are_deleted_whatever_happened_to_them(): void
+    public function test_raw_reads_older_than_the_retention_period_are_deleted_whatever_happened_to_them(): void
     {
         $old = fn (string $outcome): int => $this->raw('T'.$outcome, 'IN', '2026-10-01 08:00:00', ['outcome' => $outcome, 'received_at' => '2026-10-19 09:59:00']);
         $oldIds = array_map($old, ['pending', 'processed', 'unknown_tag', 'failed']);
@@ -322,6 +322,20 @@ class RfidRawLogTest extends AssetMovementTestCase
         $this->artisan('model:prune', ['--model' => [RfidRawLog::class]])->assertSuccessful();
 
         $this->assertSame(['TNEW'], DB::table('rfid_raw_logs')->pluck('tag_id')->all());
+    }
+
+    public function test_the_retention_default_is_seven_days_and_never_less_than_one(): void
+    {
+        $this->assertSame(7, (require base_path('config/rfid.php'))['raw_log_retention_days']);
+
+        config(['rfid.raw_log_retention_days' => 0]);
+        $this->assertSame(1, RfidRawLog::retentionDays());
+
+        config(['rfid.raw_log_retention_days' => -5]);
+        $this->assertSame(1, RfidRawLog::retentionDays());
+
+        config(['rfid.raw_log_retention_days' => 7]);
+        $this->assertSame(7, RfidRawLog::retentionDays());
     }
 
     // ---- health -------------------------------------------------------------------------------------------

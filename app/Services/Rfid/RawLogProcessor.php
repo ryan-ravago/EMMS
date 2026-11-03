@@ -115,7 +115,7 @@ class RawLogProcessor
             ->mapWithKeys(fn (string $tag): array => [strtolower($tag) => $tag]);
 
         $latest = $now->copy()->addMinutes(self::FUTURE_TOLERANCE_MINUTES)->toDateTimeString();
-        $oldest = $now->copy()->subDays((int) config('rfid.raw_log_retention_days'))->toDateTimeString();
+        $oldest = $now->copy()->subDays(RfidRawLog::retentionDays())->toDateTimeString();
 
         $unknown = [];
         $invalidTime = [];

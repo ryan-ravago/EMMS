@@ -83,6 +83,14 @@ class RfidRawLog extends Model
      */
     public function prunable(): Builder
     {
-        return static::query()->where('received_at', '<', now()->subDays((int) config('rfid.raw_log_retention_days')));
+        return static::query()->where('received_at', '<', now()->subDays(self::retentionDays()));
+    }
+
+    /**
+     * Whole days a raw row is kept (RFID_RAW_LOG_RETENTION_DAYS), never less than 1 so a bad value cannot wipe the table.
+     */
+    public static function retentionDays(): int
+    {
+        return max(1, (int) config('rfid.raw_log_retention_days'));
     }
 }
