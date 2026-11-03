@@ -28,6 +28,7 @@ abstract class AssetMovementTestCase extends TestCase
         config(['activitylog.enabled' => false]);
 
         (require base_path('database/migrations/2026_04_24_054941_create_permission_tables.php'))->up();
+        (require base_path('database/migrations/2026_10_05_115336_create_personal_access_tokens_table.php'))->up();
 
         Schema::create('app_users', function (Blueprint $table): void {
             $table->id('user_id');

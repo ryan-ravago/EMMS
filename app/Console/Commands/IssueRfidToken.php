@@ -12,12 +12,23 @@ class IssueRfidToken extends Command
 
     protected $signature = 'rfid:issue-token
                             {--dep= : dep_id of the service account (only needed the first time)}
-                            {--revoke : Revoke every existing RFID token first}';
+                            {--revoke : Revoke every existing RFID token first}
+                            {--days= : Make the token expire after this many days (by default it never expires)}';
 
     protected $description = 'Issue the Sanctum bearer token used by the external RFID reader server';
 
     public function handle(): int
     {
+        $days = $this->option('days');
+
+        if ($days !== null && (! ctype_digit((string) $days) || (int) $days < 1)) {
+            $this->error('--days must be a whole number of days, 1 or more.');
+
+            return self::FAILURE;
+        }
+
+        $days = $days === null ? null : (int) $days;
+
         $user = AppUser::firstWhere('user_email', self::SERVICE_EMAIL) ?? $this->createServiceUser();
 
         if (! $user) {
@@ -28,12 +39,14 @@ class IssueRfidToken extends Command
             $user->tokens()->delete();
         }
 
-        $token = $user->createToken('rfid-reader-server', ['rfid:write'], now()->addYear());
+        $token = $user->createToken(config('rfid.token_name'), ['rfid:write'], $days === null ? null : now()->addDays($days));
 
         $this->newLine();
         $this->line($token->plainTextToken);
         $this->newLine();
-        $this->warn('Copy it now, it is shown only once. Expires '.$token->accessToken->expires_at->toDateString().'.');
+        $this->warn('Copy it now, it is shown only once. '.($days === null
+            ? 'It does not expire; revoke it with --revoke if it leaks.'
+            : 'Expires '.$token->accessToken->expires_at->toDateString().'.'));
 
         return self::SUCCESS;
     }

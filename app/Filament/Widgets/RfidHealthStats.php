@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Models\AssetTag;
 use App\Models\AssetTagLog;
 use App\Models\Equipment;
+use App\Services\Rfid\RfidHealthCheck;
 use Carbon\Carbon;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
@@ -25,9 +26,6 @@ class RfidHealthStats extends StatsOverviewWidget
 
     protected ?string $heading = 'RFID Health';
 
-    /** A reader that has been quiet for this long is flagged. */
-    private const QUIET_AFTER_HOURS = 24;
-
     public static function canView(): bool
     {
         return Auth::user()?->hasAnyRole(['super_admin', 'asset_admin', 'asset_manager']) ?? false;
@@ -38,7 +36,7 @@ class RfidHealthStats extends StatsOverviewWidget
         $figures = Cache::remember('dashboard.rfid_health', now()->addSeconds(60), fn (): array => $this->queryFigures());
         $lastScan = $figures['last_scan'];
         $lastScanAt = $lastScan === null ? null : Carbon::parse($lastScan);
-        $quiet = $lastScanAt === null || $lastScanAt->lt(now()->subHours(self::QUIET_AFTER_HOURS));
+        $quiet = $figures['health_cause'] !== null;
 
         $withoutTag = $figures['without_tag'];
 
@@ -49,7 +47,7 @@ class RfidHealthStats extends StatsOverviewWidget
                 ->color('primary'),
             Stat::make('Last scan', $lastScanAt?->diffForHumans() ?? 'Never')
                 ->icon(Heroicon::Clock)
-                ->description($lastScanAt?->format('M d, Y h:i A') ?? 'No scans received yet')
+                ->description(($lastScanAt?->format('M d, Y h:i A') ?? 'No scans received yet').($quiet ? ' · '.$figures['health_headline'] : ''))
                 ->color($quiet ? 'danger' : 'success'),
             Stat::make('Active tags', $figures['active'])
                 ->icon(Heroicon::Tag)
@@ -66,10 +64,12 @@ class RfidHealthStats extends StatsOverviewWidget
      * The numbers behind the tiles. They come from tables that grow with every scan, so they are kept for a
      * minute instead of being counted again on every refresh.
      *
-     * @return array{scans_today: int, last_scan: ?string, active: int, retired: int, without_tag: int}
+     * @return array{scans_today: int, last_scan: ?string, active: int, retired: int, without_tag: int, health_cause: ?string, health_headline: string}
      */
     private function queryFigures(): array
     {
+        $health = app(RfidHealthCheck::class)->inspect();
+
         $tags = AssetTag::query()
             ->selectRaw('SUM(is_deleted = 0) as active, SUM(is_deleted = 1) as retired')
             ->toBase()
@@ -80,6 +80,8 @@ class RfidHealthStats extends StatsOverviewWidget
             'last_scan' => AssetTagLog::query()->max('detected_at'),
             'active' => (int) ($tags->active ?? 0),
             'retired' => (int) ($tags->retired ?? 0),
+            'health_cause' => $health->cause,
+            'health_headline' => $health->headline(),
             'without_tag' => Equipment::query()
                 ->equipmentAssets()
                 ->where('eqm_is_active', true)
