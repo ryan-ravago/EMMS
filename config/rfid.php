@@ -17,6 +17,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Raw reader log
+    |--------------------------------------------------------------------------
+    |
+    | Every read the reader server sends is first stored in rfid_raw_logs (known tag or not). A background job
+    | then moves the reads of registered tags into asset_tag_logs and the equipment trips.
+    |
+    | raw_log_retention_days  Raw rows older than this are deleted by the daily `model:prune` run, handled or not.
+    | process_chunk           Raw rows handled per query batch.
+    | stuck_after_minutes     Raw rows waiting longer than this mean processing is not running (health alert).
+    |
+    */
+
+    'raw_log_retention_days' => (int) env('RFID_RAW_LOG_RETENTION_DAYS', 14),
+    'process_chunk' => (int) env('RFID_PROCESS_CHUNK', 1000),
+    'stuck_after_minutes' => (int) env('RFID_STUCK_AFTER_MINUTES', 15),
+
+    /*
+    |--------------------------------------------------------------------------
     | Reader token
     |--------------------------------------------------------------------------
     |

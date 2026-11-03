@@ -2,116 +2,85 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AssetTag;
-use App\Models\AssetTagLog;
+use App\Jobs\ProcessRfidRawLogs;
 use App\Models\Location;
-use App\Services\Rfid\MovementRecorder;
+use App\Models\RfidRawLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Throwable;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
+/**
+ * Receives the reads from the RFID reader server. It only stores them (rfid_raw_logs), whatever the tag is, and
+ * answers straight away; ProcessRfidRawLogs then moves the reads of registered tags into the tag logs and trips.
+ */
 class RfidLogController extends Controller
 {
+    /** 500 reads are about 60 KB; anything far bigger is not the reader. */
+    private const MAX_BODY_BYTES = 262144;
+
     public function store(Request $request, string $yard): JsonResponse
     {
         abort_unless($request->isJson(), 415, 'Content-Type must be application/json.');
+        abort_if(strlen($request->getContent()) > self::MAX_BODY_BYTES, 413, 'Request body is too large.');
         abort_unless(Location::whereKey($yard)->exists(), 404, 'Yard not found.');
 
-        $logs = collect(Validator::validate(
-            ['logs' => $request->json()->all()],
-            [
-                'logs' => ['required', 'array', 'list', 'min:1', 'max:500'],
-                'logs.*.Tag' => ['required', 'string', 'max:255'],
-                'logs.*.Status' => ['required', 'string', 'regex:/^(in|out)$/i'],
-                'logs.*.Timestamp' => ['required', 'date_format:Y-m-d H:i:s'],
-            ],
-        )['logs']);
+        try {
+            $logs = collect(Validator::validate(
+                ['logs' => $request->json()->all()],
+                [
+                    'logs' => ['required', 'array', 'list', 'min:1', 'max:500'],
+                    'logs.*.Tag' => ['required', 'string', 'max:64'],
+                    'logs.*.Status' => ['required', 'string', 'regex:/^(in|out)$/i'],
+                    'logs.*.Timestamp' => ['required', 'date_format:Y-m-d H:i:s'],
+                ],
+            )['logs']);
+        } catch (ValidationException $exception) {
+            // Never the body: it is whatever the caller chose to send.
+            logger()->warning('RFID request rejected', [
+                'ip' => $request->ip(),
+                'token_id' => $this->tokenId($request),
+                'bytes' => strlen($request->getContent()),
+                'errors' => array_keys($exception->errors()),
+            ]);
 
-        // lowercase => canonical tag_id (asset_tags.tag_id is the FK target)
-        $knownTags = AssetTag::whereIn('tag_id', $logs->pluck('Tag')->unique())
-            ->pluck('tag_id')
-            ->mapWithKeys(fn (string $tag) => [strtolower($tag) => $tag]);
-
-        // Logs already stored for this yard; also fed with the rows of this batch to catch repeats inside it.
-        $seen = AssetTagLog::where('yard_id', $yard)
-            ->whereIn('tag_id', $knownTags->values())
-            ->whereIn('detected_at', $logs->pluck('Timestamp')->unique())
-            ->toBase()
-            ->get(['tag_id', 'detected_at', 'status'])
-            ->mapWithKeys(fn (object $row) => [$this->logKey($row->tag_id, $row->detected_at, $row->status) => true])
-            ->all();
-
-        $rows = [];
-        $notInserted = [];
-
-        foreach ($logs as $index => $log) {
-            $tag = $knownTags->get(strtolower($log['Tag']));
-            $key = $tag ? $this->logKey($tag, $log['Timestamp'], $log['Status']) : null;
-
-            $reason = match (true) {
-                $tag === null => 'unknown_tag',
-                isset($seen[$key]) => 'duplicate',
-                default => null,
-            };
-
-            if ($reason) {
-                $notInserted[] = ['index' => $index, ...$log, 'reason' => $reason];
-
-                continue;
-            }
-
-            $seen[$key] = true;
-
-            // received_at is the DB default.
-            $rows[] = [
-                'detected_at' => $log['Timestamp'],
-                'tag_id' => $tag,
-                'yard_id' => $yard,
-                'status' => strtoupper($log['Status']),
-            ];
+            throw $exception;
         }
 
-        $inserted = AssetTagLog::insertOrIgnore($rows);
+        $batch = (string) Str::uuid();
+        $tokenId = $this->tokenId($request);
+        $ip = $request->ip();
 
-        $this->recordMovements($yard, $rows);
+        $rows = $logs->map(fn (array $log): array => [
+            'batch_uuid' => $batch,
+            'yard_id' => $yard,
+            'token_id' => $tokenId,
+            'ip' => $ip,
+            'tag_id' => trim($log['Tag']),
+            'status' => strtoupper($log['Status']),
+            'detected_at' => $log['Timestamp'],
+        ])->all();
+
+        // Reads already stored (the reader retrying a batch) are skipped by the unique key.
+        $inserted = RfidRawLog::query()->insertOrIgnore($rows);
+
+        if ($inserted > 0) {
+            ProcessRfidRawLogs::dispatch();
+        }
 
         return response()->json([
             'received' => $logs->count(),
             'inserted' => $inserted,
-            'not_inserted' => $notInserted,
+            'not_inserted' => [],
         ]);
     }
 
-    /**
-     * Pairs the stored scans into equipment trips. The scans are already saved, so a failure here must not
-     * fail the reader's request; `rfid:build-movements` can catch up later.
-     *
-     * @param  list<array{detected_at: string, tag_id: string, yard_id: string, status: string}>  $rows
-     */
-    private function recordMovements(string $yard, array $rows): void
+    private function tokenId(Request $request): ?int
     {
-        if ($rows === []) {
-            return;
-        }
+        $token = $request->user()?->currentAccessToken();
 
-        try {
-            $keys = collect($rows)->mapWithKeys(fn (array $row) => [$this->logKey($row['tag_id'], $row['detected_at'], $row['status']) => true]);
-
-            $stored = AssetTagLog::where('yard_id', $yard)
-                ->whereIn('tag_id', collect($rows)->pluck('tag_id')->unique())
-                ->whereIn('detected_at', collect($rows)->pluck('detected_at')->unique())
-                ->get()
-                ->filter(fn (AssetTagLog $log) => $keys->has($this->logKey($log->tag_id, $log->detected_at->format('Y-m-d H:i:s'), $log->status)));
-
-            app(MovementRecorder::class)->record($stored);
-        } catch (Throwable $exception) {
-            report($exception);
-        }
-    }
-
-    private function logKey(string $tag, string $detectedAt, string $status): string
-    {
-        return strtolower($tag).'|'.$detectedAt.'|'.strtoupper($status);
+        return $token instanceof PersonalAccessToken && is_numeric($token->getKey()) ? (int) $token->getKey() : null;
     }
 }

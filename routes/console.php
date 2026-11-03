@@ -8,6 +8,7 @@ use App\Jobs\ProcessDueDateChecks;
 use App\Models\Activity;
 use App\Models\AimsInspectionLog;
 use App\Models\MaintenanceInspectionLog;
+use App\Models\RfidRawLog;
 use App\Services\Inspections\InspectionSyncRunner;
 use App\Support\InspectionSyncSettings;
 use Illuminate\Foundation\Inspiring;
@@ -45,11 +46,11 @@ Schedule::command(SyncInspections::class, ['--only' => InspectionSyncRunner::AIM
     ->withoutOverlapping();
 
 // Log retention: once a day, delete log rows older than config('log_retention.days') days (default 30).
-// Only these three tables are pruned (the activity log, which also holds the inspection sync history,
-// and the maintenance and AIMS inspection logs). Naming the models keeps any other model that later becomes
+// Only these tables are pruned (the activity log, which also holds the inspection sync history,
+// the maintenance and AIMS inspection logs, and the raw RFID reader log, which keeps its own rfid.raw_log_retention_days). Naming the models keeps any other model that later becomes
 // prunable out of this run.
 Schedule::command('model:prune', [
-    '--model' => [Activity::class, MaintenanceInspectionLog::class, AimsInspectionLog::class],
+    '--model' => [Activity::class, MaintenanceInspectionLog::class, AimsInspectionLog::class, RfidRawLog::class],
     '--chunk' => config('log_retention.chunk'),
 ])
     ->dailyAt(config('log_retention.run_at'))
@@ -63,5 +64,12 @@ Schedule::command(CheckDueMaintenanceCommand::class)
 // Tell IT when the RFID reader server stops getting scans to EMMS (only sends when RFID_ALERTS_ENABLED is on).
 Schedule::command('rfid:check-health')
     ->everyTenMinutes()
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Safety net for the job dispatched after every reader request: move any raw reader reads that are still waiting
+// (queue worker down, job failed) into the tag logs and trips.
+Schedule::command('rfid:process-raw-logs')
+    ->everyMinute()
     ->withoutOverlapping()
     ->onOneServer();

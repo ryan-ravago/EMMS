@@ -8,6 +8,7 @@ use App\Models\AssetTagLog;
 use App\Models\AssetType;
 use App\Models\Equipment;
 use App\Models\Location;
+use Carbon\Carbon;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\PermissionRegistrar;
@@ -85,6 +86,7 @@ abstract class AssetMovementTestCase extends TestCase
         });
 
         (require base_path('database/migrations/2026_10_29_121720_create_asset_movements_table.php'))->up();
+        (require base_path('database/migrations/2026_11_03_120549_create_rfid_raw_logs_table.php'))->up();
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
         AssetType::flushIdCache();
@@ -95,6 +97,7 @@ abstract class AssetMovementTestCase extends TestCase
     protected function tearDown(): void
     {
         AssetType::flushIdCache();
+        Carbon::setTestNow();
 
         parent::tearDown();
     }

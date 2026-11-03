@@ -3,29 +3,43 @@
 namespace App\Services\Rfid;
 
 use App\Models\AssetTagLog;
+use App\Models\RfidRawLog;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\PersonalAccessToken;
 
 /**
- * Works out whether the RFID reader server is getting its scans to EMMS, using two signals:
+ * Works out whether the RFID reader server is getting its scans to EMMS, using these signals:
  *
- *  - the last request it made with its token (Sanctum's last_used_at). Requests for tags EMMS does not
- *    know are rejected and store nothing, but they still prove the reader server is alive;
- *  - the last scan that was stored (asset_tag_logs.received_at).
+ *  - the last request it made: the newest of its token's last_used_at (Sanctum) and the newest raw read stored
+ *    (rfid_raw_logs, which keeps reads of tags EMMS does not know too), so it proves the reader server is alive;
+ *  - the last scan that was stored (asset_tag_logs.received_at);
+ *  - whether raw reads are waiting to be processed for too long (the queue worker or scheduler is down).
  */
 class RfidHealthCheck
 {
     public function inspect(): RfidHealthReport
     {
         $tokens = $this->validTokens();
-        $lastRequestAt = $tokens->max('last_used_at');
-        $minutesSinceScan = $this->minutesSinceLastScan();
+        $minutesSinceRawRead = $this->minutesSince(RfidRawLog::query());
+        $lastRequestAt = collect([
+            $tokens->max('last_used_at'),
+            $minutesSinceRawRead === null ? null : now()->subMinutes($minutesSinceRawRead),
+        ])->filter()->max();
+        $minutesSinceScan = $this->minutesSince(AssetTagLog::query());
         $tokenExpiresAt = $this->tokenExpiry($tokens);
 
         if ($tokens->isEmpty()) {
             return new RfidHealthReport(RfidHealthReport::DOWN, RfidHealthReport::CAUSE_NO_TOKEN, null, $minutesSinceScan, null);
+        }
+
+        // Reads are being saved but nothing moves them on: the queue worker or scheduler is not running.
+        $oldestWaiting = $this->minutesSince(RfidRawLog::query()->where('outcome', RfidRawLog::PENDING), 'min');
+
+        if ($oldestWaiting !== null && $oldestWaiting >= (int) config('rfid.stuck_after_minutes')) {
+            return new RfidHealthReport(RfidHealthReport::DOWN, RfidHealthReport::CAUSE_STUCK, $lastRequestAt, $minutesSinceScan, $tokenExpiresAt);
         }
 
         $silence = (int) config('rfid.alerts.silence_minutes');
@@ -69,19 +83,23 @@ class RfidHealthCheck
     }
 
     /**
-     * Measured by the database against its own clock: received_at is filled in by the database, whose
-     * timezone can differ from the application's.
+     * Minutes since the newest (or with 'min', the oldest) received_at of the rows the query selects, or null when
+     * there are none. Measured by the database against its own clock: received_at is filled in by the database,
+     * whose timezone can differ from the application's.
+     *
+     * @param  Builder<*>  $query
+     * @param  'max'|'min'  $aggregate
      */
-    private function minutesSinceLastScan(): ?int
+    private function minutesSince(Builder $query, string $aggregate = 'max'): ?int
     {
-        $lastScan = AssetTagLog::query()->max('received_at');
+        $received = $aggregate === 'min' ? $query->min('received_at') : $query->max('received_at');
 
-        if ($lastScan === null) {
+        if ($received === null) {
             return null;
         }
 
         $databaseNow = DB::selectOne('select CURRENT_TIMESTAMP as now')->now;
 
-        return max(0, (int) Carbon::parse($lastScan)->diffInMinutes(Carbon::parse($databaseNow), false));
+        return max(0, (int) Carbon::parse($received)->diffInMinutes(Carbon::parse($databaseNow), false));
     }
 }

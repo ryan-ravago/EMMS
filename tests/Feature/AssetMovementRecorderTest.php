@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AssetMovement;
 use App\Services\Rfid\MovementRecorder;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\Sanctum;
 
@@ -159,6 +160,7 @@ class AssetMovementRecorderTest extends AssetMovementTestCase
 
     public function test_the_reader_api_builds_trips_from_the_scans_it_stores(): void
     {
+        Carbon::setTestNow('2026-10-21 12:00:00');
         $this->makeTag($equipment = $this->makeEquipment(), 'AAA1');
         $this->makeTag($equipment, 'AAA2');
         $this->makeTag($this->makeAccessory(), 'ACC1');
@@ -185,6 +187,7 @@ class AssetMovementRecorderTest extends AssetMovementTestCase
 
     public function test_a_failure_while_building_trips_does_not_fail_the_reader_request(): void
     {
+        Carbon::setTestNow('2026-10-21 12:00:00');
         $this->makeTag($this->makeEquipment(), 'AAA1');
         Sanctum::actingAs($this->makeUser(), ['rfid:write']);
         Schema::drop('asset_movements');
