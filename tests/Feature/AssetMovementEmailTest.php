@@ -6,6 +6,7 @@ use App\Filament\Pages\MyProfile;
 use App\Mail\AssetMovementMail;
 use App\Models\AppUser;
 use App\Models\Equipment;
+use App\Services\Rfid\MovementNotifier;
 use App\Services\Rfid\MovementRecorder;
 use App\Services\Rfid\RawLogProcessor;
 use Carbon\Carbon;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class AssetMovementEmailTest extends AssetMovementTestCase
 {
@@ -55,6 +57,10 @@ class AssetMovementEmailTest extends AssetMovementTestCase
         Role::findByName('asset_admin')->givePermissionTo($viewProfile);
         Role::findByName('asset_manager')->givePermissionTo($viewProfile);
         Role::findByName('viewer')->givePermissionTo($viewProfile);
+        Role::findByName('super_admin')->givePermissionTo($viewProfile);
+
+        // Asset admin and asset manager start out with the "Receive Emails" permission (the migration grants it).
+        (require base_path('database/migrations/2026_11_04_152458_add_receive_emails_permission_to_asset_movements.php'))->up();
 
         $this->admin = $this->userWithRole('asset_admin', 'Alice', 'Admin');
         $this->manager = $this->userWithRole('asset_manager', 'Mark', 'Manager');
@@ -210,19 +216,58 @@ class AssetMovementEmailTest extends AssetMovementTestCase
         Mail::assertQueuedCount(1);
     }
 
-    public function test_only_active_asset_admins_and_managers_who_have_it_on_are_emailed(): void
+    public function test_super_admins_asset_admins_and_managers_are_emailed_but_not_inactive_or_switched_off_users(): void
     {
+        $super = $this->userWithRole('super_admin', 'Super', 'Admin');
         $off = $this->userWithRole('asset_manager', 'Off', 'Manager');
         $off->update(['notify_asset_movements' => false]);
         $inactive = $this->userWithRole('asset_admin', 'Gone', 'Admin');
         $inactive->update(['is_active' => false]);
-        $this->userWithRole('super_admin', 'Super', 'Admin');
         $this->userWithRole('viewer', 'View', 'Er');
         $tag = $this->makeTag($this->makeEquipment(), 'AAA1');
 
         $this->recorder()->record([$this->scan($tag, 'OUT', '2026-11-04 11:30:00')]);
 
-        Mail::assertQueued(AssetMovementMail::class, fn (AssetMovementMail $mail): bool => $this->recipientsOf($mail) === $this->emailsOf($this->admin, $this->manager));
+        Mail::assertQueuedCount(1);
+        Mail::assertQueued(AssetMovementMail::class, fn (AssetMovementMail $mail): bool => $this->recipientsOf($mail) === $this->emailsOf($this->admin, $this->manager, $super));
+    }
+
+    public function test_the_roles_that_are_emailed_follow_the_shield_permission(): void
+    {
+        $dispatcher = Role::create(['name' => 'dispatcher', 'guard_name' => 'web']);
+        $dispatch = $this->userWithRole('dispatcher', 'Dee', 'Dispatch');
+        $tag = $this->makeTag($this->makeEquipment(), 'AAA1');
+
+        // A role without the permission is not emailed.
+        $this->recorder()->record([$this->scan($tag, 'OUT', '2026-11-04 11:30:00')]);
+        Mail::assertQueued(AssetMovementMail::class, fn (AssetMovementMail $mail): bool => ! in_array($dispatch->user_email, $this->recipientsOf($mail), true));
+
+        // Ticking "Receive Emails" for the role in Shield adds it...
+        $dispatcher->givePermissionTo(MovementNotifier::PERMISSION);
+        $this->assertContains($dispatch->user_email, app(MovementNotifier::class)->recipients());
+
+        // ...and taking it away from asset manager removes them.
+        Role::findByName('asset_manager')->revokePermissionTo(MovementNotifier::PERMISSION);
+        $recipients = app(MovementNotifier::class)->recipients();
+        $this->assertNotContains($this->manager->user_email, $recipients);
+        $this->assertContains($this->admin->user_email, $recipients);
+    }
+
+    public function test_a_single_user_can_be_given_the_permission_directly(): void
+    {
+        $viewer = $this->userWithRole('viewer', 'View', 'Er');
+        $viewer->givePermissionTo(MovementNotifier::PERMISSION);
+
+        $this->assertContains($viewer->user_email, app(MovementNotifier::class)->recipients());
+    }
+
+    public function test_only_super_admins_are_emailed_until_the_permission_exists(): void
+    {
+        Permission::where('name', MovementNotifier::PERMISSION)->delete();
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $super = $this->userWithRole('super_admin', 'Super', 'Admin');
+
+        $this->assertSame([$super->user_email], app(MovementNotifier::class)->recipients());
     }
 
     public function test_nothing_is_sent_when_everyone_has_switched_it_off(): void
@@ -319,6 +364,28 @@ class AssetMovementEmailTest extends AssetMovementTestCase
             ->fillForm(['notify_asset_movements' => true]);
 
         $this->assertTrue($this->admin->fresh()->notify_asset_movements);
+    }
+
+    public function test_super_admins_and_roles_with_the_permission_see_the_switch(): void
+    {
+        Filament::setCurrentPanel('admin');
+        $notifier = app(MovementNotifier::class);
+
+        $super = $this->userWithRole('super_admin', 'Super', 'Admin');
+        $this->assertTrue($notifier->canReceive($super));
+        $this->actingAs($super);
+        Livewire::test(MyProfile::class)->assertSee('Email notifications');
+
+        $dispatcher = Role::create(['name' => 'dispatcher', 'guard_name' => 'web']);
+        $dispatcher->givePermissionTo(['View:MyProfile', MovementNotifier::PERMISSION]);
+        $dispatch = $this->userWithRole('dispatcher', 'Dee', 'Dispatch');
+        $this->assertTrue($notifier->canReceive($dispatch));
+        $this->actingAs($dispatch);
+        Livewire::test(MyProfile::class)
+            ->assertSee('Email notifications')
+            ->fillForm(['notify_asset_movements' => false]);
+
+        $this->assertFalse($dispatch->fresh()->notify_asset_movements);
     }
 
     public function test_other_roles_do_not_see_the_switch_and_cannot_change_it(): void

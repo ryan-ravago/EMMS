@@ -89,4 +89,13 @@ class AssetMovementPolicy
     {
         return $authUser->can('AddTestLog:AssetMovementResource');
     }
+
+    /**
+     * Whether the person is emailed on every equipment / service vehicle time out and time in (and sees the
+     * switch for it on My Profile). Tick "Receive Emails" for a role in Shield; super admins always receive them.
+     */
+    public function receiveEmails(AuthUser $authUser): bool
+    {
+        return $authUser->can('ReceiveEmails:AssetMovementResource');
+    }
 }

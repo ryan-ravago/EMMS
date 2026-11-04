@@ -5,7 +5,7 @@
         <x-filament::section icon="heroicon-o-envelope" icon-color="primary">
             <x-slot name="heading">Email notifications</x-slot>
             <x-slot name="description">
-                As an asset admin or asset manager you can be emailed about equipment and service vehicles.
+                Your role can be emailed about equipment and service vehicles.
             </x-slot>
 
             {{ $this->form }}

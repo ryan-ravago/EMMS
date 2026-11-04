@@ -50,7 +50,7 @@
                             @endif
 
                             <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">
-                                You receive this because you are an asset admin or asset manager.
+                                You receive this because your role is set up to be told about equipment and service vehicle time outs and time ins.
                                 @if ($profileUrl)
                                     You can turn these emails off on your <a href="{{ $profileUrl }}" style="color:#6b7280;">My Profile</a> page.
                                 @endif

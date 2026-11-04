@@ -204,6 +204,7 @@ return [
                 'manualIn',
                 'disregard',
                 'addTestLog',
+                'receiveEmails',
             ],
             RfidRawLogResource::class => [
                 'viewAny',

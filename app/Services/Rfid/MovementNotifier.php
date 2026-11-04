@@ -9,20 +9,22 @@ use App\Models\AppUser;
 use App\Models\AssetMovement;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Spatie\Permission\Models\Permission;
 use Throwable;
 
 /**
- * Emails the asset admins and asset managers each time an equipment or service vehicle goes out or comes in.
+ * Emails the people who are set up for it each time an equipment or service vehicle goes out or comes in.
  *
  * It is told about trips, not tags: the recorder merges the scans of an asset's several RFID tags into one trip
  * event, so one time out / time in is one email, however many tags were read.
  *
- * Who gets it: active users with the asset_admin or asset_manager role who have not switched it off on My Profile.
+ * Who gets it is decided in Filament Shield, not in code: every role with the "Receive Emails" permission of the
+ * Asset Movement resource (given to asset admin and asset manager by migration, any other role by ticking it),
+ * and always the super admins. Each person can still switch it off on My Profile.
  */
 class MovementNotifier
 {
-    /** @var list<string> */
-    public const ROLES = ['asset_admin', 'asset_manager'];
+    public const PERMISSION = 'ReceiveEmails:AssetMovementResource';
 
     /**
      * @param  list<array{0: AssetMovement, 1: 'out'|'in'}>  $events  the trip and what happened to it
@@ -56,6 +58,47 @@ class MovementNotifier
     }
 
     /**
+     * Whether the person is allowed to receive these emails: a super admin, or a role/permission from Shield.
+     * (Used for the switch on My Profile; whether they are emailed also needs the switch to be on.)
+     */
+    public function canReceive(?AppUser $user): bool
+    {
+        return $user !== null && ($user->hasRole($this->superAdminRole()) || $user->can(self::PERMISSION));
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function recipients(): array
+    {
+        $permissionExists = Permission::query()->where('name', self::PERMISSION)->where('guard_name', 'web')->exists();
+
+        return AppUser::query()
+            ->where('is_active', true)
+            ->where('notify_asset_movements', true)
+            ->whereNotNull('user_email')
+            ->where(function ($eligible) use ($permissionExists): void {
+                $eligible->role($this->superAdminRole());
+
+                // Roles (or single users) holding the permission. Before the permission is created there are none.
+                if ($permissionExists) {
+                    $eligible->orWhere(fn ($holders) => $holders->permission(self::PERMISSION));
+                }
+            })
+            ->pluck('user_email')
+            ->map(fn (string $email): string => trim($email))
+            ->filter(fn (string $email): bool => $email !== '' && ! Validator::make(['email' => $email], ['email' => 'email'])->fails())
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function superAdminRole(): string
+    {
+        return (string) config('filament-shield.super_admin.name', 'super_admin');
+    }
+
+    /**
      * Old scans (a backfill, an import, a reader that was offline for a day) are history, not news.
      *
      * @param  'out'|'in'  $kind
@@ -66,24 +109,6 @@ class MovementNotifier
 
         return $happenedAt !== null
             && $happenedAt->gte(now()->subMinutes((int) config('rfid.movement_emails.max_age_minutes')));
-    }
-
-    /**
-     * @return list<string>
-     */
-    public function recipients(): array
-    {
-        return AppUser::query()
-            ->role(self::ROLES)
-            ->where('is_active', true)
-            ->where('notify_asset_movements', true)
-            ->whereNotNull('user_email')
-            ->pluck('user_email')
-            ->map(fn (string $email): string => trim($email))
-            ->filter(fn (string $email): bool => $email !== '' && ! Validator::make(['email' => $email], ['email' => 'email'])->fails())
-            ->unique()
-            ->values()
-            ->all();
     }
 
     /**

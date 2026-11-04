@@ -42,11 +42,12 @@ class MyProfile extends Page implements HasInfolists
     }
 
     /**
-     * Only asset admins and asset managers are ever emailed about equipment and vehicle time out / time in.
+     * Only people whose role may receive equipment and vehicle time out / time in emails (set in Shield, and always
+     * the super admins) see the switch.
      */
     public function canReceiveMovementEmails(): bool
     {
-        return Auth::user()?->hasAnyRole(MovementNotifier::ROLES) ?? false;
+        return app(MovementNotifier::class)->canReceive(Auth::user());
     }
 
     public function form(Schema $schema): Schema
