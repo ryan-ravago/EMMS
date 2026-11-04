@@ -7,6 +7,7 @@ use App\Filament\Resources\AssetMovements\AssetMovementResource;
 use App\Mail\AssetMovementMail;
 use App\Models\AppUser;
 use App\Models\AssetMovement;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
@@ -25,6 +26,27 @@ use Throwable;
 class MovementNotifier
 {
     public const PERMISSION = 'ReceiveEmails:AssetMovementResource';
+
+    /**
+     * Sends the emails once the trips are saved: after the outermost transaction commits, and never if it rolls back
+     * (a dry run). A failure here changes nothing.
+     *
+     * @param  list<array{0: AssetMovement, 1: 'out'|'in'}>  $events
+     */
+    public function notifyAfterCommit(array $events): void
+    {
+        if ($events === []) {
+            return;
+        }
+
+        DB::afterCommit(function () use ($events): void {
+            try {
+                $this->notify($events);
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        });
+    }
 
     /**
      * @param  list<array{0: AssetMovement, 1: 'out'|'in'}>  $events  the trip and what happened to it

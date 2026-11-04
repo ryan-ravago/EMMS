@@ -63,6 +63,15 @@ class AssetMovementPolicy
         return $authUser->can('ManualIn:AssetMovementResource');
     }
 
+    /**
+     * Entering a time in by hand without a particular trip (the "It has already come back" part of Create trip):
+     * the same Manual In permission as on a trip, so it is kept to the roles that have it.
+     */
+    public function manualInAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('ManualIn:AssetMovementResource');
+    }
+
     public function disregard(AuthUser $authUser, AssetMovement $assetMovement): bool
     {
         return $authUser->can('Disregard:AssetMovementResource');
@@ -97,5 +106,13 @@ class AssetMovementPolicy
     public function receiveEmails(AuthUser $authUser): bool
     {
         return $authUser->can('ReceiveEmails:AssetMovementResource');
+    }
+
+    /**
+     * The "Create trip" button: records a time out (and time in) by hand, for a yard without a scanner.
+     */
+    public function createTrip(AuthUser $authUser): bool
+    {
+        return $authUser->can('CreateTrip:AssetMovementResource');
     }
 }

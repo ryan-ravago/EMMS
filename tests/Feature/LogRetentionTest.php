@@ -7,6 +7,8 @@ use App\Models\AimsInspection;
 use App\Models\AimsInspectionLog;
 use App\Models\MaintenanceInspection;
 use App\Models\MaintenanceInspectionLog;
+use App\Models\RfidRawLog;
+use App\Models\RfidScannerStatusLog;
 use App\Models\SyncAuditLog;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Scheduling\Schedule;
@@ -22,6 +24,9 @@ class LogRetentionTest extends TestCase
     private const NOW = '2026-10-20 12:00:00';
 
     private const MODELS = [Activity::class, MaintenanceInspectionLog::class, AimsInspectionLog::class];
+
+    /** Pruned by the same daily run but with their own retention settings (rfid.raw_log_retention_days etc.). */
+    private const RFID_MODELS = [RfidRawLog::class, RfidScannerStatusLog::class];
 
     protected function setUp(): void
     {
@@ -227,7 +232,7 @@ class LogRetentionTest extends TestCase
         $this->assertSame(30, config('activitylog.delete_records_older_than_days'));
     }
 
-    public function test_the_cleanup_is_scheduled_once_a_day_for_exactly_these_three_models(): void
+    public function test_the_cleanup_is_scheduled_once_a_day_for_exactly_these_five_models(): void
     {
         $event = collect(app(Schedule::class)->events())->first(fn ($event): bool => $event->description === 'log-retention');
 
@@ -236,11 +241,13 @@ class LogRetentionTest extends TestCase
         $this->assertTrue($event->withoutOverlapping);
         $this->assertStringContainsString('model:prune', $event->command);
 
-        foreach (self::MODELS as $model) {
+        $scheduled = [...self::MODELS, ...self::RFID_MODELS];
+
+        foreach ($scheduled as $model) {
             $this->assertStringContainsString($model, str_replace('\\\\', '\\', $event->command));
         }
 
-        $this->assertSame(3, substr_count($event->command, '--model='), 'only the three log models are named');
+        $this->assertSame(count($scheduled), substr_count($event->command, '--model='), 'only the log models are named');
     }
 
     public function test_the_retention_indexes_exist_and_can_be_removed(): void

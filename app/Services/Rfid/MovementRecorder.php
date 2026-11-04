@@ -7,7 +7,6 @@ use App\Models\AssetTagLog;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Throwable;
 
 /**
  * Turns raw tag scans (asset_tag_logs) into equipment trips (asset_movements).
@@ -66,16 +65,7 @@ class MovementRecorder
             }
         });
 
-        if ($events !== []) {
-            // After the trips are committed (and never for a dry run that rolls back); a failure here changes nothing.
-            DB::afterCommit(function () use ($events): void {
-                try {
-                    app(MovementNotifier::class)->notify($events);
-                } catch (Throwable $exception) {
-                    report($exception);
-                }
-            });
-        }
+        app(MovementNotifier::class)->notifyAfterCommit($events);
 
         return $result;
     }

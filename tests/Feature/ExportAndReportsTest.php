@@ -331,7 +331,9 @@ class ExportAndReportsTest extends TestCase
 
         // A queue worker has no logged-in user; run the queued jobs the same way.
         Auth::logout();
-        $this->artisan('queue:work', ['--stop-when-empty' => true, '--tries' => 1])->assertSuccessful();
+        // The worker runs inside the test process, which has used a lot of memory by now; the default 128 MB worker limit
+        // would stop it (exit code 12) depending on how many tests ran before this one.
+        $this->artisan('queue:work', ['--stop-when-empty' => true, '--tries' => 1, '--memory' => 2048])->assertSuccessful();
 
         $this->assertSame(0, DB::table('failed_jobs')->count());
 

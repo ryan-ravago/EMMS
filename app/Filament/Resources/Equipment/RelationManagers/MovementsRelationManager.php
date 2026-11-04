@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Equipment\RelationManagers;
 
+use App\Filament\Resources\AssetMovements\Actions\CreateTripAction;
 use App\Filament\Resources\AssetMovements\AssetMovementResource;
 use App\Models\AssetMovement;
 use App\Models\Equipment;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * The equipment's trips (time out / time in) as built from its tag scans. Read-only: acknowledging, filling in a
+ * The equipment's trips (time out / time in) as built from its tag scans, or entered by hand (Create trip) for a yard without a scanner. Acknowledging, filling in a
  * missing time or disregarding a trip is done on the trip itself (Time In / Out).
  */
 class MovementsRelationManager extends RelationManager
@@ -51,6 +52,7 @@ class MovementsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('id')
             ->heading('Equipment Trips')
+            ->headerActions([CreateTripAction::make($this->getOwnerRecord())])
             ->modifyQueryUsing(fn (Builder $query) => $query->with('acknowledgedBy'))
             ->defaultSort(fn (Builder $query): Builder => $query->orderByRaw('COALESCE(time_out, time_in) DESC'))
             ->columns([

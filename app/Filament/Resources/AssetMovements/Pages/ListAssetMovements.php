@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\AssetMovements\Pages;
 
 use App\Filament\Resources\AssetMovements\Actions\AddTestLogAction;
+use App\Filament\Resources\AssetMovements\Actions\CreateTripAction;
 use App\Filament\Resources\AssetMovements\AssetMovementResource;
 use App\Models\AssetMovement;
 use Filament\Resources\Pages\ListRecords;
@@ -15,7 +16,7 @@ class ListAssetMovements extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [AddTestLogAction::make()];
+        return [CreateTripAction::make(), AddTestLogAction::make()];
     }
 
     /** @var array<string, int>|null */

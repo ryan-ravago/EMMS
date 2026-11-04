@@ -205,6 +205,7 @@ return [
                 'disregard',
                 'addTestLog',
                 'receiveEmails',
+                'createTrip',
             ],
             RfidRawLogResource::class => [
                 'viewAny',

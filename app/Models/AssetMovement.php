@@ -379,6 +379,101 @@ class AssetMovement extends Model
         });
     }
 
+    /**
+     * Creates a trip by hand, for a yard without a scanner: no scan logs and no tag, only the times a person entered.
+     * With a time in it is a whole trip and is acknowledged straight away (the person entering it is the check, as
+     * with a manual in/out). With only a time out the equipment is out; its time in is entered later (Manual in)
+     * or comes from a scan.
+     *
+     * @throws DomainException when the times make no sense, or the equipment already has a trip at that time
+     */
+    public static function recordManualTrip(
+        Equipment $asset,
+        CarbonInterface $timeOut,
+        int $yardOutId,
+        ?CarbonInterface $timeIn,
+        ?int $yardInId,
+        int $userId,
+        string $remarks,
+    ): self {
+        if (! $asset->isMovementTracked()) {
+            throw new DomainException('Only equipment and service vehicles have trips.');
+        }
+
+        if ($timeOut->isFuture()) {
+            throw new DomainException('The time out cannot be in the future.');
+        }
+
+        if ($timeIn !== null) {
+            if ($timeIn->isFuture()) {
+                throw new DomainException('The time in cannot be in the future.');
+            }
+
+            if ($timeIn->lessThan($timeOut)) {
+                throw new DomainException('The time in cannot be earlier than the time out.');
+            }
+
+            if ($yardInId === null) {
+                throw new DomainException('Choose the yard it came back to.');
+            }
+        }
+
+        return DB::transaction(function () use ($asset, $timeOut, $yardOutId, $timeIn, $yardInId, $userId, $remarks): self {
+            // One person at a time per equipment, so two entries cannot both pass the check below.
+            Equipment::query()->lockForUpdate()->findOrFail($asset->getKey());
+
+            self::assertNoClashingTrip($asset, $timeOut, $timeIn);
+
+            $times = [
+                'time_out' => $timeOut,
+                'yard_out_id' => $yardOutId,
+                'manual_out_by' => $userId,
+                'manual_out_at' => now(),
+                'manual_out_remarks' => $remarks,
+            ];
+
+            if ($timeIn !== null) {
+                $times += [
+                    'time_in' => $timeIn,
+                    'yard_in_id' => $yardInId,
+                    'manual_in_by' => $userId,
+                    'manual_in_at' => now(),
+                    'manual_in_remarks' => $remarks,
+                    'acknowledged_by' => $userId,
+                    'acknowledged_at' => now(),
+                    'acknowledgement_remarks' => $remarks,
+                ];
+            }
+
+            return self::query()->create(['asset_id' => $asset->getKey()] + $times);
+        });
+    }
+
+    /**
+     * A piece of equipment cannot be out twice at once: the new trip must not overlap one of its other trips
+     * (disregarded trips do not count). A trip that has left and not come back lasts until it is closed.
+     */
+    private static function assertNoClashingTrip(Equipment $asset, CarbonInterface $timeOut, ?CarbonInterface $timeIn): void
+    {
+        $clash = self::query()
+            ->where('asset_id', $asset->getKey())
+            ->whereNull('disregarded_at')
+            ->where(fn (Builder $trip) => $trip->whereNull('time_in')->orWhere('time_in', '>', $timeOut))
+            ->when($timeIn !== null, fn (Builder $trip) => $trip->whereRaw('COALESCE(time_out, time_in) < ?', [$timeIn]))
+            ->orderBy('time_out')
+            ->first();
+
+        if ($clash === null) {
+            return;
+        }
+
+        throw new DomainException(match (true) {
+            $clash->time_out === null => "This equipment has a trip with only a time in ({$clash->time_in->format('M d, Y h:i A')}, trip #{$clash->getKey()}). Enter that trip's time out (Manual out) instead of creating a new trip.",
+            $clash->time_in === null => "This equipment is still out since {$clash->time_out->format('M d, Y h:i A')} (trip #{$clash->getKey()}). Record that trip's time in, or disregard it, first.",
+            default => "This overlaps trip #{$clash->getKey()} of the same equipment ({$clash->time_out->format('M d, Y h:i A')} - {$clash->time_in->format('M d, Y h:i A')}).",
+        });
+    }
+
     public function disregard(int $userId, string $remarks): void
     {
         $this->transition(function (self $movement) use ($userId, $remarks): void {
