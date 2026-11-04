@@ -1,0 +1,2 @@
+# Your own certificate (for example from the company's certificate authority), mounted at /certs.
+tls /certs/fullchain.pem /certs/privkey.pem

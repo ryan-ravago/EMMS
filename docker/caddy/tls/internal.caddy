@@ -1,0 +1,2 @@
+# Certificate from Caddy's own local authority. For testing only.
+tls internal

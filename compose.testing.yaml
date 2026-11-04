@@ -1,0 +1,66 @@
+# Testing environment: everything on one machine, including its own MariaDB, with a locally generated certificate.
+#
+#   cp docker/env/testing.env.example docker/env/testing.env      (then fill in APP_KEY and the passwords)
+#   docker compose --env-file docker/env/testing.env -f compose.yaml -f compose.testing.yaml up -d --build
+#   open https://localhost:8443  (the browser warns once: the certificate comes from Caddy's local authority)
+
+x-env: &env
+  env_file:
+    - docker/env/testing.env
+
+services:
+  app:
+    <<: *env
+  queue:
+    <<: *env
+  scheduler:
+    <<: *env
+  migrate:
+    <<: *env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    ports:
+      # A port above 1024 so it never clashes with Herd, IIS or another site on the same machine.
+      - "${HTTPS_PORT:-8443}:${HTTPS_PORT:-8443}/tcp"
+      - "${HTTPS_PORT:-8443}:${HTTPS_PORT:-8443}/udp"
+
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      MARIADB_DATABASE: ${DB_DATABASE:?}
+      MARIADB_USER: ${DB_USERNAME:?}
+      MARIADB_PASSWORD: ${DB_PASSWORD:?}
+      # No root password is shared with the app: nobody needs to log in as root.
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+      MARIADB_AUTO_UPGRADE: "1"
+      TZ: Asia/Manila
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --innodb-buffer-pool-size=256M
+      - --max-connections=60
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    mem_limit: 768m
+    networks:
+      - backend
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  db_data:

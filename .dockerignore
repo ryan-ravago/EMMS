@@ -1,0 +1,58 @@
+# Nothing here is needed to build the image, and some of it must never be inside it.
+
+# Secrets and local settings
+.env
+.env.*
+!.env.example
+docker/env/*.env
+secrets
+google-cloud-service-accounts
+storage/google-sheets-credentials.json
+auth.json
+*.pem
+*.key
+
+# Version control and editor
+.git
+.gitattributes
+.github
+.vscode
+.idea
+.fleet
+.zed
+.nova
+
+# Rebuilt inside the image
+vendor
+node_modules
+public/build
+public/hot
+public/storage
+
+# Runtime data (a volume in production)
+storage/app/*
+!storage/app/.gitignore
+storage/framework/*/*
+storage/logs
+storage/debugbar
+storage/pail
+bootstrap/cache/*.php
+
+# Not part of the app
+tests
+phpunit.xml
+.phpunit.cache
+.phpunit.result.cache
+dbs
+database/*.sqlite
+*.md
+*.xls
+*.xlsx
+*.csv
+*.txt
+_scratch*
+deploy.sh
+update.sh
+Dockerfile
+compose*.yaml
+.dockerignore

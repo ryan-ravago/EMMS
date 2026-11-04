@@ -1,0 +1,54 @@
+# Production: the app talks to the existing MariaDB (set DB_HOST in the environment file); nothing else is started
+# for the database. HTTPS on 443 with an automatic Let's Encrypt certificate (TLS_MODE=acme) or your own (TLS_MODE=custom).
+#
+#   cp docker/env/production.env.example docker/env/production.env     (then fill it in; keep it out of git)
+#   docker compose --env-file docker/env/production.env -f compose.yaml -f compose.production.yaml up -d --build
+#
+# Update after `git pull`: run the same command again. Old containers are replaced, migrations run first.
+# Logs:  docker compose -f compose.yaml -f compose.production.yaml logs -f queue scheduler web
+
+x-env: &env
+  env_file:
+    - docker/env/production.env
+
+# So DB_HOST=host.docker.internal reaches a database on the Docker host (the old single-VM layout).
+x-host: &host
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+services:
+  app:
+    <<: [*env, *host]
+    mem_limit: 1g
+    cpus: 2.0
+    pids_limit: 200
+  queue:
+    <<: [*env, *host]
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 100
+    deploy:
+      # Two workers, as before. More only help if jobs pile up.
+      replicas: 2
+  scheduler:
+    <<: [*env, *host]
+    mem_limit: 384m
+    cpus: 0.5
+    pids_limit: 100
+  migrate:
+    <<: [*env, *host]
+    mem_limit: 512m
+
+  web:
+    ports:
+      - "80:80"
+      - "443:443/tcp"
+      - "443:443/udp"
+    volumes:
+      # Only used when TLS_MODE=custom; put fullchain.pem and privkey.pem in ./certs (kept out of git).
+      - ./certs:/certs:ro
+    mem_limit: 192m
+    cpus: 1.0
+    pids_limit: 100
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:-}

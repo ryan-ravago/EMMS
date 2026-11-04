@@ -27,3 +27,8 @@ Thumbs.db
 /storage/google-sheets-credentials.json
 /storage/framework/lsp-*.php
 /rfid issue token.txt
+
+# Docker: real settings, secrets and certificates never go in git
+/docker/env/*.env
+/secrets
+/certs
