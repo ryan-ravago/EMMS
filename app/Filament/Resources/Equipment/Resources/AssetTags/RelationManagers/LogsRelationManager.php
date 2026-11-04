@@ -50,7 +50,7 @@ class LogsRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('id')
-            ->heading('Tag Logs')
+            ->heading('RFID Tag Logs')
             ->columns([
                 TextColumn::make('detected_at')
                     ->label('Detected At')

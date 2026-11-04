@@ -19,7 +19,7 @@ class TagsRelationManager extends RelationManager
 
     protected static ?string $relatedResource = AssetTagResource::class;
 
-    protected static ?string $title = 'Tags';
+    protected static ?string $title = 'RFID Tags';
 
     public static function getBadge(Model $ownerRecord, string $pageClass): ?string
     {
@@ -31,14 +31,14 @@ class TagsRelationManager extends RelationManager
         return $table
             ->headerActions([
                 Action::make('addTags')
-                    ->label('Add tags')
+                    ->label('Add RFID tags')
                     ->icon('heroicon-o-plus')
-                    ->modalHeading('Add tags')
+                    ->modalHeading('Add RFID tags')
                     ->modalSubmitActionLabel('Add')
                     ->authorize(fn () => Auth::user()?->can('update', $this->getOwnerRecord()) ?? false)
                     ->schema([
                         TagsInput::make('tags')
-                            ->label('Tags')
+                            ->label('RFID tags')
                             ->helperText('Type a tag and press Enter (or paste multiple, separated by comma). Each tag must be unique.')
                             ->splitKeys(['Tab', ',', ' '])
                             ->required()
@@ -71,7 +71,7 @@ class TagsRelationManager extends RelationManager
                         );
 
                         Notification::make()
-                            ->title($tags->count().' tag(s) added')
+                            ->title($tags->count().' RFID tag(s) added')
                             ->success()
                             ->send();
 

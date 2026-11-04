@@ -26,6 +26,10 @@ class AssetTagResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'tag_id';
 
+    protected static ?string $modelLabel = 'RFID Tag';
+
+    protected static ?string $pluralModelLabel = 'RFID Tags';
+
     /** Tags are searched through the RFID Tags resource, which has a page of its own to link to. */
     protected static bool $isGloballySearchable = false;
 

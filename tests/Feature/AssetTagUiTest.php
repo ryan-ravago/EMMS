@@ -2,8 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Filament\Resources\Equipment\Pages\EditEquipment;
+use App\Filament\Resources\Equipment\RelationManagers\TagLogsRelationManager;
 use App\Filament\Resources\Equipment\RelationManagers\TagsRelationManager;
+use App\Filament\Resources\Equipment\Resources\AssetTags\AssetTagResource;
 use App\Filament\Resources\Equipment\Resources\AssetTags\Schemas\AssetTagInfolist;
 use App\Models\AppUser;
 use App\Models\AssetTag;
@@ -11,6 +14,7 @@ use App\Models\AssetType;
 use App\Models\Equipment;
 use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
+use Filament\Resources\RelationManagers\RelationGroup;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
@@ -113,6 +117,29 @@ class AssetTagUiTest extends TestCase
     private function relationManager(): Testable
     {
         return Livewire::test(TagsRelationManager::class, ['ownerRecord' => $this->equipment, 'pageClass' => EditEquipment::class]);
+    }
+
+    public function test_the_tags_and_their_logs_are_one_rfid_tags_tab(): void
+    {
+        AssetTag::query()->insert([
+            ['tag_id' => 'TAG-1', 'asset_parent_id' => $this->equipment->eqm_id, 'is_deleted' => false],
+            ['tag_id' => 'TAG-2', 'asset_parent_id' => $this->equipment->eqm_id, 'is_deleted' => false],
+        ]);
+
+        $relations = EquipmentResource::getRelations();
+        $groups = array_values(array_filter($relations, fn ($relation): bool => $relation instanceof RelationGroup));
+        $rfidGroup = collect($groups)->first(fn (RelationGroup $group): bool => $group->getLabel() === 'RFID Tags');
+
+        $this->assertNotNull($rfidGroup);
+        $this->assertSame([TagsRelationManager::class, TagLogsRelationManager::class], $rfidGroup->getManagers());
+        $this->assertSame('2', $rfidGroup->ownerRecord($this->equipment)->getBadge());
+
+        // The two managers are no longer separate tabs.
+        $this->assertNotContains(TagsRelationManager::class, $relations);
+        $this->assertNotContains(TagLogsRelationManager::class, $relations);
+
+        $this->assertSame('RFID Tags', AssetTagResource::getPluralModelLabel());
+        $this->assertSame('RFID Tag', AssetTagResource::getModelLabel());
     }
 
     public function test_the_table_shows_who_assigned_each_tag_when_and_its_status(): void

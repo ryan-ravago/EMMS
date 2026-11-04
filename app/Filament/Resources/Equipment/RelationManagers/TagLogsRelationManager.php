@@ -16,7 +16,7 @@ class TagLogsRelationManager extends RelationManager
 {
     protected static string $relationship = 'tagLogs';
 
-    protected static ?string $title = 'Tag Logs';
+    protected static ?string $title = 'RFID Tag Logs';
 
     public static function getBadge(Model $ownerRecord, string $pageClass): ?string
     {
@@ -60,7 +60,7 @@ class TagLogsRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('id')
-            ->heading('Tag Logs')
+            ->heading('RFID Tag Logs')
             ->modifyQueryUsing(fn ($query) => $query->with('yard'))
             ->columns([
                 TextColumn::make('detected_at')
@@ -90,7 +90,7 @@ class TagLogsRelationManager extends RelationManager
             ->defaultSort('detected_at', 'desc')
             ->recordActions([
                 ViewAction::make()
-                    ->modalHeading('Tag Log Details')
+                    ->modalHeading('RFID Tag Log Details')
                     ->modalWidth('md'),
             ]);
     }

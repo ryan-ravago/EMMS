@@ -28,6 +28,7 @@ use App\Models\Equipment;
 use BackedEnum;
 use Closure;
 use Filament\Panel;
+use Filament\Resources\RelationManagers\RelationGroup;
 use Filament\Resources\Resource;
 use Filament\Resources\ResourceConfiguration;
 use Filament\Schemas\Schema;
@@ -240,8 +241,11 @@ class EquipmentResource extends Resource
     {
         $relations = [
             AccessoriesRelationManager::class,
-            TagsRelationManager::class,
-            TagLogsRelationManager::class,
+            // One tab: the equipment's RFID tags with their scan logs underneath.
+            RelationGroup::make('RFID Tags', [
+                TagsRelationManager::class,
+                TagLogsRelationManager::class,
+            ])->badge(fn (Model $ownerRecord): string => (string) $ownerRecord->tags()->count()),
             MovementsRelationManager::class,
             LifecycleLogsRelationManager::class,
             WorkOrdersRelationManager::class,
