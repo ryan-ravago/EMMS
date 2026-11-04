@@ -33,6 +33,7 @@ class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasNam
         'user_fb_profile_link',
         'user_dep_id',
         'is_active',
+        'notify_asset_movements',
         'google_access_token',
         'google_refresh_token',
         'google_token_expires_at',
@@ -56,6 +57,7 @@ class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasNam
     {
         return [
             'is_active' => 'boolean',
+            'notify_asset_movements' => 'boolean',
             'google_access_token' => 'encrypted',
             'google_refresh_token' => 'encrypted',
             'google_token_expires_at' => 'datetime',

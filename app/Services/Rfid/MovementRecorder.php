@@ -7,13 +7,16 @@ use App\Models\AssetTagLog;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 /**
  * Turns raw tag scans (asset_tag_logs) into equipment trips (asset_movements).
  *
- * One trip per equipment, not per tag: equipment carries several tags and a reader may scan them one after
- * another, so scans of the same equipment closer together than config('rfid.movement_window_seconds') belong
- * to one trip. Only equipment is tracked; accessories are ignored.
+ * One trip per asset, not per tag: equipment carries several tags and a reader may scan them one after
+ * another, so scans of the same asset closer together than config('rfid.movement_window_seconds') belong
+ * to one trip. Equipment and service vehicles are tracked; accessories are ignored.
+ *
+ * Each new time out / time in is handed to MovementNotifier (one email per event, not per tag) once saved.
  *
  *  - OUT: opens a trip. An older trip that never got its IN is left as it is ("missing time in").
  *  - IN: closes the latest open trip, or creates a trip with only a time in ("missing time out").
@@ -33,7 +36,10 @@ class MovementRecorder
 
         $result = ['opened' => 0, 'closed' => 0, 'in_only' => 0, 'ignored' => 0, 'skipped' => 0];
 
-        DB::transaction(function () use ($logs, &$result): void {
+        /** @var list<array{0: AssetMovement, 1: 'out'|'in'}> $events */
+        $events = [];
+
+        DB::transaction(function () use ($logs, &$result, &$events): void {
             $alreadyRecorded = AssetMovement::query()
                 ->whereIn('out_log_id', $logs->pluck('id'))
                 ->pluck('out_log_id')
@@ -43,24 +49,41 @@ class MovementRecorder
             foreach ($logs as $log) {
                 $asset = $log->tag?->asset;
 
-                if ($alreadyRecorded->has($log->id) || $asset === null || ! $asset->isEquipmentAsset()) {
+                if ($alreadyRecorded->has($log->id) || $asset === null || ! $asset->isMovementTracked()) {
                     $result['skipped']++;
 
                     continue;
                 }
 
-                $outcome = $log->status === 'OUT' ? $this->recordOut($log) : $this->recordIn($log);
+                [$outcome, $movement] = $log->status === 'OUT' ? $this->recordOut($log) : $this->recordIn($log);
                 $result[$outcome]++;
+
+                // A scan merged into a trip that is already there ('ignored') is not a new event, so it sends nothing:
+                // one time out / time in of an asset is one email, however many of its tags were read.
+                if ($movement !== null) {
+                    $events[] = [$movement, $outcome === 'opened' ? 'out' : 'in'];
+                }
             }
         });
+
+        if ($events !== []) {
+            // After the trips are committed (and never for a dry run that rolls back); a failure here changes nothing.
+            DB::afterCommit(function () use ($events): void {
+                try {
+                    app(MovementNotifier::class)->notify($events);
+                } catch (Throwable $exception) {
+                    report($exception);
+                }
+            });
+        }
 
         return $result;
     }
 
     /**
-     * @return 'opened'|'ignored'
+     * @return array{0: 'opened'|'ignored', 1: ?AssetMovement}
      */
-    private function recordOut(AssetTagLog $log): string
+    private function recordOut(AssetTagLog $log): array
     {
         $assetId = $log->tag->asset_parent_id;
 
@@ -71,10 +94,10 @@ class MovementRecorder
             ->exists();
 
         if ($sameTrip) {
-            return 'ignored';
+            return ['ignored', null];
         }
 
-        AssetMovement::query()->create([
+        $movement = AssetMovement::query()->create([
             'asset_id' => $assetId,
             'tag_id' => $log->tag_id,
             'out_log_id' => $log->id,
@@ -82,13 +105,13 @@ class MovementRecorder
             'yard_out_id' => $log->yard_id,
         ]);
 
-        return 'opened';
+        return ['opened', $movement];
     }
 
     /**
-     * @return 'closed'|'in_only'|'ignored'
+     * @return array{0: 'closed'|'in_only'|'ignored', 1: ?AssetMovement}
      */
-    private function recordIn(AssetTagLog $log): string
+    private function recordIn(AssetTagLog $log): array
     {
         $assetId = $log->tag->asset_parent_id;
 
@@ -99,7 +122,7 @@ class MovementRecorder
             ->exists();
 
         if ($sameTrip) {
-            return 'ignored';
+            return ['ignored', null];
         }
 
         $open = AssetMovement::query()
@@ -116,10 +139,10 @@ class MovementRecorder
                 'yard_in_id' => $log->yard_id,
             ]);
 
-            return 'closed';
+            return ['closed', $open];
         }
 
-        AssetMovement::query()->create([
+        $movement = AssetMovement::query()->create([
             'asset_id' => $assetId,
             'tag_id' => $log->tag_id,
             'in_log_id' => $log->id,
@@ -127,7 +150,7 @@ class MovementRecorder
             'yard_in_id' => $log->yard_id,
         ]);
 
-        return 'in_only';
+        return ['in_only', $movement];
     }
 
     /**

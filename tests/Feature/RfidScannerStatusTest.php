@@ -394,8 +394,8 @@ class RfidScannerStatusTest extends AssetMovementTestCase
 
     public function test_the_page_shows_each_scanner_with_its_state_and_history(): void
     {
-        $active = $this->makeScanner('IN', true, '2026-11-03 09:00:00', '2026-11-03 09:58:00');
-        $inactive = $this->makeScanner('OUT', false, '2026-11-03 09:30:00', '2026-11-03 09:58:00');
+        $active = $this->makeScanner('IN', true, $this->ago(60), $this->ago(2));
+        $inactive = $this->makeScanner('OUT', false, $this->ago(30), $this->ago(2));
         DB::table('rfid_scanner_status_logs')->insert(['yard_id' => $this->yard->id, 'scanner_name' => 'OUT', 'is_active' => 0, 'reported_at' => '2026-11-03 09:30:00']);
         DB::table('rfid_scanner_status_logs')->insert(['yard_id' => $this->yard->id, 'scanner_name' => 'IN', 'is_active' => 1, 'reported_at' => '2026-11-03 09:00:00']);
         $this->signInAs('super_admin');
@@ -415,7 +415,7 @@ class RfidScannerStatusTest extends AssetMovementTestCase
 
     public function test_the_page_is_read_only_and_needs_the_permission(): void
     {
-        $scanner = $this->makeScanner('IN', true, '2026-11-03 09:00:00', '2026-11-03 09:58:00');
+        $scanner = $this->makeScanner('IN', true, $this->ago(60), $this->ago(2));
         $this->signInAs('viewer');
 
         $this->assertFalse(RfidScannerStatusResource::canViewAny());
@@ -436,8 +436,8 @@ class RfidScannerStatusTest extends AssetMovementTestCase
         $this->signInAs('super_admin');
         $this->assertFalse(RfidScannerStatusStats::canView());
 
-        $this->makeScanner('IN', true, '2026-11-03 09:00:00', '2026-11-03 09:58:00');
-        $this->makeScanner('OUT', false, '2026-11-03 09:30:00', '2026-11-03 09:58:00');
+        $this->makeScanner('IN', true, $this->ago(60), $this->ago(2));
+        $this->makeScanner('OUT', false, $this->ago(30), $this->ago(2));
 
         $this->assertTrue(RfidScannerStatusStats::canView());
         Livewire::test(RfidScannerStatusStats::class)

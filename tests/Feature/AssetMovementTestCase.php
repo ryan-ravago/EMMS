@@ -39,6 +39,7 @@ abstract class AssetMovementTestCase extends TestCase
             $table->string('user_email')->nullable();
             $table->unsignedBigInteger('user_dep_id')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->boolean('notify_asset_movements')->default(true);
         });
 
         Schema::create('locations', function (Blueprint $table): void {

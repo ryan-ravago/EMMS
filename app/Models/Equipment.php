@@ -271,6 +271,26 @@ class Equipment extends Model
     }
 
     /**
+     * Assets whose time out / time in are tracked (equipment and service vehicles; accessories are not).
+     */
+    public function isMovementTracked(): bool
+    {
+        return $this->isEquipmentAsset() || $this->isServiceVehicle();
+    }
+
+    /**
+     * @param  Builder<Equipment>  $query
+     * @return Builder<Equipment>
+     */
+    public function scopeMovementTracked(Builder $query): Builder
+    {
+        return $query->whereHas(
+            'assetType',
+            fn (Builder $assetTypeQuery) => $assetTypeQuery->whereIn('code', [AssetType::EQUIPMENT, AssetType::SERVICE_VEHICLE])
+        );
+    }
+
+    /**
      * @param  Builder<Equipment>  $query
      * @return Builder<Equipment>
      */

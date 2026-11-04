@@ -37,12 +37,12 @@ class MovementsRelationManager extends RelationManager
     }
 
     /**
-     * Only equipment is tracked (accessories are not), and only for people who may see the trips.
+     * Only equipment and service vehicles are tracked (accessories are not), and only for people who may see the trips.
      */
     public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
     {
         return $ownerRecord instanceof Equipment
-            && $ownerRecord->isEquipmentAsset()
+            && $ownerRecord->isMovementTracked()
             && parent::canViewForRecord($ownerRecord, $pageClass);
     }
 

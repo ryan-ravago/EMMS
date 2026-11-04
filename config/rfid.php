@@ -17,6 +17,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Time out / time in emails
+    |--------------------------------------------------------------------------
+    |
+    | Each time an equipment or service vehicle goes out or comes in, the asset admins and asset managers are
+    | emailed once (not once per RFID tag). Each person can switch it off on My Profile.
+    |
+    | enabled          Master switch. Keep it off wherever real people must not be emailed (local, testing).
+    | max_age_minutes  Events older than this are never emailed, so importing or re-building old trips stays quiet.
+    |
+    */
+
+    'movement_emails' => [
+        'enabled' => (bool) env('RFID_MOVEMENT_EMAILS_ENABLED', true),
+        'max_age_minutes' => (int) env('RFID_MOVEMENT_EMAIL_MAX_AGE_MINUTES', 180),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Raw reader log
     |--------------------------------------------------------------------------
     |

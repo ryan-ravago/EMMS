@@ -110,7 +110,7 @@ class AddTestLogAction
     }
 
     /**
-     * Active tags of equipment (accessories are not tracked), found by tag id, equipment code or name.
+     * Active tags of equipment and service vehicles (accessories are not tracked), found by tag id, asset code or name.
      *
      * @return array<string, string> tag id => label
      */
@@ -119,7 +119,7 @@ class AddTestLogAction
         return AssetTag::query()
             ->with('asset')
             ->where('is_deleted', false)
-            ->whereHas('asset', fn ($asset) => $asset->equipmentAssets())
+            ->whereHas('asset', fn ($asset) => $asset->movementTracked())
             ->where(fn ($query) => $query
                 ->where('tag_id', 'like', "%{$search}%")
                 ->orWhereHas('asset', fn ($asset) => $asset
