@@ -9,15 +9,16 @@ use App\Models\AssetTagLog;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\IconPosition;
 
 class AssetTagLogInfolist
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            ->inlineLabel()
             ->components([
-                Section::make('Scan')
-                    ->columns(3)
+                Section::make('Log')
                     ->schema([
                         TextEntry::make('status')
                             ->badge()
@@ -25,29 +26,18 @@ class AssetTagLogInfolist
                         TextEntry::make('detected_at')->label('Detected')->dateTime('M d, Y h:i:s A'),
                         TextEntry::make('received_at')->label('Received')->dateTime('M d, Y h:i:s A'),
                         TextEntry::make('yard.name')->label('Yard')->placeholder('-'),
-                    ]),
-                Section::make('Tag and asset')
-                    ->columns(3)
-                    ->schema([
                         TextEntry::make('tag_id')
                             ->label('RFID tag')
                             ->copyable()
                             ->url(fn (AssetTagLog $record): ?string => AssetTagLogLinks::tag($record))
-                            ->color(fn (AssetTagLog $record): ?string => AssetTagLogLinks::tag($record) ? 'primary' : null),
-                        TextEntry::make('tag.asset.eqm_prc_code')
-                            ->label('Asset code')
-                            ->placeholder('-')
-                            ->url(fn (AssetTagLog $record): ?string => AssetTagLogLinks::asset($record))
-                            ->color(fn (AssetTagLog $record): ?string => AssetTagLogLinks::asset($record) ? 'primary' : null),
+                            ->icon('heroicon-o-arrow-top-right-on-square')
+                            ->iconPosition(IconPosition::After),
                         TextEntry::make('tag.asset.eqm_name')
                             ->label('Asset')
                             ->placeholder('-')
                             ->url(fn (AssetTagLog $record): ?string => AssetTagLogLinks::asset($record))
-                            ->color(fn (AssetTagLog $record): ?string => AssetTagLogLinks::asset($record) ? 'primary' : null),
-                    ]),
-                Section::make('Used in')
-                    ->description('The equipment trip this scan became (a scan of another tag of the same asset may have been merged into it).')
-                    ->schema([
+                            ->icon('heroicon-o-arrow-top-right-on-square')
+                            ->iconPosition(IconPosition::After),
                         TextEntry::make('trip')
                             ->label('Trip')
                             ->state(fn (AssetTagLog $record): string => self::trip($record) ? 'Trip #'.self::trip($record)->getKey().' — '.self::trip($record)->status_label : 'Not part of a trip')

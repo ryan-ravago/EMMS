@@ -22,9 +22,10 @@ use Illuminate\Support\Facades\Auth;
 class AssetTagsTable
 {
     /**
-     * @param  bool  $withAsset  Also show (and search by) the equipment the tag is on, for the list of every tag.
+     * The tags of one asset (its tags tab and its nested tag pages). The page that lists every tag has its own
+     * table: see RfidTagsTable.
      */
-    public static function configure(Table $table, bool $withAsset = false): Table
+    public static function configure(Table $table): Table
     {
         return $table
             ->recordTitleAttribute('tag_id')
@@ -34,16 +35,6 @@ class AssetTagsTable
                     ->label('Tag')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('asset.eqm_prc_code')
-                    ->label('Asset Code')
-                    ->searchable()
-                    ->placeholder('—')
-                    ->visible($withAsset),
-                TextColumn::make('asset.eqm_name')
-                    ->label('Asset')
-                    ->searchable()
-                    ->placeholder('—')
-                    ->visible($withAsset),
                 TextColumn::make('is_deleted')
                     ->label('Status')
                     ->badge()

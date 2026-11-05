@@ -3,10 +3,10 @@
 namespace App\Filament\Resources\RfidTags;
 
 use App\Filament\Resources\Equipment\Resources\AssetTags\RelationManagers\LogsRelationManager;
-use App\Filament\Resources\Equipment\Resources\AssetTags\Schemas\AssetTagInfolist;
-use App\Filament\Resources\Equipment\Resources\AssetTags\Tables\AssetTagsTable;
 use App\Filament\Resources\RfidTags\Pages\ListRfidTags;
 use App\Filament\Resources\RfidTags\Pages\ViewRfidTag;
+use App\Filament\Resources\RfidTags\Schemas\RfidTagInfolist;
+use App\Filament\Resources\RfidTags\Tables\RfidTagsTable;
 use App\Models\AssetTag;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -67,12 +67,12 @@ class RfidTagResource extends Resource
 
     public static function infolist(Schema $schema): Schema
     {
-        return AssetTagInfolist::configure($schema);
+        return RfidTagInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
     {
-        return AssetTagsTable::configure($table, withAsset: true);
+        return RfidTagsTable::configure($table);
     }
 
     public static function getRelations(): array

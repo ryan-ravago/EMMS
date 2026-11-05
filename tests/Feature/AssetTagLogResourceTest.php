@@ -71,7 +71,7 @@ class AssetTagLogResourceTest extends AssetMovementTestCase
         Livewire::test(ListAssetTagLogs::class)
             ->loadTable()
             ->assertCanSeeTableRecords([$out, $in])
-            ->assertTableColumnStateSet('tag.asset.eqm_prc_code', $crane->eqm_prc_code, $out)
+            ->assertTableColumnStateSet('tag.asset.eqm_name', $crane->eqm_name, $out)
             ->assertTableColumnStateSet('yard.name', 'Valenzuela Yard', $out)
             // A tag is searched by its start...
             ->searchTable('E2806995AAAA')

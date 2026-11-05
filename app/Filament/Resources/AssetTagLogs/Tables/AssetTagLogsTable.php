@@ -39,23 +39,16 @@ class AssetTagLogsTable
                 TextColumn::make('tag_id')
                     ->label('RFID tag')
                     ->url(fn (AssetTagLog $record): ?string => AssetTagLogLinks::tag($record))
-                    ->color(fn (AssetTagLog $record): ?string => AssetTagLogLinks::tag($record) ? 'primary' : null)
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(fn (Builder $inner) => $inner
                         ->where('tag_id', 'like', "{$search}%")
                         ->orWhereHas('tag.asset', fn (Builder $asset) => $asset
                             ->where('eqm_prc_code', 'like', "%{$search}%")
                             ->orWhere('eqm_name', 'like', "%{$search}%")))),
-                TextColumn::make('tag.asset.eqm_prc_code')
-                    ->label('Asset code')
-                    ->placeholder('-')
-                    ->url(fn (AssetTagLog $record): ?string => AssetTagLogLinks::asset($record))
-                    ->color(fn (AssetTagLog $record): ?string => AssetTagLogLinks::asset($record) ? 'primary' : null),
                 TextColumn::make('tag.asset.eqm_name')
                     ->label('Asset')
                     ->placeholder('-')
                     ->limit(40)
-                    ->url(fn (AssetTagLog $record): ?string => AssetTagLogLinks::asset($record))
-                    ->color(fn (AssetTagLog $record): ?string => AssetTagLogLinks::asset($record) ? 'primary' : null),
+                    ->url(fn (AssetTagLog $record): ?string => AssetTagLogLinks::asset($record)),
                 TextColumn::make('status')
                     ->badge()
                     ->sortable()

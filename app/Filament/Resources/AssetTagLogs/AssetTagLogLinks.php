@@ -4,6 +4,7 @@ namespace App\Filament\Resources\AssetTagLogs;
 
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Filament\Resources\RfidTags\RfidTagResource;
+use App\Models\AssetTag;
 use App\Models\AssetTagLog;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,7 +31,15 @@ class AssetTagLogLinks
      */
     public static function asset(AssetTagLog $log): ?string
     {
-        $asset = $log->tag?->asset;
+        return $log->tag === null ? null : self::assetOfTag($log->tag);
+    }
+
+    /**
+     * The page of the asset a tag is on, or null when the tag is on none or the viewer may not open it.
+     */
+    public static function assetOfTag(AssetTag $tag): ?string
+    {
+        $asset = $tag->asset;
 
         if ($asset === null || ! Auth::user()?->can('view', $asset)) {
             return null;

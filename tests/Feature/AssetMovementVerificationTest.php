@@ -858,4 +858,61 @@ class AssetMovementVerificationTest extends AssetMovementTestCase
         $this->assertSame('Looks right', $entry->properties['attributes']['acknowledgement_remarks']);
         $this->assertSame($this->manager->user_id, $entry->properties['attributes']['acknowledged_by']);
     }
+
+    public function test_the_list_and_the_asset_trips_tab_load_their_relations_in_bulk(): void
+    {
+        $queriesFor = function (callable $render): int {
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            $render();
+            $count = count(DB::getQueryLog());
+            DB::disableQueryLog();
+
+            return $count;
+        };
+
+        // Each batch: trips of different equipment (for the list) and trips of one equipment (for its trips tab),
+        // all with their yards and an acknowledging user.
+        $addTrips = function (int $from, int $to, string $day): void {
+            foreach (range($from, $to) as $n) {
+                $asset = $this->makeEquipment();
+                $tag = $this->makeTag($asset, "BULK{$n}");
+                AssetMovement::factory()->create([
+                    'asset_id' => $asset->eqm_id, 'tag_id' => $tag->tag_id,
+                    'time_out' => "{$day} 08:00:00", 'time_in' => "{$day} 17:30:00",
+                    'yard_out_id' => $this->yard->id, 'yard_in_id' => $this->yard->id,
+                ]);
+                AssetMovement::factory()->acknowledged($this->admin->user_id)->create([
+                    'asset_id' => $this->equipment->eqm_id, 'tag_id' => 'AAA1',
+                    'time_out' => sprintf('%s 08:%02d:00', $day, $n), 'time_in' => sprintf('%s 09:%02d:00', $day, $n),
+                    'yard_out_id' => $this->yard->id, 'yard_in_id' => $this->yard->id,
+                ]);
+            }
+        };
+
+        $this->actingAs($this->admin);
+
+        $renderList = fn () => Livewire::test(ListAssetMovements::class)->loadTable()->assertSee('Pending acknowledgement');
+        $renderTab = fn () => Livewire::test(MovementsRelationManager::class, ['ownerRecord' => $this->equipment, 'pageClass' => ViewEquipment::class])
+            ->loadTable()
+            ->assertSee('Acknowledged');
+
+        $addTrips(1, 12, '2026-10-20');
+
+        // Warm up first (roles, permissions and settings are loaded once and then cached), so only the rows are measured.
+        $renderList();
+        $renderTab();
+        $list = $queriesFor($renderList);
+        $tab = $queriesFor($renderTab);
+
+        $addTrips(13, 24, '2026-10-21');
+
+        // Saving a trip clears the cached tab counts, which are worked out again once; warm that up too.
+        $renderList();
+        $renderTab();
+
+        // Twice as many trips, the same number of queries: the relations are loaded in bulk, not once per row.
+        $this->assertSame($list, $queriesFor($renderList), 'The Time In / Out list ran more queries with more trips (N+1).');
+        $this->assertSame($tab, $queriesFor($renderTab), 'The trips tab ran more queries with more trips (N+1).');
+    }
 }

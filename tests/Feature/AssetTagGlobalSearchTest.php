@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\AssetTagLogs\AssetTagLogLinks;
 use App\Filament\Resources\Equipment\Resources\AssetTags\AssetTagResource;
 use App\Filament\Resources\RfidTags\Pages\ListRfidTags;
 use App\Filament\Resources\RfidTags\Pages\ViewRfidTag;
@@ -11,7 +12,9 @@ use App\Models\AssetTag;
 use App\Models\Equipment;
 use Filament\Facades\Filament;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class AssetTagGlobalSearchTest extends AssetMovementTestCase
 {
@@ -90,7 +93,7 @@ class AssetTagGlobalSearchTest extends AssetMovementTestCase
 
         Livewire::test(ListRfidTags::class)
             ->assertCanSeeTableRecords([$this->craneTag, $this->otherTag])
-            ->assertTableColumnStateSet('asset.eqm_prc_code', $this->crane->eqm_prc_code, $this->craneTag)
+            ->assertTableColumnStateSet('asset.eqm_name', $this->crane->eqm_name, $this->craneTag)
             ->searchTable($this->crane->eqm_name)
             ->assertCanSeeTableRecords([$this->craneTag])
             ->assertCanNotSeeTableRecords([$this->otherTag]);
@@ -103,5 +106,27 @@ class AssetTagGlobalSearchTest extends AssetMovementTestCase
         Livewire::test(ViewRfidTag::class, ['record' => $this->craneTag->getKey()])
             ->assertSuccessful()
             ->assertSee('E2806995AAAA1111');
+    }
+
+    public function test_the_asset_on_a_tags_page_links_to_the_asset(): void
+    {
+        $this->signInAs('super_admin');
+        $url = AssetTagLogLinks::assetOfTag($this->craneTag->load('asset'));
+
+        $this->assertStringContainsString((string) $this->crane->getKey(), (string) $url);
+
+        Livewire::test(ViewRfidTag::class, ['record' => $this->craneTag->getKey()])
+            ->assertSuccessful()
+            ->assertSee($this->crane->eqm_name)
+            ->assertSee($url, false);
+    }
+
+    public function test_a_viewer_who_may_not_open_the_asset_gets_no_link(): void
+    {
+        $user = $this->signInAs('viewer');
+        $user->givePermissionTo(Permission::findOrCreate('View:AssetTagResource', 'web'));
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->assertNull(AssetTagLogLinks::assetOfTag($this->craneTag->load('asset')));
     }
 }
