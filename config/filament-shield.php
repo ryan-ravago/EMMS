@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Filament\Resources\AssetMovements\AssetMovementResource;
+use App\Filament\Resources\AssetTagLogs\AssetTagLogResource;
 use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Filament\Resources\EquipmentUnitCategories\EquipmentUnitCategoryResource;
 use App\Filament\Resources\MaintenanceTasks\MaintenanceTaskResource;
@@ -206,6 +207,10 @@ return [
                 'addTestLog',
                 'receiveEmails',
                 'createTrip',
+            ],
+            AssetTagLogResource::class => [
+                'viewAny',
+                'view',
             ],
             RfidRawLogResource::class => [
                 'viewAny',

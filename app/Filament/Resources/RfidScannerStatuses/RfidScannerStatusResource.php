@@ -31,7 +31,7 @@ class RfidScannerStatusResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Scanner Status';
 
-    protected static ?int $navigationSort = 9;
+    protected static ?int $navigationSort = 10;
 
     public static function getEloquentQuery(): Builder
     {

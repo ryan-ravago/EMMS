@@ -32,7 +32,7 @@ class RfidRawLogResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'tag_id';
 
-    protected static ?int $navigationSort = 8;
+    protected static ?int $navigationSort = 9;
 
     public static function getEloquentQuery(): Builder
     {
