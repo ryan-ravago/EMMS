@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AppUsers\Schemas;
 
+use App\Models\AppUser;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -66,6 +67,43 @@ class AppUserInfolist
                             ->label('Active')
                             ->boolean(),
                     ]),
+
+                // Super admins only. It is read again from the database every minute, so it stays current
+                // while the page is open (the page's own record is loaded once).
+                Section::make('Activity')
+                    ->key('presence')
+                    ->poll('60s')
+                    ->columns(3)
+                    ->visible(fn (): bool => Auth::user()?->hasRole('super_admin') ?? false)
+                    ->schema([
+                        TextEntry::make('presence')
+                            ->label('Status')
+                            ->badge()
+                            ->state(fn (AppUser $record): string => self::fresh($record)?->isOnline() ? 'Online' : 'Offline')
+                            ->color(fn (string $state): string => $state === 'Online' ? 'success' : 'gray')
+                            ->icon(fn (string $state): string => $state === 'Online' ? 'heroicon-o-signal' : 'heroicon-o-signal-slash'),
+                        TextEntry::make('last_active_at')
+                            ->label('Last active')
+                            ->state(fn (AppUser $record) => self::fresh($record)?->last_active_at)
+                            ->since()
+                            ->dateTimeTooltip('M d, Y h:i A')
+                            ->placeholder('Never'),
+                        TextEntry::make('last_seen_at')
+                            ->label('Last seen')
+                            ->state(fn (AppUser $record) => self::fresh($record)?->last_seen_at)
+                            ->since()
+                            ->dateTimeTooltip('M d, Y h:i A')
+                            ->placeholder('Never')
+                            ->helperText('Includes the automatic refreshes of an open page.'),
+                    ]),
             ]);
+    }
+
+    /**
+     * The user's presence as it is in the database now, not as it was when the page opened.
+     */
+    private static function fresh(AppUser $user): ?AppUser
+    {
+        return AppUser::query()->find($user->getKey(), ['user_id', 'last_seen_at', 'last_active_at']);
     }
 }

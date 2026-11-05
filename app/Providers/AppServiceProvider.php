@@ -16,14 +16,17 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Pulse\Facades\Pulse;
+use STS\FilamentImpersonate\ImpersonateManager;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +44,19 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Equipment::observe(EquipmentObserver::class);
+
+        // Signing out shows as offline straight away, instead of after the online window has passed.
+        Event::listen(Logout::class, function (Logout $event): void {
+            // Never let this get in the way of signing out (for example before the column exists on a new deploy).
+            try {
+                // Leaving an impersonation signs the borrowed user out, but that person has not signed out themselves.
+                if ($event->user instanceof AppUser && ! app(ImpersonateManager::class)->isImpersonating()) {
+                    AppUser::query()->whereKey($event->user->getKey())->update(['last_seen_at' => null]);
+                }
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        });
 
         // Readable activity log: record names, triggering action, bulk batches.
         ActivityLogging::register();

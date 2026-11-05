@@ -7,6 +7,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -43,6 +44,8 @@ class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasNam
 
     /** Never written to the activity log (secrets / refreshed on every login). */
     protected array $activityExclude = [
+        'last_seen_at',
+        'last_active_at',
         'google_access_token',
         'google_refresh_token',
         'google_token_expires_at',
@@ -58,10 +61,30 @@ class AppUser extends Authenticatable implements FilamentUser, HasAvatar, HasNam
         return [
             'is_active' => 'boolean',
             'notify_asset_movements' => 'boolean',
+            'last_seen_at' => 'datetime',
+            'last_active_at' => 'datetime',
             'google_access_token' => 'encrypted',
             'google_refresh_token' => 'encrypted',
             'google_token_expires_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Online while the last request (of any kind, see TrackUserActivity) is recent.
+     */
+    public function isOnline(): bool
+    {
+        return $this->last_seen_at !== null
+            && $this->last_seen_at->gte(now()->subSeconds((int) config('presence.online_seconds')));
+    }
+
+    /**
+     * @param  Builder<AppUser>  $query
+     * @return Builder<AppUser>
+     */
+    public function scopeOnline(Builder $query): Builder
+    {
+        return $query->where('last_seen_at', '>=', now()->subSeconds((int) config('presence.online_seconds')));
     }
 
     // This method tells Filament what to display in the user menu

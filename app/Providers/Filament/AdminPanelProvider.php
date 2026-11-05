@@ -9,6 +9,7 @@ use App\Filament\Resources\Equipment\Resources\AssetTags\AssetTagResource;
 use App\Filament\Resources\Equipment\Resources\WorkOrders\WorkOrderResource;
 use App\Filament\Widgets\DashboardStatsOverview;
 use App\Http\Middleware\EnsureUserStillHasRole;
+use App\Http\Middleware\TrackUserActivity;
 use App\Models\AssetType;
 use App\Models\Equipment;
 use App\Models\SiteSetting;
@@ -269,8 +270,10 @@ class AdminPanelProvider extends PanelProvider
                 'Reports',
                 'Super Admin',
             ])
+            // Persistent, so the automatic refreshes of an open page (Livewire requests) are seen too: who is online.
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+                TrackUserActivity::class,
+            ], isPersistent: true);
     }
 }
