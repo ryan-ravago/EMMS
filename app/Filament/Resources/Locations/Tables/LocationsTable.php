@@ -29,6 +29,8 @@ class LocationsTable
             ->tree(
                 parentColumn: 'parent_id',
                 treeColumn: 'name',
+                // Start with the top level only; a branch is loaded when it is opened.
+                defaultExpanded: false,
             )
             ->filters([
                 //
