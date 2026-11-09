@@ -181,7 +181,8 @@ class EquipmentPolicy
 
     public function deploy(AuthUser $authUser, Equipment $equipment): bool
     {
-        return $equipment->isEquipmentAsset()
+        // Equipment and service vehicles are deployed; an accessory is allocated to an equipment instead.
+        return ($equipment->isEquipmentAsset() || $equipment->isServiceVehicle())
             && $equipment->lifecycle_status_id !== 'dep'
             && $authUser->can('Deploy:EquipmentResource');
     }
