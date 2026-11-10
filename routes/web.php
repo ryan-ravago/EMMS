@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PwaManifestController;
 use App\Http\Controllers\SocialiteController;
 use App\Mail\WorkOrderConfirmationMail;
 use App\Models\WorkOrder;
@@ -9,6 +10,9 @@ use Illuminate\Support\Facades\Route;
 // Route::get('/', function () {
 //     return view('welcome');
 // });
+
+// Lets phones and browsers offer "Install app" (see also public/sw.js and the head hook in AdminPanelProvider).
+Route::get('/manifest.webmanifest', PwaManifestController::class)->name('pwa.manifest');
 
 // Route::get('/auth/{provider}/redirect', [SocialiteController::class, 'redirect'])
 //     ->name('socialite.redirect');

@@ -8,6 +8,7 @@ use App\Filament\Resources\Equipment\EquipmentResource;
 use App\Filament\Resources\Equipment\Resources\AssetTags\AssetTagResource;
 use App\Filament\Resources\Equipment\Resources\WorkOrders\WorkOrderResource;
 use App\Filament\Widgets\DashboardStatsOverview;
+use App\Http\Controllers\PwaManifestController;
 use App\Http\Middleware\EnsureUserStillHasRole;
 use App\Http\Middleware\TrackUserActivity;
 use App\Models\AssetType;
@@ -75,8 +76,17 @@ class AdminPanelProvider extends PanelProvider
 
                     $vite = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
 
+                    // Installable app: manifest, browser bar colour, and a service worker that does not cache anything.
+                    $themeColor = PwaManifestController::THEME_COLOR;
+                    $pwa = '<link rel="manifest" href="/manifest.webmanifest">'
+                        ."<meta name=\"theme-color\" content=\"{$themeColor}\">"
+                        .'<meta name="mobile-web-app-capable" content="yes">'
+                        .'<meta name="apple-mobile-web-app-capable" content="yes">'
+                        .'<link rel="apple-touch-icon" href="/pwa/icon-192.png">'
+                        .'<script>if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function () {}); }); }</script>';
+
                     return new HtmlString(
-                        $vite.
+                        $vite.$pwa.
                             "<link href=\"https://fonts.googleapis.com/css2?family={$encoded}:wght@300;400;500;600;700&display=swap\" rel=\"stylesheet\">
                             <style>
                                 body, html { font-family: '{$font}', sans-serif !important; }

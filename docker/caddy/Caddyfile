@@ -84,6 +84,8 @@ http://:8081 {
 		header /css/* Cache-Control "public, max-age=604800"
 		header /js/* Cache-Control "public, max-age=604800"
 		header /fonts/* Cache-Control "public, max-age=2592000"
+		# The service worker must be checked on every visit, or an update would not reach the browsers.
+		header /sw.js Cache-Control "no-cache"
 		file_server
 	}
 
