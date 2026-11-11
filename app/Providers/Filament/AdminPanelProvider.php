@@ -11,8 +11,6 @@ use App\Filament\Widgets\DashboardStatsOverview;
 use App\Http\Controllers\PwaManifestController;
 use App\Http\Middleware\EnsureUserStillHasRole;
 use App\Http\Middleware\TrackUserActivity;
-use App\Models\AssetType;
-use App\Models\Equipment;
 use App\Models\SiteSetting;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Enums\GlobalSearchPosition;
@@ -163,19 +161,16 @@ class AdminPanelProvider extends PanelProvider
             ->navigationItems([
                 NavigationItem::make('Equipment')
                     ->icon(Heroicon::OutlinedTruck)
-                    ->badge(fn (): string => (string) Equipment::assetCounts()[AssetType::EQUIPMENT])
                     ->url(fn (): string => route('filament.admin.resources.equipment.index'))
                     ->visible(fn (): bool => EquipmentResource::canViewPage('equipment'))
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.equipment.*')),
                 NavigationItem::make('Accessories')
                     ->icon(Heroicon::OutlinedCog)
-                    ->badge(fn (): string => (string) Equipment::assetCounts()[AssetType::ACCESSORY])
                     ->url(fn (): string => route('filament.admin.resources.accessories.index'))
                     ->visible(fn (): bool => EquipmentResource::canViewPage('accessories'))
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.accessories.*')),
                 NavigationItem::make('Service Vehicles')
                     ->icon(Heroicon::OutlinedWrenchScrewdriver)
-                    ->badge(fn (): string => (string) Equipment::assetCounts()[AssetType::SERVICE_VEHICLE])
                     ->url(fn (): string => route('filament.admin.resources.service-vehicles.index'))
                     ->visible(fn (): bool => EquipmentResource::canViewPage('service-vehicles'))
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.service-vehicles.*')),

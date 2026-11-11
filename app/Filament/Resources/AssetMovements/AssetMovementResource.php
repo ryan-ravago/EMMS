@@ -40,18 +40,6 @@ class AssetMovementResource extends Resource
         return parent::getEloquentQuery()->with(['asset', 'tag', 'yardOut', 'yardIn', 'acknowledgedBy']);
     }
 
-    public static function getNavigationBadge(): ?string
-    {
-        $count = AssetMovement::query()->needingAttention()->count();
-
-        return $count > 0 ? (string) $count : null;
-    }
-
-    public static function getNavigationBadgeColor(): string|array|null
-    {
-        return 'warning';
-    }
-
     public static function canCreate(): bool
     {
         return false;

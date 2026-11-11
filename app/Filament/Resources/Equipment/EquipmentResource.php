@@ -190,11 +190,6 @@ class EquipmentResource extends Resource
         return parent::getUrl($name, $parameters, $isAbsolute, $panel, $tenant, $shouldGuessMissingParameters, $configuration);
     }
 
-    public static function getNavigationBadge(): ?string
-    {
-        return (string) Equipment::assetCounts()[static::currentAssetTypeCode() ?? 'total'];
-    }
-
     public static function getNavigationLabel(): string
     {
         return self::PAGES[static::currentPageKey()]['plural'] ?? 'Assets';

@@ -59,11 +59,6 @@ class WorkOrderResource extends Resource
             ->with('notes', 'logs', 'logUpdates');
     }
 
-    public static function getNavigationBadge(): ?string
-    {
-        return static::getEloquentQuery()->count();
-    }
-
     public static function form(Schema $schema): Schema
     {
         return WorkOrderForm::configure($schema);

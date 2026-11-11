@@ -55,11 +55,6 @@ class RequestorWorkOrderResource extends Resource
         return $query->where('wo_created_by', Auth::id());
     }
 
-    public static function getNavigationBadge(): ?string
-    {
-        return static::getEloquentQuery()->count();
-    }
-
     public static function form(Schema $schema): Schema
     {
         return RequestorWorkOrderForm::configure($schema);
