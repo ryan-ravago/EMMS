@@ -70,7 +70,7 @@ class AppServiceProvider extends ServiceProvider
         Table::configureUsing(
             fn (Table $table) => $table
                 ->paginated([10, 25, 50, 100])
-                ->defaultPaginationPageOption(25)
+                ->defaultPaginationPageOption(10)
                 ->stackedOnMobile()
                 ->poll('30s')
         );

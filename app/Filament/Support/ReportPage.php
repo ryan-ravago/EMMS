@@ -53,7 +53,7 @@ abstract class ReportPage extends Page implements HasTable
     public function table(Table $table): Table
     {
         return $this->reportTable($table)
-            ->defaultPaginationPageOption(25)
+            ->defaultPaginationPageOption(10)
             ->paginated([10, 25, 50, 100]);
     }
 

@@ -41,7 +41,7 @@ class EquipmentTable
             // The resource query also serves the view/edit pages, which need model, type and brand; the list does not show them.
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->without(['equipmentModel', 'type', 'brand']))
             ->paginated([10, 25, 50, 100])
-            ->defaultPaginationPageOption(25)
+            ->defaultPaginationPageOption(10)
             ->columns([
                 TextColumn::make('eqm_prc_code')
                     ->label('Asset Code')
