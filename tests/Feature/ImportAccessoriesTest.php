@@ -78,7 +78,7 @@ class ImportAccessoriesTest extends TestCase
             '3,MAIN HOOK(4SHEAVES)',
             '4,"  JIB   EXTENSION  "',
             '5,main  hook (single sheave)',
-            '6,THIS ACCESSORY NAME IS WAY TOO LONG FOR A CODE',
+            '6,'.str_repeat('X', 256),
             '7,',
             ',',
         ])."\n");
@@ -111,7 +111,7 @@ class ImportAccessoriesTest extends TestCase
         $this->artisan('assets:import-accessories', ['source' => $this->sample()])
             ->expectsOutputToContain('(as MAIN HOOK)')
             ->expectsOutputToContain('listed twice in the file')
-            ->expectsOutputToContain('name is longer than 30 characters')
+            ->expectsOutputToContain('asset code is longer than 255 characters')
             ->doesntExpectOutputToContain('no accessory name')
             ->assertSuccessful();
     }
@@ -123,6 +123,38 @@ class ImportAccessoriesTest extends TestCase
         $this->artisan('assets:import-accessories', ['source' => $path, '--execute' => true, '--force' => true])->assertSuccessful();
 
         $this->assertDatabaseHas('equipment_units', ['eqm_prc_code' => 'SPREADER BAR', 'asset_type_id' => 2]);
+    }
+
+    public function test_a_long_name_is_kept_whole_as_the_asset_code_and_name(): void
+    {
+        $long = '12M BOOM INSERT (STRENGTHENED) #1 (SN: 18-3528-28)';
+        $path = $this->csv("NO.,ACCESSORY NAME\n1,{$long}\n");
+
+        $this->artisan('assets:import-accessories', ['source' => $path, '--execute' => true, '--force' => true])->assertSuccessful();
+
+        $this->assertDatabaseHas('equipment_units', ['eqm_prc_code' => $long, 'eqm_name' => $long, 'asset_type_id' => 2]);
+    }
+
+    public function test_the_asset_code_column_can_give_a_name_its_own_code(): void
+    {
+        $path = $this->csv(implode("\n", [
+            'NO.,ACCESSORY NAME,ASSET CODE',
+            '1,CWT #4 (5.3t),CWT #4 (5.3t)',
+            '2,12M BOOM INSERT (STRENGTHENED) #1 (SN: 18-3528-28),BI12S#1',
+            '3,SOME LONG NAME THAT NEEDS ITS OWN CODE,',
+            '4,ANOTHER NAME WITH A TOO LONG CODE,'.str_repeat('C', 256),
+            '5,MAIN HOOK,main hook',
+        ])."\n");
+
+        $this->artisan('assets:import-accessories', ['source' => $path, '--execute' => true, '--force' => true])
+            ->expectsOutputToContain('no asset code')
+            ->expectsOutputToContain('asset code is longer than 255 characters')
+            ->expectsOutputToContain('(as MAIN HOOK)')
+            ->assertSuccessful();
+
+        $this->assertDatabaseHas('equipment_units', ['eqm_prc_code' => 'CWT #4 (5.3t)', 'eqm_name' => 'CWT #4 (5.3t)', 'asset_type_id' => 2]);
+        $this->assertDatabaseHas('equipment_units', ['eqm_prc_code' => 'BI12S#1', 'eqm_name' => '12M BOOM INSERT (STRENGTHENED) #1 (SN: 18-3528-28)', 'asset_type_id' => 2]);
+        $this->assertSame(3, DB::table('equipment_units')->count());
     }
 
     public function test_a_file_without_the_column_fails(): void

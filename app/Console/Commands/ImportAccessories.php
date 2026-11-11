@@ -11,15 +11,17 @@ use Illuminate\Support\Facades\File;
 class ImportAccessories extends Command
 {
     protected $signature = 'assets:import-accessories
-        {source=database/data/accessories_to_add.csv : CSV with an "ACCESSORY NAME" column (other columns are ignored)}
+        {source=database/data/accessories_to_add.csv : CSV with an "ACCESSORY NAME" column and, optionally, an "ASSET CODE" column (the name is used as the code when there is no such column)}
         {--execute : Really add the accessories; without it the command only shows what would be added}
         {--force : Skip the confirmation question (with --execute)}';
 
-    protected $description = 'Add accessories listed by name (sheet "ACCESSORIES TO BE ADDED TO EMS") to equipment_units, with no parent';
+    protected $description = 'Add accessories (sheet "ACCESSORIES TO BE ADDED TO EMS") to equipment_units, with no parent';
 
     private const NAME_COLUMN = 'ACCESSORY NAME';
 
-    private const MAX_CODE_LENGTH = 30;
+    private const CODE_COLUMN = 'ASSET CODE';
+
+    private const MAX_CODE_LENGTH = 255;
 
     public function handle(): int
     {
@@ -32,9 +34,9 @@ class ImportAccessories extends Command
             return self::FAILURE;
         }
 
-        $names = $this->readNames($path);
+        $rows = $this->readRows($path);
 
-        if ($names === null) {
+        if ($rows === null) {
             $this->error('The file has no "'.self::NAME_COLUMN.'" column.');
 
             return self::FAILURE;
@@ -49,11 +51,12 @@ class ImportAccessories extends Command
         $skipped = [];
         $seen = [];
 
-        foreach ($names as $line => $name) {
-            $key = $this->normalize($name);
+        foreach ($rows as $line => ['name' => $name, 'code' => $code]) {
+            $key = $this->normalize($code);
 
             $reason = match (true) {
-                mb_strlen($name) > self::MAX_CODE_LENGTH => 'name is longer than '.self::MAX_CODE_LENGTH.' characters (the asset code limit)',
+                $code === '' => 'no asset code (the ASSET CODE column is empty for this row)',
+                mb_strlen($code) > self::MAX_CODE_LENGTH => 'asset code is longer than '.self::MAX_CODE_LENGTH.' characters',
                 $existing->has($key) => 'already in EMMS',
                 isset($seen[$key]) => 'listed twice in the file',
                 default => null,
@@ -71,7 +74,7 @@ class ImportAccessories extends Command
             }
 
             $seen[$key] = true;
-            $toAdd[] = $name;
+            $toAdd[] = ['code' => $code, 'name' => $name];
         }
 
         $this->table(['Result', 'Count'], [
@@ -118,15 +121,14 @@ class ImportAccessories extends Command
             return self::FAILURE;
         }
 
-        $created = DB::transaction(fn (): array => collect($toAdd)->map(fn (string $name): array => [
+        $created = DB::transaction(fn (): array => collect($toAdd)->map(fn (array $accessory): array => [
             'id' => Equipment::query()->create([
-                'eqm_prc_code' => $name,
-                'eqm_name' => $name,
+                'eqm_prc_code' => $accessory['code'],
+                'eqm_name' => mb_substr($accessory['name'], 0, 255),
                 'asset_type_id' => $accessoryTypeId,
                 'eqm_is_active' => true,
             ])->getKey(),
-            'name' => $name,
-        ])->all());
+        ] + $accessory)->all());
 
         $report = $this->writeReport($created);
 
@@ -141,11 +143,12 @@ class ImportAccessories extends Command
     }
 
     /**
-     * The values of the "ACCESSORY NAME" column, by line number, with spaces tidied. Null when the column is missing.
+     * The accessory name and asset code of each row, by line number, with spaces tidied. The code comes from the
+     * "ASSET CODE" column when the file has one, otherwise it is the name. Null when the name column is missing.
      *
-     * @return array<int, string>|null
+     * @return array<int, array{name: string, code: string}>|null
      */
-    private function readNames(string $path): ?array
+    private function readRows(string $path): ?array
     {
         $handle = fopen($path, 'r');
         $header = array_map(
@@ -160,24 +163,33 @@ class ImportAccessories extends Command
             return null;
         }
 
-        $names = [];
+        $codeColumn = array_search(self::CODE_COLUMN, $header, true);
+        $rows = [];
         $line = 1;
 
         while (($row = fgetcsv($handle, 0, ',', '"', '')) !== false) {
             $line++;
-            $name = trim((string) preg_replace('/\s+/u', ' ', (string) ($row[$column] ?? '')));
+            $name = $this->tidy((string) ($row[$column] ?? ''));
 
             // Rows with no name (the sheet runs to row 1000, with numbers filled down) are empty, not mistakes.
             if ($name === '') {
                 continue;
             }
 
-            $names[$line] = $name;
+            $rows[$line] = [
+                'name' => $name,
+                'code' => $codeColumn === false ? $name : $this->tidy((string) ($row[$codeColumn] ?? '')),
+            ];
         }
 
         fclose($handle);
 
-        return $names;
+        return $rows;
+    }
+
+    private function tidy(string $value): string
+    {
+        return trim((string) preg_replace('/\s+/u', ' ', $value));
     }
 
     private function normalize(string $code): string
@@ -207,7 +219,7 @@ class ImportAccessories extends Command
     }
 
     /**
-     * @param  list<array{id: int|string, name: string}>  $created
+     * @param  list<array{id: int|string, code: string, name: string}>  $created
      */
     private function writeReport(array $created): string
     {
@@ -219,7 +231,7 @@ class ImportAccessories extends Command
         fputcsv($handle, ['eqm_id', 'asset_code', 'asset_name'], escape: '');
 
         foreach ($created as $accessory) {
-            fputcsv($handle, [$accessory['id'], $accessory['name'], $accessory['name']], escape: '');
+            fputcsv($handle, [$accessory['id'], $accessory['code'], $accessory['name']], escape: '');
         }
 
         fclose($handle);

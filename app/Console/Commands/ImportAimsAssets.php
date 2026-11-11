@@ -52,7 +52,7 @@ class ImportAimsAssets extends Command
 
             $reason = match (true) {
                 $code === '' => 'no asset code',
-                mb_strlen($code) > 30 => 'asset code is longer than 30 characters',
+                mb_strlen($code) > 255 => 'asset code is longer than 255 characters',
                 $type === null => 'unknown asset type "'.($row['Asset Type'] ?? '').'"',
                 $existing->has($key) => 'already in EMMS as '.$existing[$key],
                 isset($seen[$key]) => 'listed twice in the file',

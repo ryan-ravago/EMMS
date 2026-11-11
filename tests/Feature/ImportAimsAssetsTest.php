@@ -36,7 +36,7 @@ class ImportAimsAssetsTest extends TestCase
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->unsignedBigInteger('location_id')->nullable();
             $table->string('lifecycle_status_id')->default('idle');
-            $table->string('eqm_prc_code', 30)->unique();
+            $table->string('eqm_prc_code', 255)->unique();
             $table->string('eqm_name');
             $table->boolean('eqm_is_active')->default(true);
             $table->text('specifications')->nullable();
@@ -79,6 +79,7 @@ class ImportAimsAssetsTest extends TestCase
             'XE215D,XE215D,Equipment,PARENT,13507,,',
             'MD 01,MD 01,Accessory,ACCESSORIES,4404,FAYMONVILLE,already there',
             'BOOM SECTION 12M (Serial No: 2724-22-13),BOOM SECTION 12M (Serial No: 2724-22-13),Accessory,ACCESSORIES,1,CC2800 #1,',
+            str_repeat('Z', 256).',TOO LONG,Accessory,ACCESSORIES,3,DUMMY PARENT,',
             'DUMMY 1,DUMMY 1,,ACCESSORIES,2,DUMMY PARENT,',
             'l300 #3,l300 #3,Service Vehicle,PARENT,1009,,listed twice',
         ])."\n");
@@ -100,7 +101,8 @@ class ImportAimsAssetsTest extends TestCase
 
         $added = DB::table('equipment_units')->where('eqm_prc_code', '!=', 'MD   01')->orderBy('eqm_prc_code')->get()->keyBy('eqm_prc_code');
 
-        $this->assertSame(['L300#3', 'TOWBAR #1', 'XE215D'], $added->keys()->all());
+        // A code over 30 characters is now fine (the column holds 255); only longer ones are refused.
+        $this->assertSame(['BOOM SECTION 12M (Serial No: 2724-22-13)', 'L300#3', 'TOWBAR #1', 'XE215D'], $added->keys()->all());
         $this->assertSame(3, (int) $added['L300#3']->asset_type_id);
         $this->assertSame(2, (int) $added['TOWBAR #1']->asset_type_id);
         $this->assertSame(1, (int) $added['XE215D']->asset_type_id);
@@ -114,7 +116,7 @@ class ImportAimsAssetsTest extends TestCase
     {
         $this->artisan('assets:import-aims', ['source' => $this->sample()])
             ->expectsOutputToContain('already in EMMS as MD   01')
-            ->expectsOutputToContain('asset code is longer than 30 characters')
+            ->expectsOutputToContain('asset code is longer than 255 characters')
             ->expectsOutputToContain('unknown asset type ""')
             ->expectsOutputToContain('listed twice in the file')
             ->assertSuccessful();
@@ -127,13 +129,13 @@ class ImportAimsAssetsTest extends TestCase
             ->expectsOutputToContain('Nothing to add')
             ->assertSuccessful();
 
-        $this->assertSame(4, DB::table('equipment_units')->count());
+        $this->assertSame(5, DB::table('equipment_units')->count());
     }
 
     public function test_declining_the_confirmation_adds_nothing(): void
     {
         $this->artisan('assets:import-aims', ['source' => $this->sample(), '--execute' => true])
-            ->expectsConfirmation('Add 3 assets to EMMS?', 'no')
+            ->expectsConfirmation('Add 4 assets to EMMS?', 'no')
             ->assertFailed();
 
         $this->assertSame(1, DB::table('equipment_units')->count());

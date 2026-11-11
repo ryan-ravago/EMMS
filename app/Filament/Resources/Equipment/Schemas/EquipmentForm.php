@@ -86,7 +86,7 @@ class EquipmentForm
                                 TextInput::make('eqm_prc_code')
                                     ->label('Equipment Code')
                                     ->required()
-                                    ->maxLength(30)
+                                    ->maxLength(255)
                                     ->unique(ignoreRecord: true)
                                     ->disabled(fn (string $operation): bool => ! self::canEditAssetIdentity($operation))
                                     ->dehydrated(fn (string $operation): bool => self::canEditAssetIdentity($operation)),
