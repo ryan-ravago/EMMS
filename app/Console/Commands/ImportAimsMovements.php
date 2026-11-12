@@ -26,7 +26,7 @@ class ImportAimsMovements extends Command
         }
 
         $since = $this->option('since') ? now()->parse((string) $this->option('since'))->startOfDay() : now()->subYears(2)->startOfDay();
-        $aims = DB::connection(env('DB_AIMS_CONNECTION', 'sqlsrv_aims'));
+        $aims = DB::connection(config('services.aims.connection'));
 
         $logs = $aims->table('LOGS')
             ->whereRaw('COALESCE(TIME_OUT, TIME_IN) >= ?', [$since->format('Y-m-d H:i:s')])

@@ -3,26 +3,43 @@
 namespace App\Console\Commands;
 
 use App\Models\AppUser;
-use App\Support\Activity\ActivityLogging;
 use App\Services\Google\GmailWorkOrderReplySyncService;
+use App\Support\Activity\ActivityLogging;
 use Illuminate\Console\Command;
 
 class SyncGoogleWorkOrderReplies extends Command
 {
-    protected $signature = 'work-orders:sync-google-replies {--email= : Google mailbox account email override}';
+    protected $signature = 'work-orders:sync-google-replies {--email= : Read this mailbox instead of WORK_ORDER_GMAIL_ACCOUNT}';
 
     protected $description = 'Sync Gmail replies into work order updates.';
 
     public function handle(GmailWorkOrderReplySyncService $service): int
     {
-        $email = $this->option('email') ?: config('work_orders.gmail_account_email');
+        if (! config('work_orders.reply_sync_enabled')) {
+            $this->line('The Gmail reply sync is switched off (WORK_ORDER_REPLY_SYNC_ENABLED).');
 
-        $mailboxUser = $email
-            ? AppUser::query()->whereRaw('lower(user_email) = ?', [strtolower($email)], 'and')->first()
-            : AppUser::query()->whereNotNull('google_refresh_token', 'and')->orderBy('user_id', 'desc')->first();
+            return self::SUCCESS;
+        }
+
+        $email = trim((string) ($this->option('email') ?: config('work_orders.gmail_account_email')));
+
+        // Never guess the mailbox: every user signs in with Google, so any of them could be picked.
+        if ($email === '') {
+            $this->warn('No mailbox is set. Put the mailbox address in WORK_ORDER_GMAIL_ACCOUNT (.env).');
+
+            return self::SUCCESS;
+        }
+
+        $mailboxUser = AppUser::query()->whereRaw('lower(user_email) = ?', [strtolower($email)], 'and')->first();
 
         if (! $mailboxUser) {
-            $this->warn('No Google mailbox user was found.');
+            $this->warn("No EMMS user has the email {$email}. The mailbox must be an EMMS user.");
+
+            return self::SUCCESS;
+        }
+
+        if (! $mailboxUser->google_refresh_token) {
+            $this->warn("{$email} has not signed in to EMMS with Google yet, so its inbox cannot be read. Sign in once with that account.");
 
             return self::SUCCESS;
         }

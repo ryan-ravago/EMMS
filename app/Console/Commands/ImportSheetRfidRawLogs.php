@@ -8,6 +8,7 @@ use App\Models\RfidRawLog;
 use App\Services\Rfid\RawLogProcessor;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Throwable;
@@ -86,9 +87,25 @@ class ImportSheetRfidRawLogs extends Command
         }
 
         $inserted = 0;
+        $totals = null;
+        $addReads = function () use ($plan, &$inserted): void {
+            foreach (array_chunk(array_values($plan['reads']), 500) as $chunk) {
+                $inserted += RfidRawLog::query()->insertOrIgnore($chunk);
+            }
+        };
 
-        foreach (array_chunk(array_values($plan['reads']), 500) as $chunk) {
-            $inserted += RfidRawLog::query()->insertOrIgnore($chunk);
+        if ($processNow) {
+            // Added and processed under the processing lock: the every-minute run must not pick the reads up in
+            // between, because it would judge them by the normal retention and mark the old ones "invalid time".
+            try {
+                $totals = $processor->addAndRun($addReads);
+            } catch (LockTimeoutException) {
+                $this->error('The RFID processing is busy right now, so nothing was added. Run the command again in a minute.');
+
+                return self::FAILURE;
+            }
+        } else {
+            $addReads();
         }
 
         activity()
@@ -98,8 +115,8 @@ class ImportSheetRfidRawLogs extends Command
 
         $this->info("Added {$inserted} read(s) to the RFID raw logs.");
 
-        if ($processNow) {
-            $this->table(['Result', 'Count'], collect($processor->run())->map(fn (int $count, string $outcome): array => [$outcome, $count])->values()->all());
+        if ($totals !== null) {
+            $this->table(['Result', 'Count'], collect($totals)->map(fn (int $count, string $outcome): array => [$outcome, $count])->values()->all());
         } elseif ($inserted > 0) {
             ProcessRfidRawLogs::dispatch();
             $this->line('They are processed by the queue, or now with: php artisan rfid:process-raw-logs');

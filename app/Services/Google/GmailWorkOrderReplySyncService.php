@@ -28,10 +28,7 @@ class GmailWorkOrderReplySyncService
     {
         $gmail = new Gmail($this->createClient($mailboxUser));
 
-        $messages = $gmail->users_messages->listUsersMessages('me', [
-            'q' => 'is:unread newer_than:7d',
-            'maxResults' => 50,
-        ]);
+        $messages = $gmail->users_messages->listUsersMessages('me', $this->listOptions());
 
         $processed = 0;
 
@@ -42,6 +39,20 @@ class GmailWorkOrderReplySyncService
         }
 
         return $processed;
+    }
+
+    /**
+     * Which messages one run reads: unread ones, no older than work_orders.reply_max_age_days, at most
+     * work_orders.reply_batch_size of them.
+     *
+     * @return array{q: string, maxResults: int}
+     */
+    public function listOptions(): array
+    {
+        return [
+            'q' => 'is:unread newer_than:'.max(1, (int) config('work_orders.reply_max_age_days')).'d',
+            'maxResults' => max(1, (int) config('work_orders.reply_batch_size')),
+        ];
     }
 
     public function processMessage(Gmail $gmail, string $messageId): bool

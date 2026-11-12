@@ -21,7 +21,7 @@ class ImportAimsAssetTags extends Command
 
     public function handle(AimsAssetTagImporter $importer, AimsUserMapper $userMapper): int
     {
-        $aims = DB::connection(env('DB_AIMS_CONNECTION', 'sqlsrv_aims'));
+        $aims = DB::connection(config('services.aims.connection'));
 
         $tags = $aims->table('RFIDTbl')
             ->select(['ID', 'RFID', 'ASSIGNED_TO', 'ASSIGNED_BY', 'ASSIGNED_DATE', 'SCANNED_BY', 'SCANNED_DATE', 'IS_DELETE'])

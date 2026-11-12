@@ -757,21 +757,20 @@ class ViewWorkOrder extends ViewRecord
                             }
 
                             // 3. Notify Technicians (Action Required)
-                            $emails = $record->workers
+                            $workerEmails = $record->workers
                                 ->where('is_active', true)
                                 ->pluck('user_email')
                                 ->filter()
                                 ->unique()
+                                ->values()
                                 ->all();
 
                             if (! empty($workerEmails)) {
                                 $primaryWorker = array_shift($workerEmails); // Removes 1st technician for To:
                                 $ccRecipients = array_merge($managerEmails, $workerEmails);
-                                $replyToEmail = env('WORK_ORDER_REPLY_TO_ADDRESS');
 
                                 Mail::to($primaryWorker)
                                     ->cc($ccRecipients)
-                                    // ->replyTo($replyToEmail, "Work Order #{$workOrder->wo_no}")
                                     ->queue(new WorkOrderAssignedMail($record));
                             }
 

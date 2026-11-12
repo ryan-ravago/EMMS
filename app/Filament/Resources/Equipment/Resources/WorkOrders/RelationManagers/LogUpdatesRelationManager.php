@@ -40,7 +40,7 @@ class LogUpdatesRelationManager extends RelationManager
                             ->columnSpanFull(),
                         TextEntry::make('by.user_fname')
                             ->label('By')
-                            ->formatStateUsing(fn($record) => "{$record->by->user_fname} {$record->by->user_lname}"),
+                            ->formatStateUsing(fn ($record) => "{$record->by->user_fname} {$record->by->user_lname}"),
                         TextEntry::make('wolu_dt')
                             ->label('Date/Time')
                             ->dateTime('M d, Y | h:i A'),
@@ -57,7 +57,7 @@ class LogUpdatesRelationManager extends RelationManager
                                 return collect($record->wolu_attachments)
                                     ->map(function ($file) {
                                         $url = Storage::disk('local')->temporaryUrl($file, now()->addMinutes(30));
-                                        $name = preg_replace('/^[0-9a-f]{12}-/', '', basename($file));
+                                        $name = e(preg_replace('/^[0-9a-f]{12}-/', '', basename($file)));
 
                                         return "
                                             <div class='flex items-center justify-between gap-3 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 mb-2'>
@@ -91,7 +91,7 @@ class LogUpdatesRelationManager extends RelationManager
                     ->imageGallery(),
                 TextEntry::make('wolu_by')
                     ->label('Added by')
-                    ->formatStateUsing(fn($record) => "{$record->by->user_fname} {$record->by->user_lname}"),
+                    ->formatStateUsing(fn ($record) => "{$record->by->user_fname} {$record->by->user_lname}"),
                 TextEntry::make('wolu_dt')
                     ->label('Timestamp')
                     ->dateTime('M d, Y | h:i A'),
@@ -123,7 +123,7 @@ class LogUpdatesRelationManager extends RelationManager
                     ->imageGallery(), // Enables the gallery viewer,
                 TextColumn::make('by.user_fname')
                     ->label('By')
-                    ->formatStateUsing(fn($record) => "{$record->by->user_fname} {$record->by->user_lname}")
+                    ->formatStateUsing(fn ($record) => "{$record->by->user_fname} {$record->by->user_lname}")
                     ->placeholder('—'),
                 TextColumn::make('wolu_dt')
                     ->label('Timestamp')

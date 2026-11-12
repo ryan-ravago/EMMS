@@ -5,7 +5,10 @@ namespace Tests\Feature;
 use App\Models\AssetMovement;
 use App\Models\Equipment;
 use App\Models\RfidRawLog;
+use App\Services\Rfid\RawLogProcessor;
 use Carbon\Carbon;
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\Cache;
 
 class ImportSheetRfidRawLogsTest extends AssetMovementTestCase
 {
@@ -123,5 +126,42 @@ class ImportSheetRfidRawLogsTest extends AssetMovementTestCase
 
         $this->assertSame(1, RfidRawLog::query()->where('outcome', RfidRawLog::PROCESSED)->count());
         $this->assertSame(1, AssetMovement::query()->where('asset_id', $asset->eqm_id)->count());
+    }
+
+    public function test_rows_are_not_added_while_another_processing_run_holds_the_lock(): void
+    {
+        $lock = Cache::lock('rfid-raw-log-processing', 600);
+        $this->assertTrue($lock->get());
+        $added = false;
+
+        try {
+            app(RawLogProcessor::class)->addAndRun(function () use (&$added): void {
+                $added = true;
+            }, waitSeconds: 0);
+
+            $this->fail('Expected the lock to time out.');
+        } catch (LockTimeoutException) {
+            $this->assertFalse($added);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    public function test_rows_added_under_the_lock_are_processed_in_the_same_run(): void
+    {
+        $asset = Equipment::factory()->equipment()->create(['eqm_prc_code' => 'TH30']);
+        $this->makeTag($asset, 'TAG-2');
+
+        $totals = app(RawLogProcessor::class)->addAndRun(fn () => RfidRawLog::query()->insert([
+            'batch_uuid' => 'b0000000-0000-0000-0000-000000000000',
+            'yard_id' => $this->yard->id,
+            'tag_id' => 'TAG-2',
+            'status' => 'OUT',
+            'detected_at' => '2026-11-10 00:30:00',
+        ]));
+
+        $this->assertSame(1, $totals[RfidRawLog::PROCESSED]);
+        $this->assertSame(1, AssetMovement::query()->where('asset_id', $asset->eqm_id)->count());
+        $this->assertTrue(Cache::lock('rfid-raw-log-processing', 5)->get(), 'the lock is released afterwards');
     }
 }

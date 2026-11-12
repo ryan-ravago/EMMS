@@ -28,6 +28,12 @@ Thumbs.db
 /storage/framework/lsp-*.php
 /rfid issue token.txt
 
+# Database dumps hold accounts and password hashes: never in git
+/dbs
+# LibreOffice / Excel lock files (they carry the user and computer name)
+.~lock.*#
+~$*
+
 # Docker: real settings, secrets and certificates never go in git
 /docker/env/*.env
 /secrets

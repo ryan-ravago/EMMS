@@ -130,13 +130,13 @@ class RequestorWorkOrderInfolist
 
                                                 return "
                                             <div class='flex items-center justify-between gap-3 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 mb-2'>
-                                                <span class='text-xs text-gray-700 dark:text-gray-300 truncate'>".basename($file)."</span>
+                                                <span class='text-xs text-gray-700 dark:text-gray-300 truncate'>".e(basename($file))."</span>
                                                 <div class='flex gap-1'>
                                                     <a href='{$url}' target='_blank' title='Preview'
                                                         class='text-xs p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition'>
                                                         View
                                                     </a>
-                                                    <a href='{$url}' download='".basename($file)."' title='Download'
+                                                    <a href='{$url}' download='".e(basename($file))."' title='Download'
                                                         class='text-xs p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition'>
                                                         Download
                                                     </a>

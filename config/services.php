@@ -21,6 +21,11 @@ return [
         'spreadsheet_id' => env('GOOGLE_SPREADSHEET_ID'),
     ],
 
+    // The AIMS database the assets:import-aims-* and movements:import-aims commands read from.
+    'aims' => [
+        'connection' => env('DB_AIMS_CONNECTION', 'sqlsrv_aims'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

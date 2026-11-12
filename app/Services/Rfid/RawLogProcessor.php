@@ -5,6 +5,8 @@ namespace App\Services\Rfid;
 use App\Models\AssetTag;
 use App\Models\AssetTagLog;
 use App\Models\RfidRawLog;
+use Closure;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +27,10 @@ class RawLogProcessor
 {
     public const MAX_ATTEMPTS = 5;
 
+    private const LOCK = 'rfid-raw-log-processing';
+
+    private const LOCK_SECONDS = 600;
+
     /** How far ahead of the server clock a reader's timestamp may be (clock drift). */
     private const FUTURE_TOLERANCE_MINUTES = 5;
 
@@ -33,32 +39,67 @@ class RawLogProcessor
      */
     public function run(): array
     {
-        $totals = [
+        // Two runs at once would race over the same pending rows.
+        $lock = Cache::lock(self::LOCK, self::LOCK_SECONDS);
+
+        if (! $lock->get()) {
+            return $this->emptyTotals();
+        }
+
+        try {
+            return $this->drain();
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * Adds rows and processes them as one step: waits for any run in progress to finish, then holds the lock while
+     * $addRows stores its rows and they are processed. No other run (the every-minute schedule, the queue job) can
+     * pick the new rows up in between, which matters when the caller has changed a setting for this run only.
+     *
+     * @param  Closure(): void  $addRows
+     * @return array{processed: int, duplicate: int, unknown_tag: int, invalid_time: int, failed: int}
+     *
+     * @throws LockTimeoutException when another run is still going after $waitSeconds; nothing has been added then
+     */
+    public function addAndRun(Closure $addRows, int $waitSeconds = 60): array
+    {
+        return Cache::lock(self::LOCK, self::LOCK_SECONDS)->block($waitSeconds, function () use ($addRows): array {
+            $addRows();
+
+            return $this->drain();
+        });
+    }
+
+    /**
+     * @return array{processed: int, duplicate: int, unknown_tag: int, invalid_time: int, failed: int}
+     */
+    private function drain(): array
+    {
+        $totals = $this->emptyTotals();
+
+        while (($counts = $this->processChunk()) !== null) {
+            foreach ($counts as $outcome => $count) {
+                $totals[$outcome] += $count;
+            }
+        }
+
+        return $totals;
+    }
+
+    /**
+     * @return array{processed: int, duplicate: int, unknown_tag: int, invalid_time: int, failed: int}
+     */
+    private function emptyTotals(): array
+    {
+        return [
             RfidRawLog::PROCESSED => 0,
             RfidRawLog::DUPLICATE => 0,
             RfidRawLog::UNKNOWN_TAG => 0,
             RfidRawLog::INVALID_TIME => 0,
             RfidRawLog::FAILED => 0,
         ];
-
-        // Two runs at once would race over the same pending rows.
-        $lock = Cache::lock('rfid-raw-log-processing', 600);
-
-        if (! $lock->get()) {
-            return $totals;
-        }
-
-        try {
-            while (($counts = $this->processChunk()) !== null) {
-                foreach ($counts as $outcome => $count) {
-                    $totals[$outcome] += $count;
-                }
-            }
-        } finally {
-            $lock->release();
-        }
-
-        return $totals;
     }
 
     /**
