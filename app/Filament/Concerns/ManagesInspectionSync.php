@@ -177,7 +177,7 @@ trait ManagesInspectionSync
 
                         Notification::make()
                             ->title('Sync Failed')
-                            ->body('Could not read the AppSheet sheet: '.$exception->getMessage())
+                            ->body('Could not read the AppSheet sheet. The detail is in the activity log.')
                             ->danger()
                             ->send();
 

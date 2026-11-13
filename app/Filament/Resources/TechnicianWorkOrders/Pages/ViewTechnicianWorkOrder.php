@@ -16,6 +16,7 @@ use App\Models\Status;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderLog;
 use App\Models\WorkOrderLogUpdate;
+use App\Support\UserFacingError;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
@@ -112,7 +113,7 @@ class ViewTechnicianWorkOrder extends ViewRecord
                     } catch (\Throwable $e) {
                         Notification::make()
                             ->title('Failed to add update.')
-                            ->body($e->getMessage())
+                            ->body(UserFacingError::from($e))
                             ->danger()
                             ->send();
                     }
@@ -318,7 +319,7 @@ class ViewTechnicianWorkOrder extends ViewRecord
                     } catch (\Throwable $e) {
                         Notification::make()
                             ->title('Failed to request completion.')
-                            ->body($e->getMessage())
+                            ->body(UserFacingError::from($e))
                             ->danger()
                             ->send();
                     }

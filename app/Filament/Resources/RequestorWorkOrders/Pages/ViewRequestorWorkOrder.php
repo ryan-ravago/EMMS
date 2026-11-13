@@ -14,6 +14,7 @@ use App\Models\MaintenanceTaskLog;
 use App\Models\Status;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderLog;
+use App\Support\UserFacingError;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -179,7 +180,7 @@ class ViewRequestorWorkOrder extends ViewRecord
                     } catch (\Throwable $e) {
                         Notification::make()
                             ->title('Failed to cancel work order.')
-                            ->body($e->getMessage())
+                            ->body(UserFacingError::from($e))
                             ->danger()
                             ->send();
                     }

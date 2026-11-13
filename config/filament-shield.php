@@ -207,6 +207,7 @@ return [
                 'addTestLog',
                 'receiveEmails',
                 'createTrip',
+                'print',
             ],
             AssetTagLogResource::class => [
                 'viewAny',

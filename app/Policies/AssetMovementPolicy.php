@@ -109,6 +109,15 @@ class AssetMovementPolicy
     }
 
     /**
+     * The "Print" button on a trip. Which trips may be printed (acknowledged ones) is a state check on the
+     * AssetMovement model, like the other actions.
+     */
+    public function print(AuthUser $authUser, AssetMovement $assetMovement): bool
+    {
+        return $authUser->can('Print:AssetMovementResource');
+    }
+
+    /**
      * The "Create trip" button: records a time out (and time in) by hand, for a yard without a scanner.
      */
     public function createTrip(AuthUser $authUser): bool

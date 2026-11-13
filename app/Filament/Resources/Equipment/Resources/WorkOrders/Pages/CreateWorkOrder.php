@@ -7,6 +7,7 @@ use App\Mail\WorkOrderAssignedMail;
 use App\Mail\WorkOrderConfirmationMail;
 use App\Models\AppUser;
 use App\Models\WorkOrderLog;
+use App\Support\UserFacingError;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
@@ -67,7 +68,7 @@ class CreateWorkOrder extends CreateRecord
                 // Transaction will auto-rollback after exception is re-thrown
                 Notification::make()
                     ->title('Failed to create work order.')
-                    ->body($e->getMessage())
+                    ->body(UserFacingError::from($e))
                     ->danger()
                     ->send();
 

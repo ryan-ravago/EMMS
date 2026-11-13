@@ -16,6 +16,7 @@ use App\Models\Priority;
 use App\Models\Status;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderLog;
+use App\Support\UserFacingError;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
@@ -292,7 +293,7 @@ class ViewMaintenanceTask extends ViewRecord
                         } catch (Throwable $e) {
                             Notification::make()
                                 ->title('Failed to create work order.')
-                                ->body($e->getMessage())
+                                ->body(UserFacingError::from($e))
                                 ->danger()
                                 ->send();
                         }
@@ -383,7 +384,7 @@ class ViewMaintenanceTask extends ViewRecord
                         } catch (Throwable $th) {
                             Notification::make()
                                 ->title('Action Failed')
-                                ->body('An error occurred while updating the task. No changes were saved.'.''.$th->getMessage())
+                                ->body(UserFacingError::from($th))
                                 ->danger()
                                 ->send();
                         }
@@ -457,7 +458,7 @@ class ViewMaintenanceTask extends ViewRecord
                         } catch (Throwable $th) {
                             Notification::make()
                                 ->title('Action Failed')
-                                ->body('An error occurred while updating the task. No changes were saved.'.''.$th->getMessage())
+                                ->body(UserFacingError::from($th))
                                 ->danger()
                                 ->send();
                         }

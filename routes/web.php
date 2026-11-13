@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AssetMovementPrintController;
 use App\Http\Controllers\PwaManifestController;
 use App\Http\Controllers\SocialiteController;
 use App\Mail\WorkOrderConfirmationMail;
@@ -29,3 +30,9 @@ Route::get('/auth/google/callback', [SocialiteController::class, 'handleGoogleCa
 
 //     return new WorkOrderConfirmationMail($workOrder);
 // });
+
+// Printable copy of a verified equipment trip (Time In / Out). The controller checks the sign-in, the "Print"
+// permission and the trip's state; the limit keeps repeated PDF rendering from loading the server.
+Route::get('/asset-movements/{assetMovement}/print', AssetMovementPrintController::class)
+    ->name('asset-movements.print')
+    ->middleware('throttle:30,1');

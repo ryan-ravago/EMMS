@@ -20,6 +20,7 @@ use App\Models\Status;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderLog;
 use App\Models\WorkOrderLogUpdate;
+use App\Support\UserFacingError;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -251,7 +252,7 @@ class ViewWorkOrder extends ViewRecord
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Failed to reject completion request.')
-                                ->body($e->getMessage())
+                                ->body(UserFacingError::from($e))
                                 ->danger()
                                 ->send();
                         }
@@ -372,7 +373,7 @@ class ViewWorkOrder extends ViewRecord
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Failed to approve completion request.')
-                                ->body($e->getMessage())
+                                ->body(UserFacingError::from($e))
                                 ->danger()
                                 ->send();
                         }
@@ -501,7 +502,7 @@ class ViewWorkOrder extends ViewRecord
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Failed to cancel work order.')
-                                ->body($e->getMessage())
+                                ->body(UserFacingError::from($e))
                                 ->danger()
                                 ->send();
                         }
@@ -621,7 +622,7 @@ class ViewWorkOrder extends ViewRecord
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Failed to complete work order.')
-                                ->body($e->getMessage())
+                                ->body(UserFacingError::from($e))
                                 ->danger()
                                 ->send();
                         }
@@ -745,7 +746,7 @@ class ViewWorkOrder extends ViewRecord
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Failed to '.strtolower($assignAction->a_past_tense).' work order.')
-                                ->body($e->getMessage())
+                                ->body(UserFacingError::from($e))
                                 ->danger()
                                 ->send();
                         }
@@ -832,7 +833,7 @@ class ViewWorkOrder extends ViewRecord
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Failed to reject work order.')
-                                ->body($e->getMessage())
+                                ->body(UserFacingError::from($e))
                                 ->danger()
                                 ->send();
                         }

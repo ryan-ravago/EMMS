@@ -237,6 +237,15 @@ class AssetMovement extends Model
         return $this->status === self::STATUS_MISSING_TIME_IN;
     }
 
+    /**
+     * Only a verified trip is printed: it is the record the printout stands for, and an open or disregarded trip
+     * can still change (or be thrown out) after it has been handed round.
+     */
+    public function isPrintable(): bool
+    {
+        return $this->status === self::STATUS_ACKNOWLEDGED;
+    }
+
     public function canBeDisregarded(): bool
     {
         return ! in_array($this->status, [self::STATUS_DISREGARDED, self::STATUS_ACKNOWLEDGED], true);

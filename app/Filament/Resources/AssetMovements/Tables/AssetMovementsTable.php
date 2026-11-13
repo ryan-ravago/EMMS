@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AssetMovements\Tables;
 
+use App\Filament\Resources\AssetMovements\Actions\PrintTripAction;
 use App\Filament\Resources\AssetMovements\Actions\VerificationActions;
 use App\Filament\Resources\AssetMovements\AssetMovementResource;
 use App\Models\AssetMovement;
@@ -68,6 +69,7 @@ class AssetMovementsTable
             ->recordUrl(fn (AssetMovement $record): string => AssetMovementResource::getUrl('view', ['record' => $record]))
             ->recordActions([
                 ViewAction::make(),
+                PrintTripAction::make(),
                 ActionGroup::make(VerificationActions::all())
                     ->label('Verify')
                     ->icon(Heroicon::OutlinedShieldCheck)

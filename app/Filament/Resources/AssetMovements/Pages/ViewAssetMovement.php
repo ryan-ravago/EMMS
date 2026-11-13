@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\AssetMovements\Pages;
 
 use App\Filament\Concerns\HasRecordNavigation;
+use App\Filament\Resources\AssetMovements\Actions\PrintTripAction;
 use App\Filament\Resources\AssetMovements\Actions\VerificationActions;
 use App\Filament\Resources\AssetMovements\AssetMovementResource;
 use Filament\Resources\Pages\ViewRecord;
@@ -15,7 +16,7 @@ class ViewAssetMovement extends ViewRecord
 
     protected function getHeaderActions(): array
     {
-        return VerificationActions::all();
+        return [PrintTripAction::make(), ...VerificationActions::all()];
     }
 
     /**
