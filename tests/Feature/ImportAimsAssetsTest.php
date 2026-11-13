@@ -115,7 +115,7 @@ class ImportAimsAssetsTest extends TestCase
     public function test_existing_codes_long_codes_unknown_types_and_repeats_are_skipped(): void
     {
         $this->artisan('assets:import-aims', ['source' => $this->sample()])
-            ->expectsOutputToContain('already in EMMS as MD   01')
+            ->expectsOutputToContain('already in EMS as MD   01')
             ->expectsOutputToContain('asset code is longer than 255 characters')
             ->expectsOutputToContain('unknown asset type ""')
             ->expectsOutputToContain('listed twice in the file')
@@ -135,7 +135,7 @@ class ImportAimsAssetsTest extends TestCase
     public function test_declining_the_confirmation_adds_nothing(): void
     {
         $this->artisan('assets:import-aims', ['source' => $this->sample(), '--execute' => true])
-            ->expectsConfirmation('Add 4 assets to EMMS?', 'no')
+            ->expectsConfirmation('Add 4 assets to EMS?', 'no')
             ->assertFailed();
 
         $this->assertSame(1, DB::table('equipment_units')->count());

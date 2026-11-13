@@ -11,10 +11,10 @@ final class RfidHealthReport
 {
     public const OK = 'ok';
 
-    /** The reader server is contacting EMMS, but no known tag has been stored for a while. */
+    /** The reader server is contacting EMS, but no known tag has been stored for a while. */
     public const QUIET = 'quiet';
 
-    /** The reader server is not reaching EMMS (or cannot: no valid token). */
+    /** The reader server is not reaching EMS (or cannot: no valid token). */
     public const DOWN = 'down';
 
     public const CAUSE_NO_TOKEN = 'no_valid_token';
@@ -50,7 +50,7 @@ final class RfidHealthReport
     {
         return match ($this->cause) {
             self::CAUSE_NO_TOKEN => 'The RFID reader has no valid token',
-            self::CAUSE_NO_CONTACT => 'The RFID reader server is not reaching EMMS',
+            self::CAUSE_NO_CONTACT => 'The RFID reader server is not reaching EMS',
             self::CAUSE_NO_SCANS => 'The RFID reader is connected but no tag scans are being stored',
             self::CAUSE_STUCK => 'RFID scans are arriving but are not being processed',
             default => 'The RFID reader is working',
@@ -60,9 +60,9 @@ final class RfidHealthReport
     public function explanation(): string
     {
         return match ($this->cause) {
-            self::CAUSE_NO_TOKEN => 'Every token for the reader server has expired or been revoked, so EMMS rejects each scan with "401 Unauthenticated".',
-            self::CAUSE_NO_CONTACT => 'EMMS has not received any request from the reader server for a while. The server may be off, offline, or not sending.',
-            self::CAUSE_NO_SCANS => 'The reader server is sending data, but none of it was a tag that EMMS knows. The readers may be off, or the tags are not registered.',
+            self::CAUSE_NO_TOKEN => 'Every token for the reader server has expired or been revoked, so EMS rejects each scan with "401 Unauthenticated".',
+            self::CAUSE_NO_CONTACT => 'EMS has not received any request from the reader server for a while. The server may be off, offline, or not sending.',
+            self::CAUSE_NO_SCANS => 'The reader server is sending data, but none of it was a tag that EMS knows. The readers may be off, or the tags are not registered.',
             self::CAUSE_STUCK => 'Reads from the reader server are saved, but have been waiting to be moved into the tag logs and equipment trips. The queue worker or the scheduler is probably not running.',
             default => '',
         };
@@ -75,12 +75,12 @@ final class RfidHealthReport
     {
         return match ($this->cause) {
             self::CAUSE_NO_TOKEN => [
-                'On the EMMS server run: php artisan rfid:issue-token --revoke',
+                'On the EMS server run: php artisan rfid:issue-token --revoke',
                 'Put the new token on the reader server (it is shown only once).',
             ],
             self::CAUSE_NO_CONTACT => [
                 'Check that the reader server is on and has internet access.',
-                'Check that it still has the current token and the right EMMS address.',
+                'Check that it still has the current token and the right EMS address.',
                 'If the token was changed, issue a new one: php artisan rfid:issue-token --revoke',
             ],
             self::CAUSE_NO_SCANS => [

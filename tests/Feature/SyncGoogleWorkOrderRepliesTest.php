@@ -114,7 +114,7 @@ class SyncGoogleWorkOrderRepliesTest extends TestCase
         $this->expectNoSync();
 
         $this->artisan('work-orders:sync-google-replies')
-            ->expectsOutputToContain('No EMMS user has the email workorders@example.test')
+            ->expectsOutputToContain('No EMS user has the email workorders@example.test')
             ->assertSuccessful();
     }
 
@@ -126,7 +126,7 @@ class SyncGoogleWorkOrderRepliesTest extends TestCase
         $this->expectNoSync();
 
         $this->artisan('work-orders:sync-google-replies')
-            ->expectsOutputToContain('has not signed in to EMMS with Google')
+            ->expectsOutputToContain('has not signed in to EMS with Google')
             ->assertSuccessful();
     }
 

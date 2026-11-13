@@ -1,4 +1,4 @@
-# EMMS on Docker: the parts both environments share.
+# EMS on Docker: the parts both environments share.
 #
 # Do not run this file alone. Combine it with one environment file:
 #

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 #
-# EMMS image, one Dockerfile, three runtime targets:
+# EMS image, one Dockerfile, three runtime targets:
 #   app  - PHP-FPM (also used for the queue worker, scheduler and migrations)
 #   web  - Caddy: HTTPS, static files, hands PHP requests to the app container
 #
@@ -45,7 +45,7 @@ RUN --mount=type=cache,target=/root/.composer/cache \
 
 COPY . .
 
-# google/apiclient-services ships all 650+ Google APIs (about 200 MB). EMMS uses Gmail and Sheets only.
+# google/apiclient-services ships all 650+ Google APIs (about 200 MB). EMS uses Gmail and Sheets only.
 # If the code starts using another Google API, add its name here (e.g. "Gmail Sheets Drive").
 ARG GOOGLE_SERVICES="Gmail Sheets"
 RUN set -eu; cd vendor/google/apiclient-services/src; \

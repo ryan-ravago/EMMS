@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
 /**
- * Carries the trips copied from AIMS to another EMMS database (production) without needing the AIMS connection.
+ * Carries the trips copied from AIMS to another EMS database (production) without needing the AIMS connection.
  *
  * Ids differ between databases, so the file names things instead: the equipment by its code, a yard by its name
  * (full path), a person by email. The importing side looks them up again. The AIMS log id travels with each trip,

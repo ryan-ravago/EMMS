@@ -36,7 +36,7 @@ class PwaTest extends TestCase
 
         $response->assertOk()
             ->assertHeader('Content-Type', 'application/manifest+json')
-            ->assertJsonPath('name', 'EMMS')
+            ->assertJsonPath('name', 'EMS')
             ->assertJsonPath('display', 'standalone')
             ->assertJsonPath('start_url', '/')
             ->assertJsonPath('scope', '/')
@@ -63,7 +63,7 @@ class PwaTest extends TestCase
         // No site_settings table at all, as on a fresh deploy before migrating.
         $this->get('/manifest.webmanifest')
             ->assertOk()
-            ->assertJsonPath('name', 'EMMS');
+            ->assertJsonPath('name', 'EMS');
     }
 
     public function test_every_icon_in_the_manifest_exists_with_the_declared_size(): void

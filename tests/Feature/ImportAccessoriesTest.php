@@ -182,7 +182,7 @@ class ImportAccessoriesTest extends TestCase
     public function test_declining_the_confirmation_adds_nothing(): void
     {
         $this->artisan('assets:import-accessories', ['source' => $this->sample(), '--execute' => true])
-            ->expectsConfirmation('Add 3 accessories to EMMS?', 'no')
+            ->expectsConfirmation('Add 3 accessories to EMS?', 'no')
             ->assertFailed();
 
         $this->assertSame(1, DB::table('equipment_units')->count());

@@ -52,7 +52,7 @@ class SecurityLoginAndUploadTest extends TestCase
 
         Schema::create('site_settings', function (Blueprint $table): void {
             $table->id();
-            $table->string('site_name')->default('EMMS');
+            $table->string('site_name')->default('EMS');
             $table->string('site_logo')->nullable();
             $table->string('site_favicon')->nullable();
             $table->string('site_primary_color')->default('amber');

@@ -63,7 +63,7 @@ Schedule::command(CheckDueMaintenanceCommand::class)
     ->daily()
     ->at('08:00');
 
-// Tell IT when the RFID reader server stops getting scans to EMMS (only sends when RFID_ALERTS_ENABLED is on).
+// Tell IT when the RFID reader server stops getting scans to EMS (only sends when RFID_ALERTS_ENABLED is on).
 Schedule::command('rfid:check-health')
     ->everyTenMinutes()
     ->withoutOverlapping()

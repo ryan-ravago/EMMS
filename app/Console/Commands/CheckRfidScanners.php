@@ -124,7 +124,7 @@ class CheckRfidScanners extends Command
     {
         return $cause === self::CAUSE_INACTIVE
             ? 'The reader server reports that this gate scanner is not working, so equipment passing the gate may not be recorded.'
-            : 'EMMS has not received a status report for this scanner for a while. The reader server may have stopped sending its status, or may be offline.';
+            : 'EMS has not received a status report for this scanner for a while. The reader server may have stopped sending its status, or may be offline.';
     }
 
     /**
@@ -139,7 +139,7 @@ class CheckRfidScanners extends Command
             ]
             : [
                 'Check that the reader server is on and has internet access.',
-                'Check that it still has the current token and the right EMMS address.',
+                'Check that it still has the current token and the right EMS address.',
             ];
     }
 

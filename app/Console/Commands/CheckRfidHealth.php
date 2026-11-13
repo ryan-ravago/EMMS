@@ -17,7 +17,7 @@ class CheckRfidHealth extends Command
 
     protected $signature = 'rfid:check-health';
 
-    protected $description = 'Check that the RFID reader server is getting scans to EMMS and alert (email and in the app) when it is not';
+    protected $description = 'Check that the RFID reader server is getting scans to EMS and alert (email and in the app) when it is not';
 
     public function handle(RfidHealthCheck $check): int
     {
@@ -25,7 +25,7 @@ class CheckRfidHealth extends Command
 
         $this->table(['Check', 'Result'], [
             ['Status', $report->status.($report->cause ? " ({$report->cause})" : '')],
-            ['Reader server last contacted EMMS', $report->lastRequestAt?->toDateTimeString() ?? 'Never'],
+            ['Reader server last contacted EMS', $report->lastRequestAt?->toDateTimeString() ?? 'Never'],
             ['Minutes since the last stored scan', $report->minutesSinceScan ?? 'Never'],
             ['Last token expires', $report->tokenExpiresAt?->toDateString() ?? 'Never'],
         ]);
@@ -111,9 +111,9 @@ class CheckRfidHealth extends Command
         $this->send(
             RfidHealthAlertMail::TOKEN_EXPIRING,
             'The RFID reader token expires soon',
-            'When it expires the reader server can no longer send scans to EMMS.',
+            'When it expires the reader server can no longer send scans to EMS.',
             ['Token expires on' => $report->tokenExpiresAt->format('M d, Y')],
-            ['On the EMMS server run: php artisan rfid:issue-token --revoke', 'Put the new token on the reader server (it is shown only once). New tokens do not expire.'],
+            ['On the EMS server run: php artisan rfid:issue-token --revoke', 'Put the new token on the reader server (it is shown only once). New tokens do not expire.'],
         );
 
         $state->update(['token_warning_sent_at' => $now]);
@@ -126,7 +126,7 @@ class CheckRfidHealth extends Command
     {
         return array_filter([
             'Problem since' => $state->since?->format('M d, Y h:i A'),
-            'Reader server last contacted EMMS' => $report->lastRequestAt?->format('M d, Y h:i A') ?? 'Never',
+            'Reader server last contacted EMS' => $report->lastRequestAt?->format('M d, Y h:i A') ?? 'Never',
             'Last scan stored' => $report->minutesSinceScan === null ? 'Never' : $report->minutesSinceScan.' minute(s) ago',
         ]);
     }

@@ -45,7 +45,7 @@
                             @if ($tripUrl)
                                 <p style="margin:0 0 24px;">
                                     <a href="{{ $tripUrl }}"
-                                        style="display:inline-block;background-color:#03449d;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:10px 18px;border-radius:6px;">View in EMMS</a>
+                                        style="display:inline-block;background-color:#03449d;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:10px 18px;border-radius:6px;">View in EMS</a>
                                 </p>
                             @endif
 

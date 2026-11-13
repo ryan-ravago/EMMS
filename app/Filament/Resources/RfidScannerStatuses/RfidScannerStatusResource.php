@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Whether each gate scanner (IN / OUT) is working, as reported by the RFID reader server. Read-only: the reader
- * server is the one that knows, EMMS only shows it.
+ * server is the one that knows, EMS only shows it.
  */
 class RfidScannerStatusResource extends Resource
 {

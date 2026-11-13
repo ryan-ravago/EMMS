@@ -9,7 +9,7 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Foundation\Auth\User as AuthUser;
 
 /**
- * Maintenance inspections are copied from AppSheet and are read-only in EMMS.
+ * Maintenance inspections are copied from AppSheet and are read-only in EMS.
  *
  * Super admins see everything. A manager of a maintenance department (Mechanical, Electrical or Preventive) sees
  * that department's inspections. Any other role needs the Shield permission and is also limited to its own department.

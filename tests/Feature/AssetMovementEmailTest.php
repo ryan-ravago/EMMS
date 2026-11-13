@@ -106,7 +106,7 @@ class AssetMovementEmailTest extends AssetMovementTestCase
                 && str_contains($mail->assetLabel, $equipment->eqm_name)
                 && $mail->details['Time out'] === 'Nov 04, 2026 11:30 AM'
                 && $mail->details['Yard'] === 'Valenzuela Yard'
-                && $mail->envelope()->subject === "[EMMS] Time out: {$mail->assetLabel}";
+                && $mail->envelope()->subject === "[EMS] Time out: {$mail->assetLabel}";
         });
     }
 
@@ -333,8 +333,11 @@ class AssetMovementEmailTest extends AssetMovementTestCase
         $this->makeTag($equipment, 'AAA2');
         foreach (['AAA1' => '11:30:00', 'AAA2' => '11:30:06'] as $tag => $time) {
             DB::table('rfid_raw_logs')->insert([
-                'batch_uuid' => 'b1', 'yard_id' => $this->yard->id, 'tag_id' => $tag,
-                'status' => 'OUT', 'detected_at' => "2026-11-04 {$time}",
+                'batch_uuid' => 'b1',
+                'yard_id' => $this->yard->id,
+                'tag_id' => $tag,
+                'status' => 'OUT',
+                'detected_at' => "2026-11-04 {$time}",
             ]);
         }
 

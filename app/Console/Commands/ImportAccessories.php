@@ -42,7 +42,7 @@ class ImportAccessories extends Command
             return self::FAILURE;
         }
 
-        // The accessory name is also its asset code (eqm_prc_code), so "already in EMMS" is judged on the code,
+        // The accessory name is also its asset code (eqm_prc_code), so "already in EMS" is judged on the code,
         // ignoring case and spaces, the same way the AIMS imports match codes.
         $existing = DB::table('equipment_units')->pluck('eqm_prc_code')
             ->mapWithKeys(fn ($code) => [$this->normalize((string) $code) => (string) $code]);
@@ -57,7 +57,7 @@ class ImportAccessories extends Command
             $reason = match (true) {
                 $code === '' => 'no asset code (the ASSET CODE column is empty for this row)',
                 mb_strlen($code) > self::MAX_CODE_LENGTH => 'asset code is longer than '.self::MAX_CODE_LENGTH.' characters',
-                $existing->has($key) => 'already in EMMS',
+                $existing->has($key) => 'already in EMS',
                 isset($seen[$key]) => 'listed twice in the file',
                 default => null,
             };
@@ -67,7 +67,7 @@ class ImportAccessories extends Command
                     'line' => $line,
                     'name' => $name,
                     'reason' => $reason,
-                    'existing' => $reason === 'already in EMMS' ? $existing[$key] : '',
+                    'existing' => $reason === 'already in EMS' ? $existing[$key] : '',
                 ];
 
                 continue;
@@ -115,7 +115,7 @@ class ImportAccessories extends Command
             return self::FAILURE;
         }
 
-        if (! $this->option('force') && ! $this->confirm('Add '.count($toAdd).' accessories to EMMS?', false)) {
+        if (! $this->option('force') && ! $this->confirm('Add '.count($toAdd).' accessories to EMS?', false)) {
             $this->warn('Cancelled. Nothing was added.');
 
             return self::FAILURE;

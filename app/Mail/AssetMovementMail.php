@@ -41,7 +41,7 @@ class AssetMovementMail extends Mailable implements ShouldQueue
     {
         $event = $this->kind === self::OUT ? 'Time out' : 'Time in';
 
-        return new Envelope(subject: "[EMMS] {$event}: {$this->assetLabel}");
+        return new Envelope(subject: "[EMS] {$event}: {$this->assetLabel}");
     }
 
     public function content(): Content

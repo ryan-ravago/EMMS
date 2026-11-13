@@ -10,16 +10,16 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * Turns AIMS LOGS rows (one row per equipment trip: TIME_OUT, and later TIME_IN) into EMMS equipment trips.
+ * Turns AIMS LOGS rows (one row per equipment trip: TIME_OUT, and later TIME_IN) into EMS equipment trips.
  *
  * AIMS has no per-tag scan history, so only trips are copied; asset_tag_logs is left alone.
  *
- *  - A log belongs to an AIMS PARENT (ITEM_ID). It is matched to EMMS equipment through the AIMS name, with the
+ *  - A log belongs to an AIMS PARENT (ITEM_ID). It is matched to EMS equipment through the AIMS name, with the
  *    same aliases the tag import uses. Accessories, other asset types and unmatched names are skipped.
  *  - Complete trips and trips with only a time in are copied as they are.
  *  - A trip that went out and was never closed is copied only when it is the equipment's most recent movement,
  *    because AIMS leaves thousands of stale open rows (an IN scan that does not find its OUT adds a new row).
- *  - Verification is kept: acknowledged in AIMS stays acknowledged (complete trips only; in EMMS an
+ *  - Verification is kept: acknowledged in AIMS stays acknowledged (complete trips only; in EMS an
  *    acknowledgement means both times were checked), manual in / out keep who did it.
  */
 class AimsMovementImporter
@@ -32,11 +32,11 @@ class AimsMovementImporter
 
     public const SKIP_NO_ASSET = 'ITEM_ID is not an AIMS parent or accessory';
 
-    public const SKIP_NO_UNIT = 'no EMMS unit with matching eqm_prc_code';
+    public const SKIP_NO_UNIT = 'no EMS unit with matching eqm_prc_code';
 
-    public const SKIP_AMBIGUOUS = 'eqm_prc_code matches more than one EMMS unit';
+    public const SKIP_AMBIGUOUS = 'eqm_prc_code matches more than one EMS unit';
 
-    public const SKIP_NOT_EQUIPMENT = 'not equipment in EMMS (only equipment is tracked)';
+    public const SKIP_NOT_EQUIPMENT = 'not equipment in EMS (only equipment is tracked)';
 
     public const SKIP_STALE_OPEN = 'never closed, and the equipment has a later movement or a newer open trip';
 
@@ -52,10 +52,10 @@ class AimsMovementImporter
      * @param  Collection<int, object>  $logs  AIMS LOGS rows in the window
      * @param  Collection<int, object>  $parents  AIMS PARENT rows (ID, NAME)
      * @param  Collection<int, object>  $accessories  AIMS ACCESSORIES rows (ID)
-     * @param  array<string, list<array{id: int, type: ?string}>>  $unitsByCode  normalized eqm_prc_code => EMMS units
-     * @param  array<string, string>  $aliases  AIMS code => EMMS code (as written)
-     * @param  array<int, int>  $userMap  AIMS user id => EMMS user id
-     * @param  array<int, int>  $locationMap  AIMS location id => EMMS location id
+     * @param  array<string, list<array{id: int, type: ?string}>>  $unitsByCode  normalized eqm_prc_code => EMS units
+     * @param  array<string, string>  $aliases  AIMS code => EMS code (as written)
+     * @param  array<int, int>  $userMap  AIMS user id => EMS user id
+     * @param  array<int, int>  $locationMap  AIMS location id => EMS location id
      * @param  array<int, true>  $alreadyImported  AIMS log ids already in asset_movements
      * @return array{rows: list<array<string, mixed>>, skipped: list<array{aims_id: int, reason: string, asset: ?string, time_out: ?string, time_in: ?string}>, unmappedUsers: list<int>}
      */

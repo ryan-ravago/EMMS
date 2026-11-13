@@ -227,7 +227,7 @@ class RfidHealthCheckTest extends AssetMovementTestCase
         $this->check();
 
         Mail::assertQueued(RfidHealthAlertMail::class, 2);
-        Mail::assertQueued(RfidHealthAlertMail::class, fn (RfidHealthAlertMail $mail): bool => str_contains($mail->headline, 'not reaching EMMS'));
+        Mail::assertQueued(RfidHealthAlertMail::class, fn (RfidHealthAlertMail $mail): bool => str_contains($mail->headline, 'not reaching EMS'));
     }
 
     public function test_recipients_are_cleaned_up_before_sending(): void

@@ -136,7 +136,7 @@ class AdminPanelProvider extends PanelProvider
                 try {
                     return SiteSetting::instance()->site_name;
                 } catch (\Throwable) {
-                    return 'EMMS';
+                    return 'EMS';
                 }
             })
             ->brandLogo(function () {

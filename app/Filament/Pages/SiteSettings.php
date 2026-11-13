@@ -57,7 +57,7 @@ class SiteSettings extends Page
                             ->label('Site Name')
                             ->required()
                             ->maxLength(255)
-                            ->placeholder('EMMS'),
+                            ->placeholder('EMS'),
 
                         Select::make('site_primary_color')
                             ->label('Primary Color')

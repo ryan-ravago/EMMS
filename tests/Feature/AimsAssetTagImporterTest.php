@@ -212,7 +212,7 @@ class AimsAssetTagImporterTest extends TestCase
             [501 => 900],
         );
 
-        // 501 was added to EMMS as its own asset (900). 502 is another crane's part: it never takes 900, and it is
+        // 501 was added to EMS as its own asset (900). 502 is another crane's part: it never takes 900, and it is
         // not pushed up onto its crane either.
         $this->assertSame(['mine' => 900], $plan['rows']);
         $this->assertSame(1, $plan['from_accessory_records']);
@@ -286,7 +286,7 @@ class AimsAssetTagImporterTest extends TestCase
         $this->assertFalse((bool) $first->is_deleted);
 
         $second = DB::table('asset_tags')->where('tag_id', 'e2002')->first();
-        $this->assertNull($second->assigned_by, 'an AIMS user with no EMMS account is stored as empty, never as the AIMS id');
+        $this->assertNull($second->assigned_by, 'an AIMS user with no EMS account is stored as empty, never as the AIMS id');
         $this->assertNull($second->assigned_date);
         $this->assertTrue((bool) $second->is_deleted);
     }

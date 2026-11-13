@@ -11,7 +11,7 @@ class ExportAimsMovementsCsv extends Command
         {--file=database/data/aims_movements.csv : Where to write the trips}
         {--users-file=database/data/aims_movement_users.csv : Where to write the people named on them}';
 
-    protected $description = 'Write the trips imported from AIMS to a CSV file, so another EMMS database (production) can load them without AIMS';
+    protected $description = 'Write the trips imported from AIMS to a CSV file, so another EMS database (production) can load them without AIMS';
 
     public function handle(AimsMovementCsv $csv): int
     {

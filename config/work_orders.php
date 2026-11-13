@@ -10,8 +10,8 @@ return [
     | Work order emails ask people to reply; `work-orders:sync-google-replies` (every minute) reads those replies
     | from a Gmail inbox and adds them to the work order as updates.
     |
-    | gmail_account_email  The EMMS user whose Gmail inbox is read. It must be an active user that has signed in to
-    |                      EMMS with Google at least once (that is what stores the Gmail permission). When empty,
+    | gmail_account_email  The EMS user whose Gmail inbox is read. It must be an active user that has signed in to
+    |                      EMS with Google at least once (that is what stores the Gmail permission). When empty,
     |                      nothing is synced.
     | reply_to_address     The address replies are sent to (the work order number is added as "+WO-..."). Normally
     |                      the same mailbox as gmail_account_email.

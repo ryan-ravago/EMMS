@@ -29,7 +29,7 @@ class ImportSheetRfidRawLogs extends Command
         {--name-column=ITEM_NAME : Column with the equipment code or name}
         {--out-column=TIME_OUT : Column with the time out ("-" or empty when there is none)}
         {--in-column=TIME_IN : Column with the time in ("-" or empty when there is none)}
-        {--aliases=database/data/aims_code_aliases.csv : CSV of names that have a different code here (AIMS Code, EMMS Code); ignored when missing}
+        {--aliases=database/data/aims_code_aliases.csv : CSV of names that have a different code here (AIMS Code, EMS Code); ignored when missing}
         {--retention-days= : Accept reads this many days old for this run only (default: the RFID_RAW_LOG_RETENTION_DAYS setting); the reads are then processed straight away}
         {--process : Process the reads now instead of leaving them to the queue}
         {--execute : Really add the reads; without it the command only shows what would happen}';
@@ -318,7 +318,7 @@ class ImportSheetRfidRawLogs extends Command
         $aliases = [];
 
         foreach ($this->read($file) as $line) {
-            $aliases[$this->normalize($line['AIMS Code'] ?? '')] = $this->normalize($line['EMMS Code'] ?? '');
+            $aliases[$this->normalize($line['AIMS Code'] ?? '')] = $this->normalize($line['EMS Code'] ?? '');
         }
 
         return $aliases;

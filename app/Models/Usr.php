@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
-use Filament\Panel;
-use Illuminate\Database\Eloquent\Model;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
+use Filament\Panel;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class Usr extends Authenticatable implements HasName, FilamentUser
+class Usr extends Authenticatable implements FilamentUser, HasName
 {
     use Notifiable;
 
@@ -17,8 +16,11 @@ class Usr extends Authenticatable implements HasName, FilamentUser
     protected $connection = 'auth_db';
 
     protected $table = 'usr';
+
     protected $primaryKey = 'userId';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     public $timestamps = false;
@@ -59,7 +61,7 @@ class Usr extends Authenticatable implements HasName, FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        // Only people with an active EMMS account (app_users) can use EMMS's password reset.
+        // Only people with an active EMS account (app_users) can use EMS's password reset.
         return AppUser::query()
             ->where('user_email', $this->email)
             ->where('is_active', true)

@@ -47,7 +47,7 @@
                             @endif
 
                             <p style="margin:0;font-size:12px;color:#9ca3af;">
-                                Sent by EMMS (rfid:check-health). Alerts are repeated while the problem lasts and a message is sent when it is fixed.
+                                Sent by EMS (rfid:check-health). Alerts are repeated while the problem lasts and a message is sent when it is fixed.
                             </p>
                         </td>
                     </tr>

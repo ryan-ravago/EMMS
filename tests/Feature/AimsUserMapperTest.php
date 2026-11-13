@@ -54,7 +54,7 @@ class AimsUserMapperTest extends TestCase
     {
         $plan = $this->mapper->plan($this->aimsUsers(), $this->emmsUsers(), [18, 19]);
 
-        // AIMS 19 (Janica Murillo) is EMMS 18; AIMS 18 (Nole Gonowon) is EMMS 27.
+        // AIMS 19 (Janica Murillo) is EMS 18; AIMS 18 (Nole Gonowon) is EMS 27.
         $this->assertSame([18 => 27, 19 => 18], $plan['map']);
         $this->assertSame([], $plan['create']);
     }
@@ -84,7 +84,7 @@ class AimsUserMapperTest extends TestCase
         $this->assertSame('dietherigne@gmail.com', $plan['create'][5]['user_email']);
         $this->assertSame('aims-user-4@aims.invalid', $plan['create'][4]['user_email'], 'shared with Nathaniel Chung');
         $this->assertSame('aims-user-11@aims.invalid', $plan['create'][11]['user_email'], 'shared with Vanessa Bareng');
-        $this->assertSame('aims-user-12@aims.invalid', $plan['create'][12]['user_email'], 'already used by another EMMS user');
+        $this->assertSame('aims-user-12@aims.invalid', $plan['create'][12]['user_email'], 'already used by another EMS user');
         $this->assertSame('aims-user-1@aims.invalid', $plan['create'][1]['user_email'], 'not a valid address');
     }
 

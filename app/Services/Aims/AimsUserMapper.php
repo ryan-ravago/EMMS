@@ -7,12 +7,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Maps AIMS USERS ids to EMMS app_users ids. AIMS ids mean nothing in EMMS (Janica Murillo is 19 in AIMS
- * and 18 in EMMS), so people are matched by name: first name + last name, ignoring case and middle names.
+ * Maps AIMS USERS ids to EMS app_users ids. AIMS ids mean nothing in EMS (Janica Murillo is 19 in AIMS
+ * and 18 in EMS), so people are matched by name: first name + last name, ignoring case and middle names.
  *
- * AIMS users with no EMMS account are created in the AIMS department as inactive accounts (they keep the
+ * AIMS users with no EMS account are created in the AIMS department as inactive accounts (they keep the
  * history readable but cannot sign in). AIMS e-mail addresses are often shared between several people,
- * so an AIMS address is only reused when exactly one AIMS user has it and EMMS does not use it yet;
+ * so an AIMS address is only reused when exactly one AIMS user has it and EMS does not use it yet;
  * everyone else gets a placeholder address on the reserved ".invalid" domain.
  */
 class AimsUserMapper
@@ -72,7 +72,7 @@ class AimsUserMapper
     }
 
     /**
-     * Creates the planned accounts and returns AIMS id => new EMMS user id.
+     * Creates the planned accounts and returns AIMS id => new EMS user id.
      *
      * @param  array<int, array{user_fname: string, user_mname: ?string, user_lname: string, user_email: string}>  $create
      * @return array<int, int>

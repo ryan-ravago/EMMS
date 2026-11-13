@@ -15,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Receives the status of a gate scanner (IN / OUT) from the RFID reader server. The reader server decides whether
- * a scanner is working; EMMS only keeps the latest status, a history of changes, and shows/alerts on it.
+ * a scanner is working; EMS only keeps the latest status, a history of changes, and shows/alerts on it.
  */
 class RfidScannerStatusController extends Controller
 {

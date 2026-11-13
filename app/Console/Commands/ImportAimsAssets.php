@@ -16,7 +16,7 @@ class ImportAimsAssets extends Command
         {--execute : Really add the assets; without it the command only shows what would be added}
         {--force : Skip the confirmation question (with --execute)}';
 
-    protected $description = 'Add AIMS assets that are missing in EMMS to equipment_units (no allocation to a parent)';
+    protected $description = 'Add AIMS assets that are missing in EMS to equipment_units (no allocation to a parent)';
 
     /** @var array<string, string> asset type as written in the CSV => asset_types.code */
     private const TYPES = [
@@ -36,7 +36,7 @@ class ImportAimsAssets extends Command
             return self::FAILURE;
         }
 
-        // An asset counts as "already in EMMS" the same way the tag import matches codes (case and spaces ignored).
+        // An asset counts as "already in EMS" the same way the tag import matches codes (case and spaces ignored).
         $existing = DB::table('equipment_units')->pluck('eqm_prc_code')
             ->mapWithKeys(fn ($code) => [$importer->normalizeCode((string) $code) => (string) $code]);
 
@@ -54,7 +54,7 @@ class ImportAimsAssets extends Command
                 $code === '' => 'no asset code',
                 mb_strlen($code) > 255 => 'asset code is longer than 255 characters',
                 $type === null => 'unknown asset type "'.($row['Asset Type'] ?? '').'"',
-                $existing->has($key) => 'already in EMMS as '.$existing[$key],
+                $existing->has($key) => 'already in EMS as '.$existing[$key],
                 isset($seen[$key]) => 'listed twice in the file',
                 default => null,
             };
@@ -106,7 +106,7 @@ class ImportAimsAssets extends Command
             return self::FAILURE;
         }
 
-        if (! $this->option('force') && ! $this->confirm('Add '.count($toAdd).' assets to EMMS?', false)) {
+        if (! $this->option('force') && ! $this->confirm('Add '.count($toAdd).' assets to EMS?', false)) {
             $this->warn('Cancelled. Nothing was added.');
 
             return self::FAILURE;

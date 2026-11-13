@@ -11,10 +11,10 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\PersonalAccessToken;
 
 /**
- * Works out whether the RFID reader server is getting its scans to EMMS, using these signals:
+ * Works out whether the RFID reader server is getting its scans to EMS, using these signals:
  *
  *  - the last request it made: the newest of its token's last_used_at (Sanctum) and the newest raw read stored
- *    (rfid_raw_logs, which keeps reads of tags EMMS does not know too), so it proves the reader server is alive;
+ *    (rfid_raw_logs, which keeps reads of tags EMS does not know too), so it proves the reader server is alive;
  *  - the last scan that was stored (asset_tag_logs.received_at);
  *  - whether raw reads are waiting to be processed for too long (the queue worker or scheduler is down).
  */

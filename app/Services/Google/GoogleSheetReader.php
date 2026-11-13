@@ -84,7 +84,7 @@ class GoogleSheetReader
         }
 
         $client = new GoogleClient;
-        $client->setApplicationName('EMMS Inspection Sync');
+        $client->setApplicationName('EMS Inspection Sync');
         $client->setScopes([Sheets::SPREADSHEETS_READONLY]);
         $client->setAuthConfig($credentialsPath);
 

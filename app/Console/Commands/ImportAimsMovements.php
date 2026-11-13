@@ -14,7 +14,7 @@ class ImportAimsMovements extends Command
         {--since= : Only trips from this date on, by their time out (or time in); default: two years ago}
         {--execute : Really write the trips; without it the command only shows what would happen}
         {--rollback : Remove every trip that was imported from AIMS (use with --execute)}
-        {--aliases=database/data/aims_code_aliases.csv : CSV of AIMS codes that have a different code in EMMS (AIMS Code, EMMS Code)}
+        {--aliases=database/data/aims_code_aliases.csv : CSV of AIMS codes that have a different code in EMS (AIMS Code, EMS Code)}
         {--report=aims-movements-skipped.csv : CSV (inside storage/app) listing every AIMS log that was not imported}';
 
     protected $description = 'Copy equipment trips (time out / time in) from the AIMS LOGS table into asset_movements';
@@ -43,14 +43,14 @@ class ImportAimsMovements extends Command
         }
 
         $aliases = collect($this->readCsv((string) $this->option('aliases')))
-            ->filter(fn (array $row): bool => trim($row['AIMS Code'] ?? '') !== '' && trim($row['EMMS Code'] ?? '') !== '')
-            ->mapWithKeys(fn (array $row): array => [$row['AIMS Code'] => $row['EMMS Code']])
+            ->filter(fn (array $row): bool => trim($row['AIMS Code'] ?? '') !== '' && trim($row['EMS Code'] ?? '') !== '')
+            ->mapWithKeys(fn (array $row): array => [$row['AIMS Code'] => $row['EMS Code']])
             ->all();
 
         $locationMap = $this->locationMap($aims);
         $alreadyImported = DB::table('asset_movements')->whereNotNull('aims_log_id')->pluck('aims_log_id')->mapWithKeys(fn ($id) => [(int) $id => true])->all();
 
-        // Who did the manual entries and acknowledgements in AIMS, as EMMS users.
+        // Who did the manual entries and acknowledgements in AIMS, as EMS users.
         $referenced = $logs->flatMap(fn (object $log): array => [$log->MANUAL_IN_BY ?? null, $log->MANUAL_OUT_BY ?? null, $log->ACKNOWLEDGED_BY ?? null])->filter()->unique()->values()->all();
         $aimsUsers = $aims->table('USERS')->get(['ID', 'FULLNAME', 'EMAIL_ADDRESS']);
         $users = $userMapper->plan($aimsUsers, DB::table('app_users')->get(['user_id', 'user_fname', 'user_lname', 'user_email']), $referenced);
@@ -135,12 +135,12 @@ class ImportAimsMovements extends Command
             fn (int $count, string $reason) => $this->line("  not imported {$count}: {$reason}")
         );
 
-        $this->line('AIMS locations mapped to EMMS locations: '.json_encode($locationMap));
+        $this->line('AIMS locations mapped to EMS locations: '.json_encode($locationMap));
 
         if ($users['create'] !== [] || $users['ambiguous'] !== [] || $plan['unmappedUsers'] !== []) {
             $this->warn('Users: '.count($users['create']).' AIMS user(s) will be created (inactive, AIMS department), '.count($users['ambiguous']).' are ambiguous and stay empty.');
         } else {
-            $this->line('All AIMS users on these trips are already EMMS users.');
+            $this->line('All AIMS users on these trips are already EMS users.');
         }
     }
 
@@ -150,7 +150,7 @@ class ImportAimsMovements extends Command
     }
 
     /**
-     * AIMS yard id => EMMS location id, matched by name ("VALENZUELA YARD" => "VALENZUELA"); roots win over children.
+     * AIMS yard id => EMS location id, matched by name ("VALENZUELA YARD" => "VALENZUELA"); roots win over children.
      *
      * @return array<int, int>
      */

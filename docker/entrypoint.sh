@@ -1,5 +1,5 @@
 #!/bin/sh
-# Runs before every EMMS container (php-fpm, queue worker, scheduler, migrations).
+# Runs before every EMS container (php-fpm, queue worker, scheduler, migrations).
 set -eu
 
 cd /var/www/html

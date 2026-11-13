@@ -89,8 +89,8 @@ return [
     | Keep `enabled` off everywhere except production, so local and test environments never email.
     |
     | emails            Comma separated recipients of the alert email.
-    | silence_minutes   The reader server has not contacted EMMS (no request with its token) for this long.
-    | no_scans_minutes  The reader server is contacting EMMS but no known tag has been stored for this long.
+    | silence_minutes   The reader server has not contacted EMS (no request with its token) for this long.
+    | no_scans_minutes  The reader server is contacting EMS but no known tag has been stored for this long.
     | window_start/end  Alerts are only sent inside this window (app timezone); recoveries are always sent.
     | days              ISO weekdays alerts are sent on (1 = Monday ... 7 = Sunday).
     | reminder_hours    How often the alert is repeated while the problem lasts.

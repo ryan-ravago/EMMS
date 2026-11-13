@@ -17,8 +17,8 @@ class PwaManifestController extends Controller
      */
     public function __invoke(): JsonResponse
     {
-        $name = rescue(fn () => SiteSetting::instance()->site_name, 'EMMS', report: false);
-        $name = is_string($name) && trim($name) !== '' ? trim($name) : 'EMMS';
+        $name = rescue(fn () => SiteSetting::instance()->site_name, 'EMS', report: false);
+        $name = is_string($name) && trim($name) !== '' ? trim($name) : 'EMS';
 
         return response()
             ->json([

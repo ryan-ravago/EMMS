@@ -142,8 +142,8 @@ class AimsMovementImporterTest extends AssetMovementTestCase
         $plan = $this->plan([
             $this->log(1, 500, '2026-10-01 08:00:00', '2026-10-01 17:00:00'),   // an accessory
             $this->log(2, 999, '2026-10-01 08:00:00', '2026-10-01 17:00:00'),   // nothing in AIMS
-            $this->log(3, 12, '2026-10-01 08:00:00', '2026-10-01 17:00:00'),    // no EMMS unit
-            $this->log(4, 13, '2026-10-01 08:00:00', '2026-10-01 17:00:00'),    // two EMMS units
+            $this->log(3, 12, '2026-10-01 08:00:00', '2026-10-01 17:00:00'),    // no EMS unit
+            $this->log(4, 13, '2026-10-01 08:00:00', '2026-10-01 17:00:00'),    // two EMS units
             $this->log(5, 14, '2026-10-01 08:00:00', '2026-10-01 17:00:00'),    // not equipment
             $this->log(6, 10, '2026-10-01 17:00:00', '2026-10-01 08:00:00'),    // back before it left
             $this->log(7, 10, '2026-10-01 08:00:00', '2026-12-25 17:00:00'),    // in the future

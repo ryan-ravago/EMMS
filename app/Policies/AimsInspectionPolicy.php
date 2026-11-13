@@ -9,7 +9,7 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Foundation\Auth\User as AuthUser;
 
 /**
- * AIMS inspections are copied from AppSheet and are read-only in EMMS. Only super admins, Asset Admins and Asset
+ * AIMS inspections are copied from AppSheet and are read-only in EMS. Only super admins, Asset Admins and Asset
  * Managers can see them; this is decided by role, not by a Shield permission.
  */
 class AimsInspectionPolicy

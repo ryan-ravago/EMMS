@@ -242,7 +242,7 @@
                     <tr>
                         <td class="email-footer" style="background-color:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center;">
                             <p style="margin:0;font-size:12px;color:#9ca3af;">
-                                This is an automated notification from EMMS
+                                This is an automated notification from EMS
                             </p>
                             <p style="margin:6px 0 0;font-size:12px;color:#d1d5db;">
                                 © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.

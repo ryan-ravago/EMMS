@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Concerns\LogsChanges;
+use Illuminate\Database\Eloquent\Model;
 
 class SiteSetting extends Model
 {
@@ -23,7 +23,7 @@ class SiteSetting extends Model
     public static function instance(): static
     {
         return static::firstOrCreate([], [
-            'site_name' => 'EMMS',
+            'site_name' => 'EMS',
             'site_primary_color' => 'amber',
         ]);
     }

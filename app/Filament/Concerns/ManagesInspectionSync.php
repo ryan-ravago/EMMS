@@ -161,7 +161,7 @@ trait ManagesInspectionSync
                 ->authorize(fn (): bool => static::canAccess())
                 ->requiresConfirmation()
                 ->modalHeading('Sync '.ucfirst(static::syncSubject()))
-                ->modalDescription('This reads the AppSheet Google Sheet and copies closed (Completed or Cancelled) '.static::syncSubject().' that are not in EMMS yet. Inspections already copied are never changed.')
+                ->modalDescription('This reads the AppSheet Google Sheet and copies closed (Completed or Cancelled) '.static::syncSubject().' that are not in EMS yet. Inspections already copied are never changed.')
                 ->modalSubmitActionLabel('Yes, Sync Now')
                 ->closeModalByClickingAway(false)
                 ->closeModalByEscaping(false)

@@ -1,5 +1,5 @@
 /*
- * EMMS service worker.
+ * EMS service worker.
  *
  * It exists so browsers offer "Install app". It does not cache anything and does not touch requests:
  * every page, Livewire call, upload and API request goes to the server as usual, so asset statuses are never stale.

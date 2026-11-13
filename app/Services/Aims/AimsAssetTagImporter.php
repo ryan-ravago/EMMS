@@ -8,18 +8,18 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * Maps AIMS RFIDTbl rows onto EMMS equipment units and writes them to asset_tags.
+ * Maps AIMS RFIDTbl rows onto EMS equipment units and writes them to asset_tags.
  *
  * AIMS RFIDTbl.ASSIGNED_TO has no foreign key: it holds an id from either PARENT or
- * ACCESSORIES (the two id ranges never overlap). EMMS units are matched through the AIMS
+ * ACCESSORIES (the two id ranges never overlap). EMS units are matched through the AIMS
  * NAME against equipment_units.eqm_prc_code:
  *
- *  - every asset keeps only its own tags: a tag on an accessory goes to the accessory's own EMMS unit when
- *    that accessory exists in EMMS as an asset of its own, and is skipped otherwise (never moved to its parent). "Its own" is decided by identity (the AIMS
+ *  - every asset keeps only its own tags: a tag on an accessory goes to the accessory's own EMS unit when
+ *    that accessory exists in EMS as an asset of its own, and is skipped otherwise (never moved to its parent). "Its own" is decided by identity (the AIMS
  *    accessory id it was created from), or by name only when no other AIMS accessory has that name:
  *    many cranes have a "CWT #2 (10T)", and their tags must not land on one crane's counterweight;
- *  - an alias (AIMS code => EMMS code) is used for assets renamed in EMMS, e.g. KLT80V#1 => KLT80V01;
- *  - when several EMMS codes look alike (XGC55 #1 / XGC55#1), the exactly matching code wins.
+ *  - an alias (AIMS code => EMS code) is used for assets renamed in EMS, e.g. KLT80V#1 => KLT80V01;
+ *  - when several EMS codes look alike (XGC55 #1 / XGC55#1), the exactly matching code wins.
  *
  * Anything that still cannot be matched unambiguously is skipped and reported.
  */
@@ -29,15 +29,15 @@ class AimsAssetTagImporter
 
     public const string SKIP_ASSET_DELETED = 'asset is deleted in AIMS';
 
-    public const string SKIP_NO_UNIT = 'no EMMS unit with matching eqm_prc_code';
+    public const string SKIP_NO_UNIT = 'no EMS unit with matching eqm_prc_code';
 
-    public const string SKIP_AMBIGUOUS_UNIT = 'eqm_prc_code matches more than one EMMS unit';
+    public const string SKIP_AMBIGUOUS_UNIT = 'eqm_prc_code matches more than one EMS unit';
 
     public const string SKIP_TAG_CONFLICT = 'same RFID assigned to different units in AIMS';
 
     public const string SKIP_BLANK_TAG = 'blank RFID';
 
-    public const string SKIP_ACCESSORY_NOT_ASSET = 'tag belongs to an accessory that is not an asset in EMMS';
+    public const string SKIP_ACCESSORY_NOT_ASSET = 'tag belongs to an accessory that is not an asset in EMS';
 
     /** @var array<string, list<int>> normalized eqm_prc_code => eqm_ids */
     private array $unitsByCode = [];
@@ -45,7 +45,7 @@ class AimsAssetTagImporter
     /** @var array<string, int> exact (trimmed, lower case) eqm_prc_code => eqm_id */
     private array $unitsByExactCode = [];
 
-    /** @var array<string, string> normalized AIMS code => exact (trimmed, lower case) EMMS code */
+    /** @var array<string, string> normalized AIMS code => exact (trimmed, lower case) EMS code */
     private array $aliases = [];
 
     /**
@@ -54,8 +54,8 @@ class AimsAssetTagImporter
      * @param  Collection<int, object{ID: int, PARENT_ID: int, NAME?: string, IS_DELETE: int|string|null}>  $accessories
      * @param  array<string, list<int>>  $unitsByCode  normalized eqm_prc_code => eqm_ids
      * @param  array<string, int>  $unitsByExactCode  trimmed lower-case eqm_prc_code => eqm_id
-     * @param  array<string, string>  $aliases  AIMS code => EMMS code (both as written; normalized here)
-     * @param  array<int, int>  $accessoryUnits  AIMS accessory id => eqm_id, for accessories that were added to EMMS as assets
+     * @param  array<string, string>  $aliases  AIMS code => EMS code (both as written; normalized here)
+     * @param  array<int, int>  $accessoryUnits  AIMS accessory id => eqm_id, for accessories that were added to EMS as assets
      * @return array{rows: array<string, int>, meta: array<string, array{assigned_by: ?int, assigned_date: ?string, scanned_by: ?int, scanned_date: ?string, is_deleted: bool}>, skipped: list<array{aims_id: int, rfid: string, assigned_to: int, reason: string}>, duplicates: int, from_accessory_records: int}
      */
     public function plan(Collection $tags, Collection $parents, Collection $accessories, array $unitsByCode, array $unitsByExactCode = [], array $aliases = [], array $accessoryUnits = []): array
@@ -118,7 +118,7 @@ class AimsAssetTagImporter
                     [$ownUnit] = $this->resolveUnit($name);
                 }
 
-                // Every asset keeps only its own tags. An accessory that is not an asset in EMMS has no record
+                // Every asset keeps only its own tags. An accessory that is not an asset in EMS has no record
                 // to hold its tags, and they are never pushed up onto its parent.
                 if ($ownUnit === null) {
                     $skip(self::SKIP_ACCESSORY_NOT_ASSET);
@@ -194,12 +194,12 @@ class AimsAssetTagImporter
 
     /**
      * Inserts the planned tags, leaving any tag that already exists untouched.
-     * AIMS user ids are translated to EMMS user ids through $userMap; unknown users are stored as null.
+     * AIMS user ids are translated to EMS user ids through $userMap; unknown users are stored as null.
      * Uses the query builder, so no per-row activity log entries are written.
      *
      * @param  array<string, int>  $rows  tag_id => asset_parent_id
      * @param  array<string, array{assigned_by: ?int, assigned_date: ?string, scanned_by: ?int, scanned_date: ?string, is_deleted: bool}>  $meta
-     * @param  array<int, int>  $userMap  AIMS user id => EMMS user id
+     * @param  array<int, int>  $userMap  AIMS user id => EMS user id
      * @return int number of tags actually inserted
      */
     public function persist(array $rows, array $meta = [], array $userMap = []): int

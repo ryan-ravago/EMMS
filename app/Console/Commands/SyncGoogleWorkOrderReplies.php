@@ -33,13 +33,13 @@ class SyncGoogleWorkOrderReplies extends Command
         $mailboxUser = AppUser::query()->whereRaw('lower(user_email) = ?', [strtolower($email)], 'and')->first();
 
         if (! $mailboxUser) {
-            $this->warn("No EMMS user has the email {$email}. The mailbox must be an EMMS user.");
+            $this->warn("No EMS user has the email {$email}. The mailbox must be an EMS user.");
 
             return self::SUCCESS;
         }
 
         if (! $mailboxUser->google_refresh_token) {
-            $this->warn("{$email} has not signed in to EMMS with Google yet, so its inbox cannot be read. Sign in once with that account.");
+            $this->warn("{$email} has not signed in to EMS with Google yet, so its inbox cannot be read. Sign in once with that account.");
 
             return self::SUCCESS;
         }
